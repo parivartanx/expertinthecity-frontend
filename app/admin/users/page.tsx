@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { mockUsers } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,83 +20,80 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowUpDown, MoreHorizontal, User, Shield, Ban, Clock } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, User, CheckCircle, Users, ArrowUpRight } from "lucide-react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useUsers } from "@/lib/contexts/users-context";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  status: string;
   role: string;
+  status: string;
   joinedAt: string;
   lastActive: string;
+  verified: boolean;
+  profilePicture?: string;
+  bio?: string;
+  location?: string;
 }
 
 export default function UsersPage() {
+  const router = useRouter();
+  const { users, updateUser } = useUsers();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"deactivate" | "ban" | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | null>(null);
 
-  const filteredUsers = users.filter(user => {
-    const matchesStatus = selectedStatus === "all" || user.status === selectedStatus;
-    const matchesSearch = searchQuery === "" || 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
-
-  const handleAction = (user: User, action: "deactivate" | "ban") => {
+  const handleAction = (user: User, action: "activate" | "deactivate" | "verify") => {
     setSelectedUser(user);
     setActionType(action);
     setActionDialogOpen(true);
   };
 
   const handleViewUser = (user: User) => {
-    setSelectedUser(user);
-    setViewDialogOpen(true);
+    router.push(`/admin/users/${user.id}`);
   };
 
   const confirmAction = () => {
     if (!selectedUser || !actionType) return;
 
     let message = "";
-    let newStatus = "";
+    let updatedUser: User | null = null;
 
     switch (actionType) {
-      case "deactivate":
-        message = `User ${selectedUser.name} has been deactivated`;
-        newStatus = "inactive";
+      case "activate":
+        updatedUser = {
+          ...selectedUser,
+          status: "active"
+        };
+        message = `User ${selectedUser.name} has been activated`;
         break;
-      case "ban":
-        message = `User ${selectedUser.name} has been banned`;
-        newStatus = "banned";
+      case "deactivate":
+        updatedUser = {
+          ...selectedUser,
+          status: "inactive"
+        };
+        message = `User ${selectedUser.name} has been deactivated`;
+        break;
+      case "verify":
+        updatedUser = {
+          ...selectedUser,
+          verified: true
+        };
+        message = `User ${selectedUser.name} has been verified`;
         break;
     }
 
-    // Update the user's status in the users array
-    setUsers(prevUsers => 
-      prevUsers.map(user => 
-        user.id === selectedUser.id 
-          ? { ...user, status: newStatus }
-          : user
-      )
-    );
+    if (updatedUser) {
+      updateUser(updatedUser);
+      toast.success(message);
+    }
 
-    toast.success(message);
     setActionDialogOpen(false);
   };
 
@@ -120,16 +116,30 @@ export default function UsersPage() {
             <User className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <a 
-              href={`/admin/users/${row.original.id}`}
-              className="font-medium hover:underline"
+            <div 
+              className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary hover:underline transition-colors"
+              onClick={() => handleViewUser(row.original)}
             >
               {row.original.name}
-            </a>
+              {row.original.verified && (
+                <CheckCircle className="h-3.5 w-3.5 text-blue-500 fill-blue-500" />
+              )}
+            </div>
             <div className="text-sm text-muted-foreground">{row.original.email}</div>
           </div>
         </div>
       ),
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }) => {
+        return (
+          <div className="text-sm">
+            {row.original.role}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "status",
@@ -141,9 +151,9 @@ export default function UsersPage() {
             variant={
               status === "active"
                 ? "default"
-                : status === "inactive"
+                : status === "pending"
                 ? "secondary"
-                : "destructive"
+                : "outline"
             }
           >
             {status}
@@ -152,14 +162,12 @@ export default function UsersPage() {
       },
     },
     {
-      accessorKey: "role",
-      header: "Role",
+      accessorKey: "location",
+      header: "Location",
       cell: ({ row }) => {
-        const role = row.original.role;
         return (
-          <div className="flex items-center gap-1">
-            {role === "moderator" && <Shield className="h-3.5 w-3.5 text-primary" />}
-            <span className="capitalize">{role}</span>
+          <div className="text-sm">
+            {row.original.location || 'Not specified'}
           </div>
         );
       },
@@ -168,99 +176,52 @@ export default function UsersPage() {
       accessorKey: "joinedAt",
       header: "Joined",
       cell: ({ row }) => {
-        return format(new Date(row.original.joinedAt), "MMM d, yyyy");
-      },
-    },
-    {
-      accessorKey: "lastActive",
-      header: "Last Active",
-      cell: ({ row }) => {
         return (
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>{format(new Date(row.original.lastActive), "MMM d, yyyy")}</span>
+          <div className="text-sm">
+            {format(new Date(row.original.joinedAt), "PPP")}
           </div>
         );
       },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                View details
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleAction(user, "deactivate")}>
-                Deactivate user
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAction(user, "ban")}>
-                Ban user
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
+    }
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">User Management</h1>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
       </div>
-      <div className="flex items-center justify-between">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search users..."
-            className="h-10 w-[300px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Users</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="banned">Banned</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <DataTable columns={columns} data={filteredUsers} />
+
+      <DataTable 
+        columns={columns} 
+        data={users} 
+        searchColumn="name" 
+        searchPlaceholder="Search users..." 
+      />
 
       {/* View User Dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>
-              Detailed information about the selected user.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
+      {selectedUser && (
+        <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>User Profile</DialogTitle>
+              <DialogDescription>
+                Detailed information about the selected user.
+              </DialogDescription>
+            </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                  <User className="h-6 w-6 text-muted-foreground" />
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                  <User className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                  <div className="flex items-center gap-1">
+                    <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
+                    {selectedUser.verified && (
+                      <CheckCircle className="h-4 w-4 text-blue-500 fill-blue-500" />
+                    )}
+                  </div>
+                  <p className="text-muted-foreground">{selectedUser.email}</p>
+                  <p className="text-sm font-medium mt-1">{selectedUser.role}</p>
                 </div>
               </div>
               
@@ -270,8 +231,8 @@ export default function UsersPage() {
                   <p className="font-medium capitalize">{selectedUser.status}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Role</p>
-                  <p className="font-medium capitalize">{selectedUser.role}</p>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-medium">{selectedUser.location || 'Not specified'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Joined</p>
@@ -282,10 +243,15 @@ export default function UsersPage() {
                   <p className="font-medium">{format(new Date(selectedUser.lastActive), "PPP")}</p>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Bio</p>
+                <p className="text-muted-foreground">{selectedUser.bio || 'No bio provided'}</p>
+              </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Action Confirmation Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
@@ -293,18 +259,16 @@ export default function UsersPage() {
           <DialogHeader>
             <DialogTitle>Confirm Action</DialogTitle>
             <DialogDescription>
+              {actionType === "activate" && "Are you sure you want to activate this user?"}
               {actionType === "deactivate" && "Are you sure you want to deactivate this user?"}
-              {actionType === "ban" && "Are you sure you want to ban this user?"}
+              {actionType === "verify" && "Are you sure you want to verify this user?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant={actionType === "ban" ? "destructive" : "default"} 
-              onClick={confirmAction}
-            >
+            <Button onClick={confirmAction}>
               Confirm
             </Button>
           </DialogFooter>

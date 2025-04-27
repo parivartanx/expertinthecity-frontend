@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { mockPosts } from "@/lib/mock-data";
@@ -47,10 +48,11 @@ interface Post {
 }
 
 export default function ContentPage() {
+  const router = useRouter();
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | "delete" | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const handleAction = (post: Post, action: "approve" | "reject" | "delete") => {
     setSelectedPost(post);
@@ -59,8 +61,7 @@ export default function ContentPage() {
   };
 
   const handleViewPost = (post: Post) => {
-    setSelectedPost(post);
-    setViewDialogOpen(true);
+    router.push(`/admin/content/${post.id}`);
   };
 
   const confirmAction = () => {
@@ -82,6 +83,12 @@ export default function ContentPage() {
     toast.success(message);
     setActionDialogOpen(false);
   };
+
+  // Filter posts based on selected status
+  const filteredPosts = mockPosts.filter(post => {
+    if (statusFilter === "all") return true;
+    return post.status === statusFilter;
+  });
 
   // Table columns definition
   const columns: ColumnDef<Post>[] = [
@@ -201,7 +208,7 @@ export default function ContentPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Content Moderation</h1>
-        <Select defaultValue="all">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -216,78 +223,10 @@ export default function ContentPage() {
 
       <DataTable 
         columns={columns} 
-        data={mockPosts} 
+        data={filteredPosts} 
         searchColumn="title" 
         searchPlaceholder="Search content..." 
       />
-
-      {/* View Post Dialog */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Content Details</DialogTitle>
-            <DialogDescription>
-              Review the selected content.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedPost && (
-            <div className="space-y-4 mt-2">
-              <div>
-                <h3 className="text-xl font-semibold">{selectedPost.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-muted-foreground">By {selectedPost.expertName}</span>
-                  <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">{selectedPost.category}</span>
-                  <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">
-                    {format(new Date(selectedPost.createdAt), "MMM d, yyyy")}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="border rounded-md p-4 bg-muted/30">
-                <p className="whitespace-pre-line">{selectedPost.content}</p>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedPost.likes}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedPost.comments}</span>
-                  </div>
-                </div>
-                
-                <Badge
-                  variant={
-                    selectedPost.status === "published"
-                      ? "default"
-                      : selectedPost.status === "pending"
-                      ? "secondary"
-                      : "destructive"
-                  }
-                >
-                  {selectedPost.status}
-                </Badge>
-              </div>
-              
-              {selectedPost.status === "pending" && (
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => handleAction(selectedPost, "reject")}>
-                    Reject
-                  </Button>
-                  <Button onClick={() => handleAction(selectedPost, "approve")}>
-                    Approve
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Action Confirmation Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>

@@ -9,6 +9,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-04-15T12:00:00Z',
     lastActive: '2023-11-05T09:45:00Z',
+    verified: true,
   },
   {
     id: '2',
@@ -18,6 +19,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-05-20T10:30:00Z',
     lastActive: '2023-11-04T14:22:00Z',
+    verified: true,
   },
   {
     id: '3',
@@ -27,6 +29,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-03-10T09:15:00Z',
     lastActive: '2023-10-01T11:33:00Z',
+    verified: false,
   },
   {
     id: '4',
@@ -36,6 +39,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-01-05T14:45:00Z',
     lastActive: '2023-09-15T16:47:00Z',
+    verified: true,
   },
   {
     id: '5',
@@ -45,6 +49,7 @@ export const mockUsers = [
     role: 'moderator',
     joinedAt: '2023-02-18T08:20:00Z',
     lastActive: '2023-11-06T10:15:00Z',
+    verified: true,
   },
   {
     id: '6',
@@ -54,6 +59,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-06-22T13:10:00Z',
     lastActive: '2023-11-03T17:30:00Z',
+    verified: true,
   },
   {
     id: '7',
@@ -63,6 +69,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-07-11T11:55:00Z',
     lastActive: '2023-11-01T09:20:00Z',
+    verified: true,
   },
   {
     id: '8',
@@ -72,6 +79,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-08-30T15:40:00Z',
     lastActive: '2023-10-10T14:05:00Z',
+    verified: false,
   },
   {
     id: '9',
@@ -81,6 +89,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-09-14T10:25:00Z',
     lastActive: '2023-11-02T11:45:00Z',
+    verified: true,
   },
   {
     id: '10',
@@ -90,6 +99,7 @@ export const mockUsers = [
     role: 'user',
     joinedAt: '2023-10-05T12:35:00Z',
     lastActive: '2023-11-06T08:55:00Z',
+    verified: true,
   },
 ];
 
@@ -106,6 +116,8 @@ export const mockExperts = [
     lastActive: '2023-11-06T08:30:00Z',
     verified: true,
     featured: true,
+    experience: '15 years of experience in holistic health and wellness',
+    skills: ['Nutrition', 'Yoga', 'Meditation', 'Stress Management']
   },
   {
     id: '2',
@@ -119,6 +131,8 @@ export const mockExperts = [
     lastActive: '2023-11-05T14:15:00Z',
     verified: true,
     featured: false,
+    experience: '20 years in education and curriculum development',
+    skills: ['Teaching', 'Curriculum Design', 'Educational Technology', 'Student Assessment']
   },
   {
     id: '3',
@@ -132,6 +146,8 @@ export const mockExperts = [
     lastActive: '2023-11-06T10:20:00Z',
     verified: true,
     featured: true,
+    experience: '12 years in professional cooking and restaurant management',
+    skills: ['Italian Cuisine', 'Pastry', 'Menu Planning', 'Food Safety']
   },
   {
     id: '4',
@@ -145,6 +161,8 @@ export const mockExperts = [
     lastActive: '2023-11-04T16:45:00Z',
     verified: false,
     featured: false,
+    experience: '8 years in software development and AI research',
+    skills: ['Machine Learning', 'Python', 'Data Analysis', 'Cloud Computing']
   },
   {
     id: '5',
@@ -158,6 +176,8 @@ export const mockExperts = [
     lastActive: '2023-11-01T13:30:00Z',
     verified: true,
     featured: false,
+    experience: '18 years in financial advisory and wealth management',
+    skills: ['Investment Planning', 'Retirement Planning', 'Tax Strategy', 'Risk Management']
   },
   {
     id: '6',
@@ -171,6 +191,8 @@ export const mockExperts = [
     lastActive: '2023-10-15T11:20:00Z',
     verified: true,
     featured: false,
+    experience: '10 years in personal training and fitness coaching',
+    skills: ['Strength Training', 'HIIT', 'Nutrition', 'Injury Prevention']
   },
   {
     id: '7',
@@ -184,6 +206,8 @@ export const mockExperts = [
     lastActive: '2023-11-03T09:10:00Z',
     verified: true,
     featured: false,
+    experience: '14 years practicing corporate law',
+    skills: ['Contract Law', 'Corporate Governance', 'Mergers & Acquisitions', 'Compliance']
   },
   {
     id: '8',
@@ -197,6 +221,8 @@ export const mockExperts = [
     lastActive: '2023-11-06T15:25:00Z',
     verified: true,
     featured: true,
+    experience: '9 years in fashion design and styling',
+    skills: ['Fashion Design', 'Personal Styling', 'Trend Analysis', 'Brand Development']
   },
   {
     id: '9',
@@ -210,6 +236,8 @@ export const mockExperts = [
     lastActive: '2023-11-02T10:40:00Z',
     verified: false,
     featured: false,
+    experience: '7 years in home renovation and interior design',
+    skills: ['Carpentry', 'Interior Design', 'Project Management', 'Sustainable Building']
   },
   {
     id: '10',
@@ -223,6 +251,8 @@ export const mockExperts = [
     lastActive: '2023-11-04T08:55:00Z',
     verified: true,
     featured: false,
+    experience: '11 years in clinical psychology and counseling',
+    skills: ['Cognitive Behavioral Therapy', 'Anxiety Management', 'Stress Reduction', 'Mindfulness']
   },
 ];
 

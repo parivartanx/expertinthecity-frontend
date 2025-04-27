@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { mockExperts } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,9 +25,10 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowUpDown, MoreHorizontal, Award, CheckCircle, Users, ArrowUpRight } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Award, CheckCircle, Users, ArrowUpRight, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
+import { useExperts } from "@/lib/contexts/experts-context";
 
 interface Expert {
   id: string;
@@ -41,16 +41,19 @@ interface Expert {
   joinedAt: string;
   lastActive: string;
   verified: boolean;
+  experience: string;
+  skills: string[];
   featured: boolean;
 }
 
 export default function ExpertsPage() {
   const router = useRouter();
+  const { experts, updateExpert } = useExperts();
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | "feature" | null>(null);
-  const [experts, setExperts] = useState<Expert[]>(mockExperts);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleAction = (expert: Expert, action: "activate" | "deactivate" | "verify" | "feature") => {
     setSelectedExpert(expert);
@@ -59,6 +62,8 @@ export default function ExpertsPage() {
   };
 
   const handleViewExpert = (expert: Expert) => {
+    setSelectedExpert(expert);
+    setIsNavigating(true);
     router.push(`/admin/experts/${expert.id}`);
   };
 
@@ -101,15 +106,10 @@ export default function ExpertsPage() {
     }
 
     if (updatedExpert) {
-      // Update the experts state
-      setExperts(prevExperts => 
-        prevExperts.map(expert => 
-          expert.id === updatedExpert!.id ? updatedExpert! : expert
-        )
-      );
+      updateExpert(updatedExpert);
+      toast.success(message);
     }
 
-    toast.success(message);
     setActionDialogOpen(false);
   };
 
@@ -133,12 +133,15 @@ export default function ExpertsPage() {
           </div>
           <div>
             <div 
-              className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary transition-colors"
+              className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary hover:underline transition-colors"
               onClick={() => handleViewExpert(row.original)}
             >
               {row.original.name}
               {row.original.verified && (
                 <CheckCircle className="h-3.5 w-3.5 text-blue-500 fill-blue-500" />
+              )}
+              {isNavigating && row.original.id === selectedExpert?.id && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
               )}
             </div>
             <div className="text-sm text-muted-foreground">{row.original.category}</div>
@@ -163,6 +166,32 @@ export default function ExpertsPage() {
           >
             {status}
           </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "experience",
+      header: "Experience",
+      cell: ({ row }) => {
+        return (
+          <div className="text-sm">
+            {row.original.experience}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "skills",
+      header: "Skills",
+      cell: ({ row }) => {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {row.original.skills.map((skill, index) => (
+              <Badge key={index} variant="secondary">
+                {skill}
+              </Badge>
+            ))}
+          </div>
         );
       },
     },
@@ -198,76 +227,13 @@ export default function ExpertsPage() {
           </div>
         );
       },
-    },
-    {
-      accessorKey: "featured",
-      header: "Featured",
-      cell: ({ row }) => {
-        const featured = row.original.featured;
-        return featured ? (
-          <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-            Featured
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground text-sm">—</span>
-        );
-      },
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const expert = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleViewExpert(expert)}>
-                View profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              {expert.status === "pending" && (
-                <DropdownMenuItem onClick={() => handleAction(expert, "activate")}>
-                  Activate expert
-                </DropdownMenuItem>
-              )}
-              {expert.status === "active" && (
-                <DropdownMenuItem onClick={() => handleAction(expert, "deactivate")}>
-                  Deactivate expert
-                </DropdownMenuItem>
-              )}
-              {!expert.verified && (
-                <DropdownMenuItem onClick={() => handleAction(expert, "verify")}>
-                  Verify expert
-                </DropdownMenuItem>
-              )}
-              {expert.status === "active" && (
-                <DropdownMenuItem onClick={() => handleAction(expert, "feature")}>
-                  {expert.featured ? "Remove from featured" : "Add to featured"}
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
+    }
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Expert Management</h1>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-1">
-            <ArrowUpRight className="h-4 w-4" />
-            Export List
-          </Button>
-        </div>
       </div>
 
       <DataTable 
@@ -304,11 +270,6 @@ export default function ExpertsPage() {
                       {selectedExpert.verified && (
                         <CheckCircle className="h-4 w-4 text-blue-500 fill-blue-500" />
                       )}
-                      {selectedExpert.featured && (
-                        <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-                          Featured
-                        </Badge>
-                      )}
                     </div>
                     <p className="text-muted-foreground">{selectedExpert.email}</p>
                     <p className="text-sm font-medium mt-1">{selectedExpert.category}</p>
@@ -340,6 +301,22 @@ export default function ExpertsPage() {
                     <span className="text-sm font-medium">{selectedExpert.profileCompletion}%</span>
                   </div>
                   <Progress value={selectedExpert.profileCompletion} className="h-2" />
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Experience</p>
+                  <p className="font-medium">{selectedExpert.experience}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Skills</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedExpert.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </TabsContent>
               <TabsContent value="performance" className="mt-4 space-y-4">

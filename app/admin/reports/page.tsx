@@ -55,6 +55,7 @@ export default function ReportsPage() {
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"resolve" | "dismiss" | null>(null);
   const [resolution, setResolution] = useState("");
+  const [filter, setFilter] = useState<string>("all");
 
   const handleAction = (report: Report, action: "resolve" | "dismiss") => {
     setSelectedReport(report);
@@ -216,11 +217,25 @@ export default function ReportsPage() {
     },
   ];
 
+  // Filter reports based on selected filter
+  const filteredReports = mockReports.filter((report) => {
+    switch (filter) {
+      case "pending":
+        return report.status === "pending";
+      case "resolved":
+        return report.status === "resolved";
+      case "high":
+        return report.priority === "high";
+      default:
+        return true; // Show all reports
+    }
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Reports & Violations</h1>
-        <Select defaultValue="all">
+        <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -235,7 +250,7 @@ export default function ReportsPage() {
 
       <DataTable 
         columns={columns} 
-        data={mockReports} 
+        data={filteredReports} 
         searchColumn="reason" 
         searchPlaceholder="Search reports..." 
       />

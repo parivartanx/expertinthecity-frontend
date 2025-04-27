@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Award, CheckCircle, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Award, CheckCircle, Edit2, Save, X, Loader2 } from "lucide-react";
 import { format } from "date-fns";
-import { mockExperts } from "@/lib/mock-data";
+import { useExperts } from "@/lib/contexts/experts-context";
+import { toast } from "sonner";
 
 interface Expert {
   id: string;
@@ -22,33 +24,102 @@ interface Expert {
   joinedAt: string;
   lastActive: string;
   verified: boolean;
+  experience: string;
+  skills: string[];
   featured: boolean;
 }
 
 export default function ExpertDetailsPage() {
   const router = useRouter();
   const params = useParams();
+  const { experts, updateExpert } = useExperts();
   const [expert, setExpert] = useState<Expert | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedExpert, setEditedExpert] = useState<Expert | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you would fetch the expert data from an API
-    const foundExpert = mockExperts.find(e => e.id === params.id);
+    const foundExpert = experts.find(e => e.id === params.id);
     if (foundExpert) {
       setExpert(foundExpert);
+      setEditedExpert(foundExpert);
     }
-  }, [params.id]);
+    setIsLoading(false);
+  }, [params.id, experts]);
 
-  if (!expert) {
-    return <div>Loading...</div>;
+  const handleSave = () => {
+    if (editedExpert) {
+      updateExpert(editedExpert);
+      setExpert(editedExpert);
+      setIsEditing(false);
+      toast.success("Expert details updated successfully");
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedExpert(expert);
+    setIsEditing(false);
+  };
+
+  const handleChange = (field: keyof Expert, value: any) => {
+    if (editedExpert) {
+      setEditedExpert({
+        ...editedExpert,
+        [field]: value
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading expert details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!expert || !editedExpert) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-muted-foreground">Expert not found</p>
+          <Button onClick={() => router.back()} variant="outline">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Expert Details</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">Expert Details</h1>
+        </div>
+        {!isEditing ? (
+          <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+            <Edit2 className="h-4 w-4" />
+            Edit Profile
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button onClick={handleCancel} variant="outline" className="gap-2">
+              <X className="h-4 w-4" />
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="gap-2">
+              <Save className="h-4 w-4" />
+              Save Changes
+            </Button>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="profile" className="mt-2">
@@ -62,9 +133,48 @@ export default function ExpertDetailsPage() {
             <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
               <Award className="h-8 w-8 text-muted-foreground" />
             </div>
-            <div>
-              <div className="flex items-center gap-1">
-                <h3 className="text-lg font-semibold">{expert.name}</h3>
+            <div className="space-y-4 flex-1">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Name</p>
+                {isEditing ? (
+                  <Input
+                    value={editedExpert.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    className="w-full max-w-md"
+                    placeholder="Enter expert name"
+                  />
+                ) : (
+                  <h3 className="text-lg font-semibold">{expert.name}</h3>
+                )}
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Email</p>
+                {isEditing ? (
+                  <Input
+                    value={editedExpert.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    className="w-full max-w-md"
+                    placeholder="Enter email address"
+                    type="email"
+                  />
+                ) : (
+                  <p className="text-muted-foreground">{expert.email}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Category</p>
+                {isEditing ? (
+                  <Input
+                    value={editedExpert.category}
+                    onChange={(e) => handleChange('category', e.target.value)}
+                    className="w-full max-w-md"
+                    placeholder="Enter category"
+                  />
+                ) : (
+                  <p className="text-sm font-medium">{expert.category}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 {expert.verified && (
                   <CheckCircle className="h-4 w-4 text-blue-500 fill-blue-500" />
                 )}
@@ -74,15 +184,20 @@ export default function ExpertDetailsPage() {
                   </Badge>
                 )}
               </div>
-              <p className="text-muted-foreground">{expert.email}</p>
-              <p className="text-sm font-medium mt-1">{expert.category}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
-              <p className="font-medium capitalize">{expert.status}</p>
+              {isEditing ? (
+                <Input
+                  value={editedExpert.status}
+                  onChange={(e) => handleChange('status', e.target.value)}
+                />
+              ) : (
+                <p className="font-medium capitalize">{expert.status}</p>
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Followers</p>
