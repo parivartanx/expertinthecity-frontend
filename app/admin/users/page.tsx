@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowUpDown, MoreHorizontal, User, CheckCircle, Users, ArrowUpRight } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, User, CheckCircle, Users, ArrowUpRight, Eye, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useUsers } from "@/lib/contexts/users-context";
@@ -35,10 +35,20 @@ interface User {
   status: string;
   joinedAt: string;
   lastActive: string;
+  chatHistory: {
+    id: string;
+    expertId: string;
+    expertName: string;
+    lastMessage: string;
+    timestamp: string;
+    unreadCount: number;
+  }[];
   verified: boolean;
   profilePicture?: string;
   bio?: string;
   location?: string;
+  profileVisitors: number;
+  preferences: string[];
 }
 
 export default function UsersPage() {
@@ -69,21 +79,24 @@ export default function UsersPage() {
       case "activate":
         updatedUser = {
           ...selectedUser,
-          status: "active"
+          status: "active",
+          chatHistory: selectedUser.chatHistory || []
         };
         message = `User ${selectedUser.name} has been activated`;
         break;
       case "deactivate":
         updatedUser = {
           ...selectedUser,
-          status: "inactive"
+          status: "inactive",
+          chatHistory: selectedUser.chatHistory || []
         };
         message = `User ${selectedUser.name} has been deactivated`;
         break;
       case "verify":
         updatedUser = {
           ...selectedUser,
-          verified: true
+          verified: true,
+          chatHistory: selectedUser.chatHistory || []
         };
         message = `User ${selectedUser.name} has been verified`;
         break;
@@ -168,6 +181,39 @@ export default function UsersPage() {
         return (
           <div className="text-sm">
             {row.original.location || 'Not specified'}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "profileVisitors",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Profile Visitors
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1.5">
+          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{row.original.profileVisitors.toLocaleString()}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "preferences",
+      header: "Preferences",
+      cell: ({ row }) => {
+        return (
+          <div className="flex flex-wrap gap-1">
+            {row.original.preferences.map((preference, index) => (
+              <Badge key={index} variant="secondary">
+                {preference}
+              </Badge>
+            ))}
           </div>
         );
       },

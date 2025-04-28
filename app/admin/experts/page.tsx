@@ -25,7 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowUpDown, MoreHorizontal, Award, CheckCircle, Users, ArrowUpRight, Loader2 } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Award, CheckCircle, Users, ArrowUpRight, Loader2, Star, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useExperts } from "@/lib/contexts/experts-context";
@@ -44,6 +44,8 @@ interface Expert {
   experience: string;
   skills: string[];
   featured: boolean;
+  rating: number;
+  profileVisitors: number;
 }
 
 export default function ExpertsPage() {
@@ -210,6 +212,42 @@ export default function ExpertsPage() {
         <div className="flex items-center gap-1.5">
           <Users className="h-3.5 w-3.5 text-muted-foreground" />
           <span>{row.original.followers.toLocaleString()}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "rating",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Rating
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1">
+          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+          <span>{row.original.rating.toFixed(1)}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "profileVisitors",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Profile Visitors
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-1.5">
+          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{row.original.profileVisitors.toLocaleString()}</span>
         </div>
       ),
     },

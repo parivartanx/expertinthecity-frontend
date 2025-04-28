@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, User, CheckCircle, Edit2, Save, X, Loader2 } from "lucide-react";
+import { ArrowLeft, User, CheckCircle, Edit2, Save, X, Loader2, Eye, Tag, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { useUsers } from "@/lib/contexts/users-context";
 import { toast } from "sonner";
@@ -25,6 +25,16 @@ interface User {
   profilePicture?: string;
   bio?: string;
   location?: string;
+  profileVisitors: number;
+  preferences: string[];
+  chatHistory: {
+    id: string;
+    expertId: string;
+    expertName: string;
+    lastMessage: string;
+    timestamp: string;
+    unreadCount: number;
+  }[];
 }
 
 export default function UserDetailsPage() {
@@ -47,8 +57,15 @@ export default function UserDetailsPage() {
 
   const handleSave = () => {
     if (editedUser) {
-      updateUser(editedUser);
-      setUser(editedUser);
+      const updatedUser = {
+        ...editedUser,
+        chatHistory: editedUser.chatHistory.map(chat => ({
+          ...chat,
+          expertId: chat.expertId || `expert-${chat.id}`
+        }))
+      };
+      updateUser(updatedUser);
+      setUser(updatedUser);
       setIsEditing(false);
       toast.success("User details updated successfully");
     }
@@ -125,6 +142,7 @@ export default function UserDetailsPage() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="chats">Chat History</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="mt-4 space-y-4">
           <div className="flex items-center space-x-4">
@@ -203,6 +221,23 @@ export default function UserDetailsPage() {
               ) : (
                 <p className="font-medium">{user.location || 'Not specified'}</p>
               )}
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Profile Visitors</p>
+              <div className="flex items-center gap-1.5">
+                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                <p className="font-medium">{user.profileVisitors.toLocaleString()}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Preferences</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {user.preferences.map((preference, index) => (
+                  <Badge key={index} variant="secondary">
+                    {preference}
+                  </Badge>
+                ))}
+              </div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Joined</p>
@@ -296,6 +331,35 @@ export default function UserDetailsPage() {
           <div className="flex justify-between mt-4">
             <Button variant="outline">Reset Settings</Button>
             <Button>Save Settings</Button>
+          </div>
+        </TabsContent>
+        <TabsContent value="chats" className="mt-4 space-y-4">
+          <div className="space-y-4">
+            {user.chatHistory.length > 0 ? (
+              user.chatHistory.map((chat) => (
+                <div key={chat.id} className="border rounded-md p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      <h4 className="font-medium">{chat.expertName}</h4>
+                      {chat.unreadCount > 0 && (
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                          {chat.unreadCount} new
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(chat.timestamp), "PPP")}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{chat.lastMessage}</p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No chat history available
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>

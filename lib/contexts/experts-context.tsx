@@ -17,6 +17,8 @@ interface Expert {
   experience: string;
   skills: string[];
   featured: boolean;
+  rating: number;
+  profileVisitors: number;
 }
 
 interface ExpertsContextType {

@@ -15,6 +15,16 @@ interface User {
   profilePicture?: string;
   bio?: string;
   location?: string;
+  profileVisitors: number;
+  preferences: string[];
+  chatHistory: {
+    id: string;
+    expertId: string;
+    expertName: string;
+    lastMessage: string;
+    timestamp: string;
+    unreadCount: number;
+  }[];
 }
 
 interface UsersContextType {

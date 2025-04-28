@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { MoonIcon, SunIcon, BellIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { MoonIcon, SunIcon, BellIcon, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,11 +21,12 @@ interface HeaderProps {
 export function Header({ user }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string; text: string; read: boolean }[]>([
-    { id: "1", text: "New report submitted: Inappropriate content", read: false },
-    { id: "2", text: "New expert application pending review", read: false },
-    { id: "3", text: "System alert: Daily backup completed", read: true },
+  const [notifications, setNotifications] = useState<{ id: string; text: string; read: boolean; expertId?: string }[]>([
+    { id: "1", text: "New report submitted: Inappropriate content", read: false, expertId: "expert-1" },
+    { id: "2", text: "New expert application pending review", read: false, expertId: "expert-2" },
+    { id: "3", text: "System alert: Daily backup completed", read: true, expertId: "expert-3" },
   ]);
 
   // Fix hydration issues with theme
@@ -108,6 +109,17 @@ export function Header({ user }: HeaderProps) {
                   </DropdownMenuItem>
                 ))
               )}
+            </div>
+            <div className="p-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-between"
+                onClick={() => router.push('/admin/notifications')}
+              >
+                Show More
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   LogOut,
+  Bell,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { User } from "@/lib/auth";
@@ -96,6 +97,11 @@ export function Sidebar({ user }: SidebarProps) {
       title: "Reports",
       href: "/admin/reports",
       icon: <AlertTriangle className="h-5 w-5" />,
+    },
+    {
+      title: "Notifications",
+      href: "/admin/notifications",
+      icon: <Bell className="h-5 w-5" />,
     },
     {
       title: "Settings",
@@ -260,28 +266,33 @@ export function Sidebar({ user }: SidebarProps) {
           </ScrollArea>
 
           {/* User Info */}
-          {!isCollapsed && user && (
+          {user && (
             <div className="border-t py-4 px-4">
-              <div className="flex items-center space-x-3">
-                {user.avatar && (
-                  <div className="h-8 w-8 rounded-full overflow-hidden">
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="h-full w-full object-cover"
-                    />
+              {!isCollapsed && (
+                <div className="flex items-center space-x-3">
+                  {user.avatar && (
+                    <div className="h-8 w-8 rounded-full overflow-hidden">
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="overflow-hidden">
+                    <p className="text-sm font-medium truncate">{user.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user.email}
+                    </p>
                   </div>
-                )}
-                <div className="overflow-hidden">
-                  <p className="text-sm font-medium truncate">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user.email}
-                  </p>
                 </div>
-              </div>
+              )}
               <Button
                 variant="ghost"
-                className="w-full mt-3 justify-start gap-2"
+                className={cn(
+                  "w-full mt-3 justify-start gap-2",
+                  isCollapsed && "justify-center"
+                )}
                 onClick={handleLogout}
                 disabled={isLoggingOut}
               >
@@ -302,12 +313,12 @@ export function Sidebar({ user }: SidebarProps) {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Logging out...
+                    {!isCollapsed && "Logging out..."}
                   </>
                 ) : (
                   <>
                     <LogOut className="h-4 w-4" />
-                    Logout
+                    {!isCollapsed && "Logout"}
                   </>
                 )}
               </Button>

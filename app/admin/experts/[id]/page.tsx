@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Award, CheckCircle, Edit2, Save, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Award, CheckCircle, Edit2, Save, X, Loader2, Star, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useExperts } from "@/lib/contexts/experts-context";
 import { toast } from "sonner";
@@ -27,6 +27,8 @@ interface Expert {
   experience: string;
   skills: string[];
   featured: boolean;
+  rating: number;
+  profileVisitors: number;
 }
 
 export default function ExpertDetailsPage() {
@@ -202,6 +204,20 @@ export default function ExpertDetailsPage() {
             <div>
               <p className="text-sm text-muted-foreground">Followers</p>
               <p className="font-medium">{expert.followers.toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Rating</p>
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                <p className="font-medium">{expert.rating.toFixed(1)}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Profile Visitors</p>
+              <div className="flex items-center gap-1.5">
+                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                <p className="font-medium">{expert.profileVisitors.toLocaleString()}</p>
+              </div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Joined</p>

@@ -10,6 +10,26 @@ export const mockUsers = [
     joinedAt: '2023-04-15T12:00:00Z',
     lastActive: '2023-11-05T09:45:00Z',
     verified: true,
+    profileVisitors: 1250,
+    preferences: ['Technology', 'Finance', 'Health & Wellness'],
+    chatHistory: [
+      {
+        id: 'chat1',
+        expertId: '1',
+        expertName: 'Dr. Alice Johnson',
+        lastMessage: 'Thank you for your question about meditation techniques.',
+        timestamp: '2023-11-05T09:30:00Z',
+        unreadCount: 0
+      },
+      {
+        id: 'chat2',
+        expertId: '3',
+        expertName: 'Chef Marco Rodriguez',
+        lastMessage: 'Here are some healthy breakfast recipes for you.',
+        timestamp: '2023-11-04T14:20:00Z',
+        unreadCount: 2
+      }
+    ]
   },
   {
     id: '2',
@@ -20,6 +40,18 @@ export const mockUsers = [
     joinedAt: '2023-05-20T10:30:00Z',
     lastActive: '2023-11-04T14:22:00Z',
     verified: true,
+    profileVisitors: 850,
+    preferences: ['Fashion & Style', 'Home Improvement', 'Education'],
+    chatHistory: [
+      {
+        id: 'chat3',
+        expertId: '8',
+        expertName: 'Sophia Lee',
+        lastMessage: 'I can help you with your wardrobe styling.',
+        timestamp: '2023-11-04T13:15:00Z',
+        unreadCount: 0
+      }
+    ]
   },
   {
     id: '3',
@@ -30,6 +62,9 @@ export const mockUsers = [
     joinedAt: '2023-03-10T09:15:00Z',
     lastActive: '2023-10-01T11:33:00Z',
     verified: false,
+    profileVisitors: 450,
+    preferences: ['Technology', 'Gaming', 'Sports'],
+    chatHistory: []
   },
   {
     id: '4',
@@ -40,6 +75,9 @@ export const mockUsers = [
     joinedAt: '2023-01-05T14:45:00Z',
     lastActive: '2023-09-15T16:47:00Z',
     verified: true,
+    profileVisitors: 320,
+    preferences: ['Health & Wellness', 'Fitness', 'Nutrition'],
+    chatHistory: []
   },
   {
     id: '5',
@@ -50,6 +88,9 @@ export const mockUsers = [
     joinedAt: '2023-02-18T08:20:00Z',
     lastActive: '2023-11-06T10:15:00Z',
     verified: true,
+    profileVisitors: 2800,
+    preferences: ['Technology', 'Security', 'Privacy'],
+    chatHistory: []
   },
   {
     id: '6',
@@ -60,6 +101,18 @@ export const mockUsers = [
     joinedAt: '2023-06-22T13:10:00Z',
     lastActive: '2023-11-03T17:30:00Z',
     verified: true,
+    profileVisitors: 950,
+    preferences: ['Fashion & Style', 'Beauty', 'Lifestyle'],
+    chatHistory: [
+      {
+        id: 'chat4',
+        expertId: '8',
+        expertName: 'Sophia Lee',
+        lastMessage: 'I can help you with your personal style.',
+        timestamp: '2023-11-03T16:45:00Z',
+        unreadCount: 1
+      }
+    ]
   },
   {
     id: '7',
@@ -70,6 +123,18 @@ export const mockUsers = [
     joinedAt: '2023-07-11T11:55:00Z',
     lastActive: '2023-11-01T09:20:00Z',
     verified: true,
+    profileVisitors: 720,
+    preferences: ['Finance', 'Investing', 'Real Estate'],
+    chatHistory: [
+      {
+        id: 'chat5',
+        expertId: '5',
+        expertName: 'Samuel Jackson',
+        lastMessage: 'Let me help you with your investment strategy.',
+        timestamp: '2023-11-01T08:30:00Z',
+        unreadCount: 0
+      }
+    ]
   },
   {
     id: '8',
@@ -80,6 +145,9 @@ export const mockUsers = [
     joinedAt: '2023-08-30T15:40:00Z',
     lastActive: '2023-10-10T14:05:00Z',
     verified: false,
+    profileVisitors: 450,
+    preferences: ['Education', 'Language Learning', 'Travel'],
+    chatHistory: []
   },
   {
     id: '9',
@@ -90,6 +158,18 @@ export const mockUsers = [
     joinedAt: '2023-09-14T10:25:00Z',
     lastActive: '2023-11-02T11:45:00Z',
     verified: true,
+    profileVisitors: 680,
+    preferences: ['Technology', 'Programming', 'AI'],
+    chatHistory: [
+      {
+        id: 'chat6',
+        expertId: '4',
+        expertName: 'Rebecca Chen',
+        lastMessage: 'I can help you with your machine learning project.',
+        timestamp: '2023-11-02T10:15:00Z',
+        unreadCount: 0
+      }
+    ]
   },
   {
     id: '10',
@@ -100,7 +180,19 @@ export const mockUsers = [
     joinedAt: '2023-10-05T12:35:00Z',
     lastActive: '2023-11-06T08:55:00Z',
     verified: true,
-  },
+    profileVisitors: 520,
+    preferences: ['Health & Wellness', 'Mental Health', 'Self-Care'],
+    chatHistory: [
+      {
+        id: 'chat7',
+        expertId: '10',
+        expertName: 'Emily Davis',
+        lastMessage: 'I can help you with stress management techniques.',
+        timestamp: '2023-11-06T08:30:00Z',
+        unreadCount: 0
+      }
+    ]
+  }
 ];
 
 export const mockExperts = [
@@ -117,7 +209,9 @@ export const mockExperts = [
     verified: true,
     featured: true,
     experience: '15 years of experience in holistic health and wellness',
-    skills: ['Nutrition', 'Yoga', 'Meditation', 'Stress Management']
+    skills: ['Nutrition', 'Yoga', 'Meditation', 'Stress Management'],
+    rating: 4.8,
+    profileVisitors: 3250
   },
   {
     id: '2',
@@ -132,7 +226,9 @@ export const mockExperts = [
     verified: true,
     featured: false,
     experience: '20 years in education and curriculum development',
-    skills: ['Teaching', 'Curriculum Design', 'Educational Technology', 'Student Assessment']
+    skills: ['Teaching', 'Curriculum Design', 'Educational Technology', 'Student Assessment'],
+    rating: 4.6,
+    profileVisitors: 2100
   },
   {
     id: '3',
@@ -147,7 +243,9 @@ export const mockExperts = [
     verified: true,
     featured: true,
     experience: '12 years in professional cooking and restaurant management',
-    skills: ['Italian Cuisine', 'Pastry', 'Menu Planning', 'Food Safety']
+    skills: ['Italian Cuisine', 'Pastry', 'Menu Planning', 'Food Safety'],
+    rating: 4.9,
+    profileVisitors: 4500
   },
   {
     id: '4',
@@ -162,7 +260,9 @@ export const mockExperts = [
     verified: false,
     featured: false,
     experience: '8 years in software development and AI research',
-    skills: ['Machine Learning', 'Python', 'Data Analysis', 'Cloud Computing']
+    skills: ['Machine Learning', 'Python', 'Data Analysis', 'Cloud Computing'],
+    rating: 4.5,
+    profileVisitors: 850
   },
   {
     id: '5',
@@ -177,7 +277,9 @@ export const mockExperts = [
     verified: true,
     featured: false,
     experience: '18 years in financial advisory and wealth management',
-    skills: ['Investment Planning', 'Retirement Planning', 'Tax Strategy', 'Risk Management']
+    skills: ['Investment Planning', 'Retirement Planning', 'Tax Strategy', 'Risk Management'],
+    rating: 4.7,
+    profileVisitors: 2800
   },
   {
     id: '6',
@@ -192,7 +294,9 @@ export const mockExperts = [
     verified: true,
     featured: false,
     experience: '10 years in personal training and fitness coaching',
-    skills: ['Strength Training', 'HIIT', 'Nutrition', 'Injury Prevention']
+    skills: ['Strength Training', 'HIIT', 'Nutrition', 'Injury Prevention'],
+    rating: 4.4,
+    profileVisitors: 3200
   },
   {
     id: '7',
@@ -207,7 +311,9 @@ export const mockExperts = [
     verified: true,
     featured: false,
     experience: '14 years practicing corporate law',
-    skills: ['Contract Law', 'Corporate Governance', 'Mergers & Acquisitions', 'Compliance']
+    skills: ['Contract Law', 'Corporate Governance', 'Mergers & Acquisitions', 'Compliance'],
+    rating: 4.6,
+    profileVisitors: 1800
   },
   {
     id: '8',
@@ -222,7 +328,9 @@ export const mockExperts = [
     verified: true,
     featured: true,
     experience: '9 years in fashion design and styling',
-    skills: ['Fashion Design', 'Personal Styling', 'Trend Analysis', 'Brand Development']
+    skills: ['Fashion Design', 'Personal Styling', 'Trend Analysis', 'Brand Development'],
+    rating: 4.9,
+    profileVisitors: 5200
   },
   {
     id: '9',
@@ -237,7 +345,9 @@ export const mockExperts = [
     verified: false,
     featured: false,
     experience: '7 years in home renovation and interior design',
-    skills: ['Carpentry', 'Interior Design', 'Project Management', 'Sustainable Building']
+    skills: ['Carpentry', 'Interior Design', 'Project Management', 'Sustainable Building'],
+    rating: 4.3,
+    profileVisitors: 950
   },
   {
     id: '10',
@@ -252,7 +362,9 @@ export const mockExperts = [
     verified: true,
     featured: false,
     experience: '11 years in clinical psychology and counseling',
-    skills: ['Cognitive Behavioral Therapy', 'Anxiety Management', 'Stress Reduction', 'Mindfulness']
+    skills: ['Cognitive Behavioral Therapy', 'Anxiety Management', 'Stress Reduction', 'Mindfulness'],
+    rating: 4.8,
+    profileVisitors: 3800
   },
 ];
 
