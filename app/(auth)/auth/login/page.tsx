@@ -48,7 +48,7 @@ export default function LoginPage() {
 
       <div
         className="absolute top-4 right-4 z-[999] text-black text-2xl cursor-pointer hover:bg-gray-200 rounded-full p-1 transition-all ease-in-out duration-300"
-        onClick={() => router.push("/")}
+        onClick={() => router.push("/home")}
       >
         <IoCloseOutline />
       </div>
