@@ -11,13 +11,14 @@ export default function Home() {
             <ShieldCheck className="h-12 w-12 text-primary" />
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
             ExpertInTheCity
           </h1>
           <p className="mx-auto max-w-[700px] text-lg text-muted-foreground">
-            Connect with experts in your city and get personalized advice from professionals you can trust.
+            Connect with experts in your city and get personalized advice from
+            professionals you can trust.
           </p>
         </div>
 
@@ -29,7 +30,7 @@ export default function Home() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline">
-            <Link href="https://expertinthecity.com">
+            <Link href="https://expertinthecity.vercel.app/home">
               Visit Main Site
             </Link>
           </Button>
@@ -39,13 +40,15 @@ export default function Home() {
           <div className="space-y-2">
             <h3 className="font-semibold">Expert Verification</h3>
             <p className="text-sm text-muted-foreground">
-              Rigorous verification process for all experts to ensure quality advice
+              Rigorous verification process for all experts to ensure quality
+              advice
             </p>
           </div>
           <div className="space-y-2">
             <h3 className="font-semibold">Real-time Chat</h3>
             <p className="text-sm text-muted-foreground">
-              Connect instantly with experts through our secure messaging platform
+              Connect instantly with experts through our secure messaging
+              platform
             </p>
           </div>
           <div className="space-y-2">
