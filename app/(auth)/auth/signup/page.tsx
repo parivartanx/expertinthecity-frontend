@@ -64,9 +64,7 @@ export default function SignupPage() {
             Sign Up
           </h2>
           <p className="text-base text-neutral-600 mb-6 text-center font-normal">
-            Join the network. Connect with verified experts
-            <br />
-            across every field.
+            Join the network. Connect with verified experts across every field.
           </p>
           <form className="w-full flex flex-col gap-4 mb-2">
             <div className="text-left font-medium text-sm text-neutral-800 flex flex-col gap-1 w-full">

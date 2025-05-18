@@ -125,7 +125,6 @@ export default function HomePage() {
       </section>
       <UnlockLearning />
       <BlogSection />
-
       <TestimonialSection />
     </main>
   );

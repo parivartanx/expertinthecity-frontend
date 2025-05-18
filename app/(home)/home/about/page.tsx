@@ -9,42 +9,6 @@ export default function AboutPage() {
       style={{ fontFamily: "var(--font-geist-sans)" }}
     >
       {/* Header */}
-      <header className="w-full bg-white border-b border-neutral-100 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-2xl font-bold text-green-700">
-          Expert
-        </div>
-        <nav className="hidden md:flex gap-6 text-base font-medium">
-          <Link href="/" className="hover:text-green-700">
-            Home
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Experts
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Categories
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Blog
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Contact
-          </Link>
-        </nav>
-        <div className="flex gap-2">
-          <a
-            href="/auth/login"
-            className="border border-green-700 text-green-700 px-4 py-1 rounded hover:bg-green-50 font-semibold"
-          >
-            Login
-          </a>
-          <a
-            href="#"
-            className="bg-green-700 text-white px-4 py-1 rounded hover:bg-green-800 font-semibold"
-          >
-            Join
-          </a>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-neutral-900 to-neutral-700 text-white py-16 px-4 flex flex-col items-center text-center">
@@ -120,9 +84,9 @@ export default function AboutPage() {
       <section className="py-8 px-4 max-w-2xl mx-auto text-center">
         <div className="text-green-700 font-bold mb-2 text-2xl">★★★★★</div>
         <p className="text-neutral-700 mb-4 text-lg">
-          &apos;The platform made it easy for me to find an expert in yoga who truly
-          understood my needs. Booking sessions was seamless, and the experience
-          changed my approach to wellness.&apos;
+          &apos;The platform made it easy for me to find an expert in yoga who
+          truly understood my needs. Booking sessions was seamless, and the
+          experience changed my approach to wellness.&apos;
         </p>
         <div className="font-semibold">Priya Mehta</div>
         <div className="text-sm text-neutral-500">UX Designer, India</div>
@@ -172,27 +136,6 @@ export default function AboutPage() {
           Join our team
         </a>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-neutral-100 py-8 px-4 mt-8">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-green-700 font-bold text-xl">Expert</div>
-          <div className="flex gap-6 text-sm text-neutral-600">
-            <a href="#" className="hover:text-green-700">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-green-700">
-              Terms of Use
-            </a>
-            <a href="#" className="hover:text-green-700">
-              Contact
-            </a>
-          </div>
-          <div className="text-neutral-500 text-xs">
-            © 2024 ExpertInTheCity. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

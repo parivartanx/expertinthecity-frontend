@@ -9,42 +9,6 @@ export default function BlogPage() {
       style={{ fontFamily: "var(--font-geist-sans)" }}
     >
       {/* Header */}
-      <header className="w-full bg-white border-b border-neutral-100 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-2xl font-bold text-green-700">
-          Expert
-        </div>
-        <nav className="hidden md:flex gap-6 text-base font-medium">
-          <Link href="/" className="hover:text-green-700">
-            Home
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Experts
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Categories
-          </Link>
-          <Link href="/home/blog" className="hover:text-green-700">
-            Blog
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Contact
-          </Link>
-        </nav>
-        <div className="flex gap-2">
-          <Link
-            href="/auth/login"
-            className="border border-green-700 text-green-700 px-4 py-1 rounded hover:bg-green-50 font-semibold"
-          >
-            Login
-          </Link>
-          <Link
-            href="#"
-            className="bg-green-700 text-white px-4 py-1 rounded hover:bg-green-800 font-semibold"
-          >
-            Join
-          </Link>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <section className="bg-white py-12 px-4 flex flex-col items-center text-center">
@@ -164,27 +128,6 @@ export default function BlogPage() {
           ))}
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-neutral-100 py-8 px-4 mt-8">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-green-700 font-bold text-xl">Expert</div>
-          <div className="flex gap-6 text-sm text-neutral-600">
-            <a href="#" className="hover:text-green-700">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-green-700">
-              Terms of Use
-            </a>
-            <a href="#" className="hover:text-green-700">
-              Contact
-            </a>
-          </div>
-          <div className="text-neutral-500 text-xs">
-            © 2024 ExpertInTheCity. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

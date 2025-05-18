@@ -61,9 +61,7 @@ export default function LoginPage() {
             Log In
           </h2>
           <p className="text-base text-neutral-600 mb-6 text-center font-normal">
-            Welcome back! Continue your journey with your
-            <br />
-            trusted mentors.
+            Welcome back! Continue your journey with your trusted mentors.
           </p>
           <form className="w-full flex flex-col items-start gap-4 mb-2">
             <div className="text-left font-medium text-sm text-neutral-800 flex flex-col gap-1 w-full">
