@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   description: "Connect with experts in your city",
 };
 
-
 export default function AuthLayout({
   children,
 }: Readonly<{

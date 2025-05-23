@@ -32,7 +32,11 @@ export default function TestimonialSection() {
         </h2>
         <p className="mt-2 text-gray-500 max-w-xl mx-auto">
           Thousands of satisfied customers have found the perfect service
-          provider through ExpertInTheCity.
+          provider through{" "}
+          <span className="text-green-600">
+            Expert<span className="text-black">InTheCity</span>
+          </span>
+          .
         </p>
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">

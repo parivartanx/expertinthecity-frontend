@@ -7,6 +7,22 @@ import TestimonialSection from "@/components/mainwebsite/TestimonialSection";
 import TopRatedMentors from "@/components/mainwebsite/TopRatedMembers";
 import UnlockLearning from "@/components/mainwebsite/UnlockLearning";
 
+// Import React Icons for categories
+import {
+  FaWrench,
+  FaBolt,
+  FaBroom,
+  FaSeedling,
+  FaBook,
+  FaCamera,
+  FaDumbbell,
+  FaUtensils,
+  FaChartBar,
+  FaBalanceScale,
+  FaLaptopCode,
+  FaPaw,
+} from "react-icons/fa";
+
 export default function HomePage() {
   const experts = [
     {
@@ -35,6 +51,22 @@ export default function HomePage() {
     },
   ];
 
+  // Define categories with React Icons
+  const categories = [
+    { name: "Plumbing", icon: FaWrench },
+    { name: "Electrical", icon: FaBolt },
+    { name: "Cleaning", icon: FaBroom },
+    { name: "Gardening", icon: FaSeedling },
+    { name: "Tutoring", icon: FaBook },
+    { name: "Photography", icon: FaCamera },
+    { name: "Personal Training", icon: FaDumbbell },
+    { name: "Catering", icon: FaUtensils },
+    { name: "Accounting", icon: FaChartBar },
+    { name: "Legal Services", icon: FaBalanceScale },
+    { name: "Web Design", icon: FaLaptopCode },
+    { name: "Pet Care", icon: FaPaw },
+  ];
+
   return (
     <main
       className="font-sans bg-white text-neutral-900"
@@ -53,27 +85,18 @@ export default function HomePage() {
           Browse our most requested services and find the right professional for
           your needs.
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 text-center mb-8">
-          {[
-            { name: "Plumbing", icon: "🔧" },
-            { name: "Electrical", icon: "⚡" },
-            { name: "Cleaning", icon: "🧹" },
-            { name: "Gardening", icon: "🌱" },
-            { name: "Tutoring", icon: "📚" },
-            { name: "Photography", icon: "📷" },
-            { name: "Personal Training", icon: "💪" },
-            { name: "Catering", icon: "🍽️" },
-            { name: "Accounting", icon: "📊" },
-            { name: "Legal Services", icon: "⚖️" },
-            { name: "Web Design", icon: "💻" },
-            { name: "Pet Care", icon: "🐾" },
-          ].map((cat) => (
-            <div key={cat.name} className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center text-3xl mb-1 border border-green-100">
-                <span>{cat.icon}</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 text-center mb-8">
+          {/* Map over the categories array with React Icons */}
+          {categories.map((category) => (
+            <div
+              key={category.name}
+              className="flex flex-col items-center gap-3 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+            >
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-2xl mb-1 border border-green-200">
+                <category.icon /> {/* Use the React Icon component */}
               </div>
-              <span className="text-base font-semibold text-neutral-900">
-                {cat.name}
+              <span className="text-sm font-semibold text-neutral-900">
+                {category.name}
               </span>
             </div>
           ))}
@@ -124,7 +147,7 @@ export default function HomePage() {
         </div>
       </section>
       <UnlockLearning />
-      <BlogSection />
+      {/* <BlogSection /> */}
       <TestimonialSection />
     </main>
   );

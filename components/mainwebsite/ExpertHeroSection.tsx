@@ -5,20 +5,17 @@ const ExpertHeroSection = () => {
   const [serviceType, setServiceType] = useState("need");
 
   return (
-    <div
-      className="relative bg-cover bg-center min-h-screen flex items-center justify-center px-4"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1745990652119-f13cced69b7c?q=80&w=2671&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
-      }}
-    >
-      <div className="absolute inset-0 bg-black opacity-50" />
-      <div className=" md:p-8 rounded-xl md:max-w-3xl w-full text-center text-white z-[99]">
-        <h1 className="text-2xl md:text-4xl font-bold mb-4">
-          Unlock Your Potential with{" "}
-          <span className="text-green-500">Expert</span> Guidance
+    <div className="relative bg-cover bg-center min-h-screen flex flex-col items-center justify-center px-4 bg-[url(https://plus.unsplash.com/premium_photo-1669825050519-e89e6cf7c2c6?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] md:flex-row">
+      {/* Overlay for the whole section */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/40 z-0" />
+
+      {/* Content Container */}
+      <div className="relative z-[99] w-full max-w-md  md:max-w-3xl p-4 md:p-8 flex flex-col items-center text-center text-white">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          Unlock Your Earning Potential with{" "}
+          <span className="text-green-600">Expert</span> Guidance
         </h1>
-        <p className="mb-6 text-gray-200">
+        <p className="mb-6 text-gray-300">
           Discover a world of knowledge with ExpertInTheCity, where skilled
           professionals are ready to guide you in various fields. Whether you're
           looking to learn teaching, music, or wellness, our platform connects
@@ -29,28 +26,28 @@ const ExpertHeroSection = () => {
         <div className="flex justify-center gap-2 mb-4">
           <button
             onClick={() => setServiceType("need")}
-            className={`px-4 py-2 rounded-l-full border transition duration-300 cursor-pointer ${
+            className={`px-4 py-2 rounded-full border hover:bg-white transition select-none duration-300 cursor-pointer ${
               serviceType === "need"
                 ? "bg-white text-black border-[3px]  border-green-500"
-                : "bg-gray-100 text-gray-700"
+                : "bg-gray-100 text-gray-700 border-gray-300"
             }`}
           >
             I need a service
           </button>
           <button
             onClick={() => setServiceType("provide")}
-            className={`px-4 py-2 rounded-r-full border transition duration-300 cursor-pointer ${
+            className={`px-4 py-2 rounded-full border transition hover:bg-white  select-none duration-300 cursor-pointer ${
               serviceType === "provide"
                 ? "bg-white text-black  border-[3px]  border-green-500"
-                : "bg-gray-100 text-gray-700"
+                : "bg-gray-100 text-gray-700 border-gray-300"
             }`}
           >
             I provide a service
           </button>
         </div>
 
-        {/* Search Form */}
-        <div className="flex flex-col gap-3 mb-5 ">
+        {/* Search Form - Left column on md and up */}
+        <div className="w-full flex flex-col gap-3 mb-5 ">
           <input
             type="text"
             placeholder={
@@ -100,6 +97,8 @@ const ExpertHeroSection = () => {
           ))}
         </div>
       </div>
+
+      {/* Background Side (Right on md and up) */}
     </div>
   );
 };
