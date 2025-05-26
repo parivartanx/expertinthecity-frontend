@@ -9,55 +9,22 @@ export default function AboutPage() {
       style={{ fontFamily: "var(--font-geist-sans)" }}
     >
       {/* Header */}
-      <header className="w-full bg-white border-b border-neutral-100 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-2xl font-bold text-green-700">
-          Expert
-        </div>
-        <nav className="hidden md:flex gap-6 text-base font-medium">
-          <Link href="/" className="hover:text-green-700">
-            Home
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Experts
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Categories
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Blog
-          </Link>
-          <Link href="#" className="hover:text-green-700">
-            Contact
-          </Link>
-        </nav>
-        <div className="flex gap-2">
-          <a
-            href="/auth/login"
-            className="border border-green-700 text-green-700 px-4 py-1 rounded hover:bg-green-50 font-semibold"
-          >
-            Login
-          </a>
-          <a
-            href="#"
-            className="bg-green-700 text-white px-4 py-1 rounded hover:bg-green-800 font-semibold"
-          >
-            Join
-          </a>
-        </div>
-      </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-neutral-900 to-neutral-700 text-white py-16 px-4 flex flex-col items-center text-center">
-        <h1 className="text-3xl md:text-5xl font-extrabold mb-4">
-          Empowering Growth Through{" "}
-          <span className="text-green-500">Real Human Connection</span>
-        </h1>
-        <p className="text-lg md:text-xl mb-6 max-w-2xl">
-          At ExpertInTheCity, we believe everyone deserves access to
-          personalized guidance. Our platform connects learners with trusted
-          mentors across fields, making true mentorship simple, personal, one
-          session at a time.
-        </p>
+      <section className="bg-gradient-to-b from-neutral-900 to-neutral-700 text-white py-16 px-4 flex flex-col items-center text-center bg-[url(https://plus.unsplash.com/premium_photo-1690391719791-b7761832690d?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] relative bg-center bg-cover">
+        <div className="absolute inset-0 bg-black/50 z-0" />
+        <div className="z-[99] text-center flex flex-col items-center">
+          <h1 className="text-3xl md:text-5xl font-extrabold mb-4">
+            Empowering Growth Through{" "}
+            <span className="text-green-500">Real Human Connection</span>
+          </h1>
+          <p className="text-lg md:text-xl mb-6 max-w-2xl">
+            At ExpertInTheCity, we believe everyone deserves access to
+            personalized guidance. Our platform connects learners with trusted
+            mentors across fields, making true mentorship simple, personal, one
+            session at a time.
+          </p>
+        </div>
       </section>
 
       {/* About Section */}
@@ -120,9 +87,9 @@ export default function AboutPage() {
       <section className="py-8 px-4 max-w-2xl mx-auto text-center">
         <div className="text-green-700 font-bold mb-2 text-2xl">★★★★★</div>
         <p className="text-neutral-700 mb-4 text-lg">
-          &apos;The platform made it easy for me to find an expert in yoga who truly
-          understood my needs. Booking sessions was seamless, and the experience
-          changed my approach to wellness.&apos;
+          &apos;The platform made it easy for me to find an expert in yoga who
+          truly understood my needs. Booking sessions was seamless, and the
+          experience changed my approach to wellness.&apos;
         </p>
         <div className="font-semibold">Priya Mehta</div>
         <div className="text-sm text-neutral-500">UX Designer, India</div>
@@ -153,46 +120,6 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-
-      {/* Hiring */}
-      <section className="py-12 px-4 max-w-4xl mx-auto text-center">
-        <h2 className="text-2xl font-bold mb-4">
-          We&apos;re <span className="text-green-700">hiring!</span>
-        </h2>
-        <p className="text-base text-neutral-700 mb-6">
-          We&apos;re growing and always looking for passionate, purpose-driven
-          individuals who believe in the power of mentorship. Join us in
-          building a future where everyone has access to expert guidance and
-          life-changing knowledge.
-        </p>
-        <a
-          href="#"
-          className="bg-green-700 text-white px-6 py-2 rounded font-semibold hover:bg-green-800"
-        >
-          Join our team
-        </a>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-neutral-100 py-8 px-4 mt-8">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="text-green-700 font-bold text-xl">Expert</div>
-          <div className="flex gap-6 text-sm text-neutral-600">
-            <a href="#" className="hover:text-green-700">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-green-700">
-              Terms of Use
-            </a>
-            <a href="#" className="hover:text-green-700">
-              Contact
-            </a>
-          </div>
-          <div className="text-neutral-500 text-xs">
-            © 2024 ExpertInTheCity. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

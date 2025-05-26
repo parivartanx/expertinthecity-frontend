@@ -15,8 +15,8 @@ const navLinks = [
     href: "#",
     dropdown: true,
     items: [
-      { name: "About", href: "/about" },
-      { name: "Contact us", href: "/contact" },
+      { name: "About", href: "/home/about" },
+      { name: "Contact us", href: "/home/contact" },
       { name: "Blog", href: "/home/blog" },
       { name: "Testimonial", href: "/testimonial" },
     ],
@@ -32,7 +32,7 @@ const Header = () => {
     <header className="w-full bg-white border-b border-neutral-100 px-2 md:px-4 py-2 flex items-center justify-between sticky top-0 z-[999] h-[56px] md:h-[60px] ">
       {/* Logo */}
       <Link
-        href="/"
+        href="/home"
         className="flex flex-col leading-tight items-start min-w-[90px]"
       >
         <span className="text-xl md:text-xl font-extrabold text-green-700">
@@ -99,7 +99,7 @@ const Header = () => {
         </nav>
         {/* Search Bar */}
         <div className="hidden lg:flex items-center ml-4 border border-gray-300 rounded gap-1 ">
-          <button className=" z-10 text-green-700 hover:text-green-800 ml-2" >
+          <button className=" z-10 text-green-700 hover:text-green-800 ml-2">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
               <circle
                 cx="11"
