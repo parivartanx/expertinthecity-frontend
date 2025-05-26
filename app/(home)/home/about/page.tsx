@@ -11,7 +11,7 @@ export default function AboutPage() {
       {/* Header */}
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-neutral-900 to-neutral-700 text-white py-16 px-4 flex flex-col items-center text-center bg-[url(https://plus.unsplash.com/premium_photo-1690391719791-b7761832690d?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] relative bg-center bg-cover">
+      <section className="bg-gradient-to-b from-neutral-900 to-neutral-700 text-white py-16 px-4 flex flex-col items-center text-center bg-[url(https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2684&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] relative bg-center bg-cover">
         <div className="absolute inset-0 bg-black/50 z-0" />
         <div className="z-[99] text-center flex flex-col items-center">
           <h1 className="text-3xl md:text-5xl font-extrabold mb-4">

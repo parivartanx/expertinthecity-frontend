@@ -7,9 +7,9 @@ import { FaRegUser } from "react-icons/fa6";
 import { AiOutlineMenu } from "react-icons/ai";
 
 const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Experts", href: "/experts" },
-  { name: "Categories", href: "/categories" },
+  { name: "Home", href: "/home" },
+  { name: "Experts", href: "/home/experts" },
+  { name: "Categories", href: "/home/categories" },
   {
     name: "More Info",
     href: "#",
@@ -18,7 +18,7 @@ const navLinks = [
       { name: "About", href: "/home/about" },
       { name: "Contact us", href: "/home/contact" },
       { name: "Blog", href: "/home/blog" },
-      { name: "Testimonial", href: "/testimonial" },
+      { name: "Testimonial", href: "/home/testimonial" },
     ],
   },
 ];
@@ -44,16 +44,14 @@ const Header = () => {
       </Link>
       {/* Desktop Navigation */}
       <div className="flex items-center gap-4">
-        <nav className="hidden lg:flex gap-4 text-[15px] font-medium items-center ml-4">
+        <nav className="hidden lg:flex gap-4 text-[15px]  items-center ml-4 font-bold">
           {navLinks.map((link) =>
             !link.dropdown ? (
               <Link
                 key={link.name}
                 href={link.href}
                 className={
-                  (pathname === link.href
-                    ? "text-green-700 "
-                    : "text-neutral-900 ") +
+                  (pathname === link.href ? "text-green-700 " : "text-black ") +
                   "hover:text-green-700 transition px-1"
                 }
               >
@@ -98,7 +96,7 @@ const Header = () => {
           )}
         </nav>
         {/* Search Bar */}
-        <div className="hidden lg:flex items-center ml-4 border border-gray-300 rounded gap-1 ">
+        <div className="hidden lg:flex items-center ml-4 border border-gray-400 rounded gap-1 ">
           <button className=" z-10 text-green-700 hover:text-green-800 ml-2">
             <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
               <circle
