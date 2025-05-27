@@ -17,8 +17,8 @@ export default function HomeLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.className}>
-      <body>
+    <html lang="en">
+      <body className={inter.className}>
         <Header />
         {children}
         <Footer />

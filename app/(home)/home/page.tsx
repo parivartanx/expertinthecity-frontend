@@ -1,7 +1,11 @@
 "use client";
 
+import Achievements from "@/components/mainwebsite/Achievements";
 import BlogSection from "@/components/mainwebsite/BlogSection";
+import CareerEarningsCard from "@/components/mainwebsite/CareerEarningsCard";
 import ExpertHeroSection from "@/components/mainwebsite/ExpertHeroSection";
+import FAQ from "@/components/mainwebsite/FAQ";
+import FeaturedInMarquee from "@/components/mainwebsite/FeaturedInMarquee";
 import HowItWorks from "@/components/mainwebsite/HowItWorks";
 import TestimonialSection from "@/components/mainwebsite/TestimonialSection";
 import TopRatedMentors from "@/components/mainwebsite/TopRatedMembers";
@@ -75,6 +79,9 @@ export default function HomePage() {
       {/* Header */}
       {/* Hero Section */}
       <ExpertHeroSection />
+      <FeaturedInMarquee />
+      <Achievements />
+      <CareerEarningsCard />
 
       {/* Categories */}
       <section className="py-12 px-4 max-w-6xl mx-auto">
@@ -149,6 +156,7 @@ export default function HomePage() {
       <UnlockLearning />
       {/* <BlogSection /> */}
       <TestimonialSection />
+      <FAQ />
     </main>
   );
 }
