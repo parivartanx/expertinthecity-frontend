@@ -1,21 +1,63 @@
 import { useState } from "react";
 import { FaLocationArrow, FaSearch, FaUserPlus } from "react-icons/fa";
 
+const floatingImages = [
+  "https://cdn.pixabay.com/photo/2024/09/12/21/20/ai-generated-9043367_1280.png",
+  "https://plus.unsplash.com/premium_photo-1661274178695-441693a23b35?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTJ8fG1lbnRvcnxlbnwwfHwwfHx8MA%3D%3D",
+  "https://cdn.pixabay.com/photo/2024/05/02/16/05/watchmaker-8735031_1280.jpg",
+  "https://cdn.pixabay.com/photo/2019/10/17/09/41/hair-4556496_1280.jpg",
+  "https://cdn.pixabay.com/photo/2014/11/01/14/33/film-512132_1280.jpg",
+  "https://cdn.pixabay.com/photo/2020/11/13/08/37/pc-5737958_1280.jpg",
+];
+
 const ExpertHeroSection = () => {
   const [serviceType, setServiceType] = useState("need");
 
   return (
-    <div className="relative bg-cover bg-center min-h-screen flex flex-col items-center justify-center px-4 bg-[url(https://plus.unsplash.com/premium_photo-1669825050519-e89e6cf7c2c6?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)] md:flex-row">
-      {/* Overlay for the whole section */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-black/40 z-0" />
+    <div className="relative min-h-screen flex flex-col md:flex-col lg:flex-row border-t border-gray-100 bg-white overflow-hidden">
+      {/* Floating Images for large screens */}
+      <div className="hidden lg:block absolute inset-0 pointer-events-none">
+        {/* Randomly placed images */}
+        {floatingImages.map((src, i) => {
+          // Positions for each image (you can tweak for better randomness)
+          const positions = [
+            "top-10 left-5",
+            "top-10 right-10",
+            "bottom-20 left-20",
+            "bottom-20 right-20",
+            "top-1/3 right-48",
+            "top-1/3 left-48",
+          ];
+          const rotation = [
+            "-rotate-6",
+            "rotate-3",
+            "-rotate-3",
+            "rotate-6",
+            "-rotate-12",
+            "rotate-12",
+          ];
 
-      {/* Content Container */}
-      <div className="relative z-[99] w-full max-w-md  md:max-w-3xl p-4 md:p-8 flex flex-col items-center text-center text-white">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          return (
+            <img
+              key={i}
+              src={src}
+              alt={`floating-${i}`}
+              className={`absolute w-32 h-32 object-cover rounded-lg shadow-lg border border-gray-300 ${positions[i]} ${rotation[i]}`}
+              style={{ zIndex: 0 }}
+              loading="lazy"
+            />
+          );
+        })}
+      </div>
+
+      {/* Content Section */}
+      <div className="relative z-10 md:w-full lg:w-1/2 flex flex-col items-center justify-center p-10 text-black w-full mx-auto">
+        <h1 className="text-4xl font-extrabold mb-6 leading-tight text-center">
           Unlock Your Earning Potential with{" "}
-          <span className="text-green-600">Expert</span> Guidance
+          <span className="text-green-500">Expert</span> Guidance
         </h1>
-        <p className="mb-6 text-gray-300">
+
+        <p className="mb-10 text-gray-600 text-lg font-light text-center">
           Discover a world of knowledge with ExpertInTheCity, where skilled
           professionals are ready to guide you in various fields. Whether you're
           looking to learn teaching, music, or wellness, our platform connects
@@ -23,31 +65,35 @@ const ExpertHeroSection = () => {
         </p>
 
         {/* Toggle Buttons */}
-        <div className="flex justify-center gap-2 mb-4">
-          <button
-            onClick={() => setServiceType("need")}
-            className={`px-4 py-2 rounded-full border hover:bg-white transition select-none duration-300 cursor-pointer ${
-              serviceType === "need"
-                ? "bg-white text-black border-[3px]  border-green-500"
-                : "bg-gray-100 text-gray-700 border-gray-300"
-            }`}
-          >
-            I need a service
-          </button>
-          <button
-            onClick={() => setServiceType("provide")}
-            className={`px-4 py-2 rounded-full border transition hover:bg-white  select-none duration-300 cursor-pointer ${
-              serviceType === "provide"
-                ? "bg-white text-black  border-[3px]  border-green-500"
-                : "bg-gray-100 text-gray-700 border-gray-300"
-            }`}
-          >
-            I provide a service
-          </button>
+        <div className="flex gap-6 mb-8 justify-center">
+          {["need", "provide"].map((type) => {
+            const isActive = serviceType === type;
+            return (
+              <button
+                key={type}
+                onClick={() => setServiceType(type)}
+                className={`relative px-6 py-3 rounded-lg font-semibold transition text-white
+                  ${
+                    isActive
+                      ? "bg-green-600 shadow-lg"
+                      : "bg-black/50  hover:bg-opacity-40"
+                  }`}
+              >
+                {type === "need" ? "I need a service" : "I provide a service"}
+                {isActive && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-green-400 rounded-full" />
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Search Form - Left column on md and up */}
-        <div className="w-full flex flex-col gap-3 mb-5 ">
+        {/* Search Form */}
+        <form
+          onSubmit={(e) => e.preventDefault()}
+          className="w-full flex flex-col gap-4 mb-8"
+        >
+          {/* Service Input */}
           <input
             type="text"
             placeholder={
@@ -55,31 +101,35 @@ const ExpertHeroSection = () => {
                 ? "What service do you need?"
                 : "What service do you provide?"
             }
-            className="px-4 py-2 rounded-md text-black placeholder:text-black w-full focus:outline-none border border-gray-300 "
+            className="flex-1 px-5 py-3 rounded-lg border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-400
+                text-gray-900 placeholder-gray-400 transition"
+            required
           />
-          <div className="relative w-full">
-            <FaLocationArrow className="absolute top-1/2 left-3 transform -translate-y-1/2 text-gray-400" />
+
+          {/* Location Input with icon */}
+          <div className="relative flex-1">
+            <FaLocationArrow className="absolute top-1/2 left-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Your Location"
-              className="pl-10 pr-4 py-2 rounded-md  text-black placeholder:text-black w-full focus:outline-none  border border-gray-300 "
+              className="w-full pl-12 pr-5 py-3 rounded-lg border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-400
+                  text-gray-900 placeholder-gray-400 transition"
+              required
             />
           </div>
-        </div>
 
-        {/* Action Button */}
-        {serviceType === "need" ? (
-          <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 mb-6 mx-auto">
-            <FaSearch /> Find Experts
+          {/* Action Button */}
+          <button
+            type="submit"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg px-8 flex items-center justify-center gap-3 transition-shadow shadow-md py-3"
+          >
+            {serviceType === "need" ? <FaSearch /> : <FaUserPlus />}
+            {serviceType === "need" ? "Find Experts" : "Register as Expert"}
           </button>
-        ) : (
-          <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full flex items-center justify-center gap-2 transition-all duration-300 mb-6 mx-auto">
-            <FaUserPlus /> Register as Expert
-          </button>
-        )}
+        </form>
 
         {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-2">
+        <div className="flex flex-wrap justify-center gap-3">
           {[
             "Home Services",
             "Professional Services",
@@ -90,7 +140,7 @@ const ExpertHeroSection = () => {
           ].map((tag) => (
             <span
               key={tag}
-              className="bg-white text-gray-800 px-3 py-1 rounded-full text-sm shadow-sm"
+              className="bg-white bg-opacity-90 text-gray-800 px-4 py-1.5 rounded-full text-sm font-medium shadow-sm cursor-default select-none border"
             >
               {tag}
             </span>
@@ -98,7 +148,17 @@ const ExpertHeroSection = () => {
         </div>
       </div>
 
-      {/* Background Side (Right on md and up) */}
+      {/* Big Image Below Content on small screens */}
+      {/* <div
+        className="w-full lg:hidden h-64 bg-cover bg-center relative mt-10 rounded-lg shadow-lg"
+        style={{
+          backgroundImage:
+            "url(https://cdn.pixabay.com/photo/2024/09/12/21/20/ai-generated-9043367_1280.png)",
+        }}
+      > */}
+      {/* Overlay */}
+      {/* <div className="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-lg"></div>
+      </div> */}
     </div>
   );
 };
