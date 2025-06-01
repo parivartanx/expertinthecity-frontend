@@ -57,7 +57,7 @@ const ExpertHeroSection = () => {
           <span className="text-green-500">Expert</span> Guidance
         </h1>
 
-        <p className="mb-10 text-gray-600 text-lg font-light text-center">
+        <p className="mb-6 text-gray-600 text-lg font-light text-center">
           Discover a world of knowledge with ExpertInTheCity, where skilled
           professionals are ready to guide you in various fields. Whether you're
           looking to learn teaching, music, or wellness, our platform connects
@@ -65,7 +65,7 @@ const ExpertHeroSection = () => {
         </p>
 
         {/* Toggle Buttons */}
-        <div className="flex gap-6 mb-8 justify-center">
+        <div className="flex gap-6 mb-4 justify-center">
           {["need", "provide"].map((type) => {
             const isActive = serviceType === type;
             return (

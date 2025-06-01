@@ -10,6 +10,7 @@ import HowItWorks from "@/components/mainwebsite/HowItWorks";
 import TestimonialSection from "@/components/mainwebsite/TestimonialSection";
 import TopRatedMentors from "@/components/mainwebsite/TopRatedMembers";
 import UnlockLearning from "@/components/mainwebsite/UnlockLearning";
+import Link from "next/link";
 
 // Import React Icons for categories
 import {
@@ -146,9 +147,11 @@ export default function HomePage() {
               <p className="text-sm text-neutral-600 mb-4 text-center">
                 {expert.description}
               </p>
-              <button className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 font-semibold">
-                View Profile
-              </button>
+              <Link href={`/home/profile/${expert.id}`}>
+                <button className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 font-semibold">
+                  View Profile
+                </button>
+              </Link>
             </div>
           ))}
         </div>

@@ -1,6 +1,10 @@
+"use client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { HiUserAdd } from "react-icons/hi";
 
 export default function Home() {
+  const router = useRouter();
   return (
     <main className="bg-white text-gray-800">
       {/* Hero Section */}
@@ -66,6 +70,18 @@ export default function Home() {
           </button>
         </div>
       </section>
+
+      <div className="flex w-full my-2 items-center justify-center bg-gray-100">
+        <div
+          className="inline-flex items-center gap-2 px-6 py-3  text-black font-semibold  hover:scale-90  transition-all duration-300 cursor-pointer"
+          onClick={() => {
+            router.push("/home/register");
+          }}
+        >
+          <HiUserAdd className="text-xl" />
+          <span>Join as Expert</span>
+        </div>
+      </div>
 
       {/* Features Section */}
       <section className="bg-gray-100 py-16 px-6">
