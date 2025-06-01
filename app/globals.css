@@ -84,3 +84,15 @@
 .input {
   @apply w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500;
 }
+
+.input-style {
+  @apply px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-100 focus:border-green-600 text-sm;
+}
+
+.btn-green {
+  @apply bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-medium transition;
+}
+
+.btn-red {
+  @apply bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-medium transition;
+}

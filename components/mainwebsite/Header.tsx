@@ -2,10 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { IoIosLogOut } from "react-icons/io";
 import { FaRegUser } from "react-icons/fa6";
 import { AiOutlineMenu } from "react-icons/ai";
+import { BsSearch } from "react-icons/bs";
+import { CiSearch } from "react-icons/ci";
 
 const navLinks = [
   { name: "Home", href: "/home" },
@@ -20,6 +22,8 @@ const navLinks = [
       { name: "Contact us", href: "/home/contact" },
       { name: "Blog", href: "/home/blog" },
       { name: "Testimonial", href: "/home/testimonial" },
+      { name: "Chats", href: "/home/chats" },
+      { name: "Community", href: "/home/community" },
     ],
   },
 ];
@@ -29,6 +33,7 @@ const Header = () => {
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [mobileDropdown, setMobileDropdown] = React.useState(false);
+  const router = useRouter();
 
   return (
     <header className="w-full bg-white border-b border-neutral-200 px-4 py-2 flex items-center justify-between sticky top-0 z-[999] h-[60px]">
@@ -92,7 +97,7 @@ const Header = () => {
       </nav>
 
       {/* Search Bar */}
-      <div className="hidden lg:flex items-center border border-gray-400 rounded ml-4">
+      {/* <div className="hidden lg:flex items-center border border-gray-400 rounded ml-4">
         <button className="text-green-700 ml-2">
           <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
             <circle
@@ -115,34 +120,42 @@ const Header = () => {
           placeholder="Search"
           className="px-3 py-1 text-sm bg-neutral-50 text-black focus:outline-none rounded h-8"
         />
-      </div>
+      </div> */}
 
       {/* Auth Buttons */}
-      <div className="hidden lg:flex gap-2 ml-2">
-        <Link
-          href="/auth/login"
-          className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 flex items-center gap-2 text-sm font-medium"
+      <div className=" flex gap-2 items-center">
+        <div
+          onClick={() => {
+            router.push("/home/search");
+          }}
         >
-          <IoIosLogOut className="text-lg" />
-          Login
-        </Link>
-        <Link
-          href="/auth/signup"
-          className="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 flex items-center gap-2 text-sm font-medium"
+          <CiSearch className="text-2xl cursor-pointer" />
+        </div>
+        {/* Mobile Hamburger */}
+        <button
+          className="lg:hidden text-green-700 p-2 hover:bg-green-50 rounded"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
         >
-          <FaRegUser className="text-md" />
-          Join
-        </Link>
+          <AiOutlineMenu className="text-2xl" />
+        </button>
+        <div className="hidden lg:flex gap-2 ml-2">
+          <Link
+            href="/auth/login"
+            className="border border-green-700 text-green-700 px-3 py-2 rounded-3xl hover:bg-green-50 flex items-center gap-2 text-sm font-medium"
+          >
+            <IoIosLogOut className="text-lg" />
+            Login
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="bg-green-700 text-white px-3 py-2 rounded-3xl  hover:bg-green-800 flex items-center gap-2 text-sm font-medium"
+          >
+            <FaRegUser className="text-md" />
+            Join
+          </Link>
+        </div>
       </div>
-
-      {/* Mobile Hamburger */}
-      <button
-        className="lg:hidden text-green-700 p-2 hover:bg-green-50 rounded"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Open menu"
-      >
-        <AiOutlineMenu className="text-2xl" />
-      </button>
 
       {/* Mobile Drawer */}
       <div
