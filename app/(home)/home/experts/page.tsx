@@ -1,36 +1,98 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiUserAdd } from "react-icons/hi";
 
-export default function Home() {
+export default function ExpertsPage() {
   const router = useRouter();
   return (
     <main className="bg-white text-gray-800">
       {/* Hero Section */}
-      <section
-        className="relative bg-cover bg-center h-[400px] flex items-center justify-center text-white"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1515187029135-18ee286d815b?q=80&w=2670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`,
-        }}
-      >
-        <div className="bg-black bg-opacity-60 p-8 rounded-lg text-center">
-          <h1 className="text-4xl font-bold mb-4">
-            Connect with Top <span className="text-green-400">Experts</span> in
-            Your Field
-          </h1>
-          <p className="mb-6">
-            Discover a diverse range of experts who can help you level up your
-            career, hobby, or personal growth journey.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded">
-              Join Now
-            </button>
-            <button className="bg-white text-black hover:bg-gray-200 px-4 py-2 rounded">
-              Explore
-            </button>
+      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2070&auto=format&fit=crop')",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-neutral-900/95 to-neutral-900/80" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="space-y-8">
+            {/* Decorative Elements */}
+            <div className="flex justify-center">
+              <div className="w-20 h-1 bg-green-500 rounded-full" />
+            </div>
+
+            {/* Main Heading */}
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight">
+              Connect with Top{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
+                Experts
+              </span>
+            </h1>
+
+            {/* Subheading */}
+            <p className="text-lg md:text-xl text-neutral-200 max-w-3xl mx-auto leading-relaxed">
+              Discover a diverse range of experts who can help you level up your
+              career, hobby, or personal growth journey. Get personalized
+              guidance from industry leaders.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+              <Link
+                href="/home/register"
+                className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Join Now
+              </Link>
+              <Link
+                href="/home"
+                className="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-colors duration-200 backdrop-blur-sm"
+              >
+                Explore
+              </Link>
+            </div>
+
+            {/* Stats Section */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 max-w-4xl mx-auto">
+              {[
+                { number: "1000+", label: "Active Experts" },
+                { number: "50+", label: "Categories" },
+                { number: "95%", label: "Success Rate" },
+                { number: "24/7", label: "Support" },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className="inline-block px-4 py-2 rounded-lg bg-neutral-900/80 backdrop-blur-sm border border-neutral-700">
+                    <div className="text-3xl md:text-4xl font-bold text-green-500 mb-1">
+                      {stat.number}
+                    </div>
+                    <div className="text-sm text-neutral-300 font-medium">
+                      {stat.label}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* Decorative Bottom Wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg
+            className="w-full h-16 text-white"
+            viewBox="0 0 1440 100"
+            fill="currentColor"
+            preserveAspectRatio="none"
+          >
+            <path d="M0,50 C150,100 350,0 500,50 C650,100 850,0 1000,50 C1150,100 1350,0 1440,50 L1440,100 L0,100 Z" />
+          </svg>
         </div>
       </section>
 
@@ -58,9 +120,11 @@ export default function Home() {
                   </span>
                 ))}
               </div>
-              <button className="text-green-600 hover:underline">
-                View profile →
-              </button>
+              <Link href={"/home/profile"}>
+                <button className="text-green-600 hover:underline">
+                  View profile →
+                </button>
+              </Link>
             </div>
           ))}
         </div>
@@ -71,16 +135,14 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="flex w-full my-2 items-center justify-center bg-gray-100">
-        <div
-          className="inline-flex items-center gap-2 px-6 py-3  text-black font-semibold  hover:scale-90  transition-all duration-300 cursor-pointer"
-          onClick={() => {
-            router.push("/home/register");
-          }}
+      <div className="flex w-full my-8 items-center justify-center bg-gradient-to-r from-green-50 to-green-100 py-6">
+        <Link
+          href="/home/register"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         >
-          <HiUserAdd className="text-xl" />
-          <span>Join as Expert</span>
-        </div>
+          <HiUserAdd className="text-2xl" />
+          <span className="text-lg">Join as Expert</span>
+        </Link>
       </div>
 
       {/* Features Section */}
@@ -97,9 +159,11 @@ export default function Home() {
               industries. Get personalized Expertship, career advice, and
               more—all in one platform.
             </p>
-            <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
-              Explore
-            </button>
+            <Link href={"/home"}>
+              <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
+                Explore
+              </button>
+            </Link>
           </div>
           <div>
             <h3 className="text-2xl font-bold mb-4">
@@ -111,9 +175,11 @@ export default function Home() {
               experienced, this is your gateway to impactful learning and
               growth.
             </p>
-            <button className="bg-white text-black px-6 py-2 border border-black rounded hover:bg-gray-200">
-              Learn More
-            </button>
+            <Link href={"/home"}>
+              <button className="bg-white text-black px-6 py-2 border border-black rounded hover:bg-gray-200">
+                Learn More
+              </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -128,12 +194,16 @@ export default function Home() {
           learning journey.
         </p>
         <div className="flex justify-center gap-4">
-          <button className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
-            Sign Up
-          </button>
-          <button className="bg-white text-black border border-black px-6 py-2 rounded hover:bg-gray-200">
-            Log In
-          </button>
+          <Link href={"/auth/signup"}>
+            <button className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+              Sign Up
+            </button>
+          </Link>
+          <Link href={"/auth/login"}>
+            <button className="bg-white text-black border border-black px-6 py-2 rounded hover:bg-gray-200">
+              Log In
+            </button>
+          </Link>
         </div>
       </section>
     </main>

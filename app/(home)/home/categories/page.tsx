@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 const mentors = [
   {
@@ -182,9 +183,11 @@ export default function MentorCategoriesPage() {
                 </span>
               ))}
             </div>
-            <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-              View Profile
-            </button>
+            <Link href={"/home/profile"}>
+              <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                View Profile
+              </button>
+            </Link>
           </div>
         ))}
       </div>
