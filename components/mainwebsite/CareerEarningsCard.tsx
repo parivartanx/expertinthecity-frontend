@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 const ExpertEarningsCard = () => {
   return (
@@ -71,9 +72,11 @@ const ExpertEarningsCard = () => {
           </p>
         </div>
 
-        <button className="mt-6 w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition">
-          Start Earning Today
-        </button>
+        <Link href={"/home/register"}>
+          <button className="mt-6 w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition">
+            Start Earning Today
+          </button>
+        </Link>
       </div>
     </div>
   );

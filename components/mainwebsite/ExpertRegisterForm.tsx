@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import React, { useState, ChangeEvent, useRef } from "react";
 import { FaArrowLeft, FaCheckCircle, FaUpload } from "react-icons/fa";
 
@@ -86,9 +87,11 @@ const ExpertRegisterForm = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-2 md:px-0">
-      <button className="flex items-center text-sm text-gray-500 mb-4 hover:underline">
-        <FaArrowLeft className="mr-2" /> Back to Become a Provider
-      </button>
+      <Link href={"/home/experts"}>
+        <button className="flex items-center text-sm text-gray-500 mb-4 hover:underline">
+          <FaArrowLeft className="mr-2" /> Back to Become a Provider
+        </button>
+      </Link>
       <h1 className="text-3xl font-bold mb-1">Register as an Expert</h1>
       <p className="text-gray-500 mb-6">
         Complete the form below to join our network of professionals

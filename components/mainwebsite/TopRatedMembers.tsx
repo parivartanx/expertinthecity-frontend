@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 
 const images = [
@@ -48,9 +49,12 @@ const TopRatedMentors = () => {
           </div>
 
           <div className="flex gap-4">
-            <button className="border border-green-600 text-green-600 px-5 py-2 rounded hover:bg-green-50 transition">
-              Explore
-            </button>
+            <Link href={"/home/experts"}>
+              {" "}
+              <button className="border border-green-600 text-green-600 px-5 py-2 rounded hover:bg-green-50 transition">
+                Explore
+              </button>
+            </Link>
             <button className="flex items-center gap-1 text-green-600 hover:underline">
               Learn More <span>›</span>
             </button>

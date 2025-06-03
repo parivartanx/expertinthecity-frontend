@@ -20,7 +20,7 @@ const navLinks = [
     items: [
       { name: "About", href: "/home/about" },
       { name: "Contact us", href: "/home/contact" },
-      { name: "Blog", href: "/home/blog" },
+      { name: "Blogs", href: "/home/blogs" },
       { name: "Testimonial", href: "/home/testimonial" },
       { name: "Chats", href: "/home/chats" },
       { name: "Community", href: "/home/community" },

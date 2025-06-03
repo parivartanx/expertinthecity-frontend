@@ -156,35 +156,7 @@ export default function TestimonialsPage() {
         </div>
       </section>
 
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Video Testimonials</h2>
-        <div className="grid md:grid-cols-2 gap-6">
-          {videoTestimonials.map((video, index) => (
-            <div
-              key={index}
-              className="relative overflow-hidden rounded-lg shadow-md"
-            >
-              <Image
-                src={video.img}
-                alt={video.title}
-                width={600}
-                height={300}
-                className="w-full object-cover"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <button className="bg-white rounded-full p-3 shadow-md">
-                  ▶
-                </button>
-              </div>
-              <div className="p-4 bg-white">
-                <p className="font-semibold mb-1">{video.title}</p>
-                <p className="text-sm text-gray-600">{video.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
+     
       <div className="text-center border-t pt-8 mt-8">
         <h3 className="text-lg font-semibold mb-2">Share Your Experience</h3>
         <p className="text-gray-600 mb-4">
