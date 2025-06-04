@@ -1,29 +1,56 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { IoIosLogOut } from "react-icons/io";
 import { FaRegUser } from "react-icons/fa6";
 import { AiOutlineMenu } from "react-icons/ai";
-import { BsSearch } from "react-icons/bs";
 import { CiSearch } from "react-icons/ci";
+import { IoMdClose } from "react-icons/io";
+import { MdKeyboardArrowDown } from "react-icons/md";
+import {
+  BsHouseDoor,
+  BsPeople,
+  BsGrid,
+  BsChatDots,
+  BsInfoCircle,
+} from "react-icons/bs";
+import { HiOutlineUserGroup } from "react-icons/hi";
+import { RiCustomerService2Line } from "react-icons/ri";
+import { IconType } from "react-icons";
 
-const navLinks = [
-  { name: "Home", href: "/home" },
-  { name: "Experts", href: "/home/experts" },
-  { name: "Categories", href: "/home/categories" },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: IconType;
+  dropdown?: boolean;
+  items?: {
+    name: string;
+    href: string;
+    icon: IconType;
+  }[];
+}
+
+const navLinks: NavItem[] = [
+  { name: "Home", href: "/home", icon: BsHouseDoor },
+  { name: "Experts", href: "/home/experts", icon: BsPeople },
+  { name: "Categories", href: "/home/categories", icon: BsGrid },
+  { name: "Chats", href: "/home/chats", icon: BsChatDots },
   {
     name: "More Info",
     href: "#",
+    icon: BsInfoCircle,
     dropdown: true,
     items: [
-      { name: "About", href: "/home/about" },
-      { name: "Contact us", href: "/home/contact" },
-      { name: "Blogs", href: "/home/blogs" },
-      { name: "Testimonial", href: "/home/testimonial" },
-      { name: "Chats", href: "/home/chats" },
-      { name: "Community", href: "/home/community" },
+      { name: "Community", href: "/home/community", icon: HiOutlineUserGroup },
+      { name: "Testimonial", href: "/home/testimonial", icon: BsPeople },
+      { name: "About Us", href: "/home/about", icon: BsInfoCircle },
+      {
+        name: "Contact Us",
+        href: "/home/contact",
+        icon: RiCustomerService2Line,
+      },
     ],
   },
 ];
@@ -54,8 +81,9 @@ const Header = () => {
               href={link.href}
               className={`${
                 pathname === link.href ? "text-green-700" : "text-black"
-              } hover:text-green-700 transition px-1`}
+              } hover:text-green-700 transition px-1 flex items-center gap-1`}
             >
+              <link.icon className="text-lg lg:hidden" />
               {link.name}
             </Link>
           ) : (
@@ -67,25 +95,23 @@ const Header = () => {
                   showDropdown ? "text-green-700" : "text-black"
                 } hover:text-green-700`}
               >
+                <link.icon className="text-lg lg:hidden" />
                 {link.name}
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M7 10l5 5 5-5"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <MdKeyboardArrowDown
+                  className={`text-lg transition-transform duration-200 ${
+                    showDropdown ? "rotate-180" : ""
+                  }`}
+                />
               </button>
               {showDropdown && (
-                <div className="absolute left-0 mt-2 w-40 bg-white border rounded shadow-lg z-10">
-                  {link.items.map((item) => (
+                <div className="absolute left-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-10 transform origin-top transition-all duration-200 ease-out">
+                  {link.items?.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="block px-4 py-2 text-sm text-neutral-900 hover:bg-green-50 hover:text-green-700"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-900 hover:bg-green-50 hover:text-green-700 transition-colors duration-150"
                     >
+                      <item.icon className="text-lg lg:hidden" />
                       {item.name}
                     </Link>
                   ))}
@@ -208,44 +234,49 @@ const Header = () => {
                   href={link.href}
                   className={`${
                     pathname === link.href
-                      ? "text-green-700"
+                      ? "text-green-700 bg-green-50"
                       : "text-neutral-900"
-                  } hover:text-green-700 transition text-sm font-medium`}
+                  } hover:text-green-700 hover:bg-green-50 transition-all duration-200 text-sm font-medium px-3 py-2.5 rounded-lg flex items-center gap-2`}
                   onClick={() => setMobileOpen(false)}
                 >
+                  <link.icon className="text-lg" />
                   {link.name}
                 </Link>
               ) : (
                 <div key={link.name} className="flex flex-col gap-1">
                   <button
                     onClick={() => setMobileDropdown((prev) => !prev)}
-                    className="text-neutral-900 text-sm font-medium flex items-center justify-between"
+                    className="text-neutral-900 text-sm font-medium flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-green-50 hover:text-green-700 transition-all duration-200"
                   >
-                    {link.name}
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M7 10l5 5 5-5"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <div className="flex items-center gap-2">
+                      <link.icon className="text-lg" />
+                      {link.name}
+                    </div>
+                    <MdKeyboardArrowDown
+                      className={`text-lg transition-transform duration-200 ${
+                        mobileDropdown ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
-                  {mobileDropdown && (
+                  <div
+                    className={`overflow-hidden transition-all duration-200 ${
+                      mobileDropdown ? "max-h-96" : "max-h-0"
+                    }`}
+                  >
                     <div className="ml-3 flex flex-col gap-1">
-                      {link.items.map((item) => (
+                      {link.items?.map((item) => (
                         <Link
                           key={item.name}
                           href={item.href}
-                          className="text-sm text-neutral-800 hover:text-green-700 transition"
+                          className="text-sm text-neutral-800 hover:text-green-700 hover:bg-green-50 transition-all duration-200 px-3 py-2 rounded-lg flex items-center gap-2"
                           onClick={() => setMobileOpen(false)}
                         >
+                          <item.icon className="text-lg" />
                           {item.name}
                         </Link>
                       ))}
                     </div>
-                  )}
+                  </div>
                 </div>
               )
             )}

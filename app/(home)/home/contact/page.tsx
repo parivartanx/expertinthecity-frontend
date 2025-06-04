@@ -60,6 +60,10 @@ export default function ContactPage() {
               Send Message
             </button>
           </form>
+          <p className="my-2 ">
+            🌟 Ready to take the next step? Reach out now—your journey to growth
+            starts with a single message!
+          </p>
         </div>
       </div>
 

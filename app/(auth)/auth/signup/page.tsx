@@ -64,7 +64,7 @@ export default function SignupPage() {
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center text-center ">
       {/* Full screen background for smaller screens */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] bg-cover bg-center z-0 md:hidden" />
+      <div className="absolute inset-0 bg-[url('https://cdn.pixabay.com/photo/2024/06/14/06/27/office-8828993_1280.jpg')] bg-cover bg-center z-0 md:hidden" />
       {/* Overlay for smaller screens */}
       <div className="absolute inset-0 bg-black/40 z-0 md:hidden" />
 
@@ -78,7 +78,7 @@ export default function SignupPage() {
       <div className="fixed inset-0 flex items-center justify-center p-4 ">
         <div className="flex flex-col md:flex-row w-full max-w-screen-lg mt-1 rounded-xl shadow-xl overflow-hidden max-h-screen">
           {/* Background Side (Left on md and up) */}
-          <div className="hidden md:flex md:w-1/2 bg-[url('https://images.unsplash.com/photo-1622547748225-3fc4abd2cca0?q=80&w=2664&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] bg-cover bg-center relative  flex-col justify-end p-8 text-white ">
+          <div className="hidden md:flex md:w-1/2 bg-[url('https://cdn.pixabay.com/photo/2024/06/14/06/27/office-8828993_1280.jpg')] bg-cover bg-center relative  flex-col justify-end p-8 text-white ">
             <div className="absolute inset-0 bg-black/40  z-0"></div>
             <div className="relative z-10 text-left space-y-4 w-full ">
               <p className="text-lg italic relative  h-full">

@@ -14,27 +14,9 @@ import { useRouter } from "next/navigation";
 const communityRooms = [
   {
     id: 1,
-    name: "General",
+    name: "India",
     description: "Talk about anything!",
     active: true,
-  },
-  {
-    id: 2,
-    name: "Events",
-    description: "Upcoming and past events",
-    active: false,
-  },
-  {
-    id: 3,
-    name: "Q&A",
-    description: "Ask questions, get answers",
-    active: false,
-  },
-  {
-    id: 4,
-    name: "Feedback",
-    description: "Share your thoughts",
-    active: false,
   },
 ];
 
@@ -76,6 +58,7 @@ const communityMessages = [
 const CommunityChat = () => {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
 
   // Sidebar content as a function for reuse
   const SidebarContent = () => (
@@ -190,7 +173,7 @@ const CommunityChat = () => {
             <div className="flex items-center gap-4">
               <FaHashtag className="text-green-600 text-2xl" />
               <div>
-                <div className="font-semibold text-lg text-[#222]">General</div>
+                <div className="font-semibold text-lg text-[#222]">India</div>
                 <div className="text-xs text-[#BDBDBD]">
                   Talk about anything!
                 </div>
@@ -242,17 +225,28 @@ const CommunityChat = () => {
               </div>
             ))}
           </div>
-          {/* Message Input */}
-          <div className="flex items-center gap-2 md:gap-4 px-2 md:px-8 py-4 md:py-6 bg-white border-t border-[#E6E6E6] w-full">
-            <MdOutlineAttachFile className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer" />
-            <input
-              type="text"
-              placeholder="Type a message to the community..."
-              className="flex-1 px-2 md:px-4 py-2 md:py-3 rounded-xl border border-[#E6E6E6] bg-[#F7F9FB] focus:outline-none text-sm md:text-base"
-            />
-            <FaRegSmile className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer" />
-            <FaPaperPlane className="text-green-600 text-xl md:text-2xl cursor-pointer" />
-          </div>
+          {/* Message Input or Join Button */}
+          {hasJoined ? (
+            <div className="flex items-center gap-2 md:gap-4 px-2 md:px-8 py-4 md:py-6 bg-white border-t border-[#E6E6E6] w-full">
+              <MdOutlineAttachFile className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer" />
+              <input
+                type="text"
+                placeholder="Type a message to the community..."
+                className="flex-1 px-2 md:px-4 py-2 md:py-3 rounded-xl border border-[#E6E6E6] bg-[#F7F9FB] focus:outline-none text-sm md:text-base"
+              />
+              <FaRegSmile className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer" />
+              <FaPaperPlane className="text-green-600 text-xl md:text-2xl cursor-pointer" />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center px-2 md:px-8 py-4 md:py-6 bg-white border-t border-[#E6E6E6] w-full">
+              <button
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                onClick={() => setHasJoined(true)}
+              >
+                Join Community
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

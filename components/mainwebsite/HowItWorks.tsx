@@ -12,7 +12,7 @@ const steps = [
   //   desc: "Receive free quotes from verified local professionals and compare their rates, reviews, and qualifications.",
   // },
   {
-    number: "3",
+    number: "2",
     title: "Hire the best expert",
     desc: "Choose the professional that best fits your needs and budget, then book and pay securely through our platform.",
   },

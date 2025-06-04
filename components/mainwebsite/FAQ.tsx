@@ -40,7 +40,7 @@ export default function FAQ() {
 
   return (
     <section className="w-full py-20 bg-gradient-to-b from-white to-gray-100">
-      <div className="flex items-start justify-between  mx-auto w-full md:max-w-7xl gap-10 px-4 flex-col md:flex-row">
+      <div className="flex items-center justify-between  mx-auto w-full md:max-w-7xl gap-10 px-4 flex-col">
         <div>
           <h2 className="text-4xl font-semibold text-center text-gray-900 mb-4">
             Frequently Asked Questions

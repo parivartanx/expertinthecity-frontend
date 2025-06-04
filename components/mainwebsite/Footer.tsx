@@ -4,12 +4,40 @@ import {
   FaXTwitter,
   FaLinkedinIn,
   FaYoutube,
+  FaWrench,
+  FaBolt,
+  FaBroom,
+  FaSeedling,
+  FaBook,
+  FaCamera,
+  FaDumbbell,
+  FaUtensils,
+  FaChartBar,
+  FaGavel,
+  FaLaptopCode,
+  FaPaw,
 } from "react-icons/fa6";
+import Link from "next/link";
 
 export default function Footer() {
+  const categories = [
+    { name: "Plumbing", icon: FaWrench, slug: "plumbing" },
+    { name: "Electrical", icon: FaBolt, slug: "electrical" },
+    { name: "Cleaning", icon: FaBroom, slug: "cleaning" },
+    { name: "Gardening", icon: FaSeedling, slug: "gardening" },
+    { name: "Tutoring", icon: FaBook, slug: "tutoring" },
+    { name: "Photography", icon: FaCamera, slug: "photography" },
+    { name: "Personal Training", icon: FaDumbbell, slug: "personal-training" },
+    { name: "Catering", icon: FaUtensils, slug: "catering" },
+    { name: "Accounting", icon: FaChartBar, slug: "accounting" },
+    { name: "Legal Services", icon: FaGavel, slug: "legal-services" },
+    { name: "Web Design", icon: FaLaptopCode, slug: "web-design" },
+    { name: "Pet Care", icon: FaPaw, slug: "pet-care" },
+  ];
+
   return (
     <footer className="bg-white text-black border-t border-neutral-200">
-      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-5 gap-10 text-sm">
+      <div className="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-6 gap-10 text-sm">
         {/* Logo + Description */}
         <div className="space-y-4">
           <div className="text-green-600 font-bold text-2xl">Expert</div>
@@ -27,15 +55,39 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Services */}
+        {/* Categories */}
         <div>
-          <h4 className="font-semibold mb-2">Services</h4>
+          <h4 className="font-semibold mb-2">Categories</h4>
           <ul className="space-y-1 text-gray-700">
-            <li>Home Services</li>
-            <li>Professional Services</li>
-            <li>Health & Wellness</li>
-            <li>Events & Entertainment</li>
-            <li>Education & Tutoring</li>
+            {categories.slice(0, 6).map((category) => (
+              <li key={category.slug}>
+                <Link
+                  href={`/home/categories/${category.slug}`}
+                  className="hover:text-green-600 flex items-center gap-2"
+                >
+                  <category.icon className="text-sm" />
+                  {category.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* More Categories */}
+        <div>
+          <h4 className="font-semibold mb-2">More Categories</h4>
+          <ul className="space-y-1 text-gray-700">
+            {categories.slice(6).map((category) => (
+              <li key={category.slug}>
+                <Link
+                  href={`/home/categories/${category.slug}`}
+                  className="hover:text-green-600 flex items-center gap-2"
+                >
+                  <category.icon className="text-sm" />
+                  {category.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -43,11 +95,32 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-2">Legal & Account</h4>
           <ul className="space-y-1 text-gray-700">
-            <li>Terms of Service</li>
-            <li>Privacy Policy</li>
-            <li>Login</li>
-            <li>Register</li>
-            <li>Dashboard</li>
+            <li>
+              <Link
+                href="/home/terms-of-service"
+                className="hover:text-green-600"
+              >
+                Terms of Service
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/home/privacy-policy"
+                className="hover:text-green-600"
+              >
+                Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link href="/auth/login" className="hover:text-green-600">
+                Login
+              </Link>
+            </li>
+            <li>
+              <Link href="/auth/signup" className="hover:text-green-600">
+                Register
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -55,11 +128,16 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-2">Resources</h4>
           <ul className="space-y-1 text-gray-700">
-            <li>About Us</li>
-            <li>Contact Us</li>
-            <li>FAQ</li>
-            <li>Blog</li>
-            <li>Support</li>
+            <li>
+              <Link href="/home/about" className="hover:text-green-600">
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link href="/home/contact" className="hover:text-green-600">
+                Contact Us
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -81,9 +159,12 @@ export default function Footer() {
           </div>
           <p className="text-xs text-gray-600">
             By joining, you consent to our{" "}
-            <span className="text-green-600 cursor-pointer">
+            <Link
+              href="/home/privacy-policy"
+              className="text-green-600 hover:underline"
+            >
               Privacy Policy
-            </span>{" "}
+            </Link>{" "}
             and receive updates.
           </p>
         </div>
@@ -93,9 +174,15 @@ export default function Footer() {
       <div className="border-t text-sm text-gray-600 py-4 px-4 flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto">
         <p>© 2024 ExpertInTheCity. All rights reserved.</p>
         <div className="flex space-x-4 mt-2 md:mt-0 text-green-600">
-          <span className="cursor-pointer">Privacy Policy</span>
-          <span className="cursor-pointer">Terms of Use</span>
-          <span className="cursor-pointer">Cookie Policy</span>
+          <Link href="/home/privacy-policy" className="hover:underline">
+            Privacy Policy
+          </Link>
+          <Link href="/home/terms-of-service" className="hover:underline">
+            Terms of Use
+          </Link>
+          <Link href="/home/cookie-policy" className="hover:underline">
+            Cookie Policy
+          </Link>
         </div>
       </div>
     </footer>

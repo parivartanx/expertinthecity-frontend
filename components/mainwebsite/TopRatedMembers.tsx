@@ -55,9 +55,12 @@ const TopRatedMentors = () => {
                 Explore
               </button>
             </Link>
-            <button className="flex items-center gap-1 text-green-600 hover:underline">
-              Learn More <span>›</span>
-            </button>
+            <Link href={"/home/about"}>
+              {" "}
+              <button className="flex items-center gap-1 text-green-600 hover:underline">
+                Learn More <span>›</span>
+              </button>
+            </Link>
           </div>
         </div>
 

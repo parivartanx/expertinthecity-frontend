@@ -11,77 +11,101 @@ export default function AboutPage() {
       {/* Header */}
 
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage:
-              "url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop')",
+              "url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop')",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-neutral-900/95 to-neutral-900/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/90 via-neutral-900/80 to-neutral-900/95" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="space-y-8">
-            {/* Decorative Elements */}
-            <div className="flex justify-center">
-              <div className="w-20 h-1 bg-green-500 rounded-full" />
-            </div>
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Column - Text Content */}
+            <div className="space-y-8 text-left my-2">
+              {/* Decorative Elements */}
+              {/* <div className="flex items-center gap-3">
+                <div className="w-12 h-1 bg-green-500 rounded-full" />
+                <span className="text-green-500 font-medium tracking-wider uppercase text-sm">
+                  About Us
+                </span>
+              </div> */}
 
-            {/* Main Heading */}
-            <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight">
-              Empowering Growth Through{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
-                Real Human Connection
-              </span>
-            </h1>
+              {/* Main Heading */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                Connecting{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
+                  Expertise
+                </span>{" "}
+                with{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
+                  Opportunity
+                </span>
+              </h1>
 
-            {/* Subheading */}
-            <p className="text-lg md:text-xl text-neutral-200 max-w-3xl mx-auto leading-relaxed">
-              At ExpertInTheCity, we believe everyone deserves access to
-              personalized guidance. Our platform connects learners with trusted
-              mentors across fields, making true mentorship simple, personal,
-              one session at a time.
-            </p>
+              {/* Subheading */}
+              <p className="text-lg text-neutral-200 leading-relaxed">
+                We're building the future of professional mentorship, where
+                expertise meets opportunity. Our platform connects skilled
+                professionals with those seeking guidance, creating meaningful
+                relationships that drive growth and success.
+              </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Link
-                href="/home"
-                className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Get Started
-              </Link>
-              <Link
-                href="/home"
-                className="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-colors duration-200 backdrop-blur-sm"
-              >
-                Learn More
-              </Link>
-            </div>
-
-            {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 max-w-4xl mx-auto">
-              {[
-                { number: "10K+", label: "Active Mentors" },
-                { number: "50K+", label: "Success Stories" },
-                { number: "100+", label: "Cities" },
-                { number: "24/7", label: "Support" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="inline-block px-4 py-2 rounded-lg bg-neutral-900/80 backdrop-blur-sm border border-neutral-700">
-                    <div className="text-3xl md:text-4xl font-bold text-green-500 mb-1">
+              {/* Stats Section */}
+              <div className="grid grid-cols-2 gap-6 pt-4">
+                {[
+                  { number: "10K+", label: "Verified Experts" },
+                  { number: "50K+", label: "Success Stories" },
+                  { number: "100+", label: "Cities Covered" },
+                  { number: "24/7", label: "Support" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20"
+                  >
+                    <div className="text-2xl font-bold text-green-500 mb-1">
                       {stat.number}
                     </div>
                     <div className="text-sm text-neutral-300 font-medium">
                       {stat.label}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link
+                  href="/home"
+                  className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+                >
+                  Join Our Network
+                </Link>
+                <Link
+                  href="/home"
+                  className="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Column - Image/Illustration */}
+            <div className="hidden lg:block relative">
+              <div className="relative z-10">
+                <img
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
+                  alt="Professional Network"
+                  className="rounded-lg shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500"
+                />
+                <div className="absolute -bottom-6 -right-6 w-64 h-64 bg-green-500/20 rounded-full blur-3xl"></div>
+                <div className="absolute -top-6 -left-6 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -89,7 +113,7 @@ export default function AboutPage() {
         {/* Decorative Bottom Wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
-            className="w-full h-16 text-white"
+            className="w-full h-24 text-white"
             viewBox="0 0 1440 100"
             fill="currentColor"
             preserveAspectRatio="none"
@@ -119,11 +143,153 @@ export default function AboutPage() {
           </p>
         </div>
         <div className="flex-1 flex justify-center">
-          <div className=" rounded-lg flex items-center justify-center">
+          <div className="rounded-lg flex items-center justify-center">
             <img
               src="https://cdn.pixabay.com/photo/2024/05/02/16/05/watchmaker-8735031_1280.jpg"
               alt=""
               className="rounded"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Mission Section - Reversed */}
+      <section className="py-12 px-4 max-w-4xl mx-auto flex flex-col md:flex-row-reverse items-center gap-8 bg-neutral-50">
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold mb-4">
+            Our <span className="text-green-700">Mission</span>
+          </h2>
+          <p className="text-base text-neutral-700 mb-4">
+            We're on a mission to democratize access to expertise and create
+            meaningful connections between professionals and learners. Our
+            platform bridges the gap between knowledge seekers and industry
+            experts, making quality mentorship accessible to everyone.
+          </p>
+          <p className="text-base text-neutral-700">
+            Through innovative technology and a human-centered approach, we're
+            building a community where knowledge flows freely, skills are
+            shared, and growth is accelerated. Join us in creating a world where
+            expertise knows no boundaries.
+          </p>
+        </div>
+        <div className="flex-1 flex justify-center">
+          <div className="rounded-lg flex items-center justify-center">
+            <img
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
+              alt="Team collaboration"
+              className="rounded shadow-lg"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Values Section - Normal */}
+      <section className="py-12 px-4 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8">
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold mb-4">
+            Our <span className="text-green-700">Values</span>
+          </h2>
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">
+                  Quality & Excellence
+                </h3>
+                <p className="text-neutral-700">
+                  We maintain the highest standards in our platform and
+                  services, ensuring every interaction adds value.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Community First</h3>
+                <p className="text-neutral-700">
+                  We prioritize building strong, supportive communities where
+                  everyone can thrive and grow together.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 flex justify-center">
+          <div className="rounded-lg flex items-center justify-center">
+            <img
+              src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop"
+              alt="Team values"
+              className="rounded shadow-lg"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Impact Section - Reversed */}
+      <section className="py-12 px-4 max-w-4xl mx-auto flex flex-col md:flex-row-reverse items-center gap-8 bg-neutral-50">
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold mb-4">
+            Our <span className="text-green-700">Impact</span>
+          </h2>
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="text-3xl font-bold text-green-600 mb-1">85%</div>
+              <div className="text-sm text-neutral-600">Career Growth Rate</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="text-3xl font-bold text-green-600 mb-1">92%</div>
+              <div className="text-sm text-neutral-600">Satisfaction Rate</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="text-3xl font-bold text-green-600 mb-1">50+</div>
+              <div className="text-sm text-neutral-600">Industries Covered</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="text-3xl font-bold text-green-600 mb-1">10K+</div>
+              <div className="text-sm text-neutral-600">Success Stories</div>
+            </div>
+          </div>
+          <p className="text-base text-neutral-700">
+            Our platform has helped thousands of professionals and learners
+            achieve their goals, create meaningful connections, and accelerate
+            their growth journey. Join our growing community and be part of this
+            transformative experience.
+          </p>
+        </div>
+        <div className="flex-1 flex justify-center">
+          <div className="rounded-lg flex items-center justify-center">
+            <img
+              src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
+              alt="Impact visualization"
+              className="rounded shadow-lg"
             />
           </div>
         </div>
