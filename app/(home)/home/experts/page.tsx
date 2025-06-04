@@ -4,12 +4,119 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiUserAdd } from "react-icons/hi";
 
+const mentors = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    title: "Piano Instructor & Music Theory",
+    location: "New York, NY",
+    rating: 4.8,
+    reviews: 129,
+    categories: ["Music Theory", "Composition"],
+    image:
+      "https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bXVzaWN8ZW58MHx8MHx8fDA%3D",
+    status: "Featured",
+  },
+  {
+    id: 2,
+    name: "Michael Chen",
+    title: "Software Engineering Mentor",
+    location: "San Francisco, CA",
+    rating: 4.9,
+    reviews: 287,
+    categories: ["Web Development", "AI/ML"],
+    image:
+      "https://images.unsplash.com/photo-1726066012822-d22831b628d9?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxzZWFyY2h8MXx8c29mdHdhcmV8ZW58MHx8MHx8fDA%3D",
+  },
+  {
+    id: 3,
+    name: "Emma Davis",
+    title: "Certified Yoga Instructor",
+    location: "Los Angeles, CA",
+    rating: 4.7,
+    reviews: 180,
+    categories: ["Yoga", "Wellness"],
+    image:
+      "https://images.unsplash.com/photo-1661308411865-4fce7576bef8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHlvZ2ElMjBtZW50b2lyfGVufDB8fDB8fHww",
+    status: "Featured",
+  },
+  {
+    id: 4,
+    name: "David Rodriguez",
+    title: "Business Strategy Consultant",
+    location: "Remote",
+    rating: 4.6,
+    reviews: 94,
+    categories: ["Startup", "Finance"],
+    image:
+      "https://images.unsplash.com/photo-1551836022-b06985bceb24?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YnVzaW5lc3MlMjBtZW50b3J8ZW58MHx8MHx8fDA%3D",
+  },
+  {
+    id: 5,
+    name: "Jennifer Lee",
+    title: "Language Tutor - Spanish & French",
+    location: "Paris, France",
+    rating: 4.9,
+    reviews: 177,
+    categories: ["Languages", "Travel"],
+    image:
+      "https://plus.unsplash.com/premium_photo-1661384194958-20679b63484b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bGFuZ2F1Z2UlMjBtZW50b3J8ZW58MHx8MHx8fDA%3D",
+  },
+  {
+    id: 6,
+    name: "Robert Kim",
+    title: "Audio Engineering & Music Production",
+    location: "Remote",
+    rating: 4.8,
+    reviews: 153,
+    categories: ["Sound Design", "Studio Setup"],
+    image:
+      "https://images.unsplash.com/photo-1611532736579-6b16e2b50449?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D",
+    status: "Featured",
+  },
+  {
+    id: 7,
+    name: "Olivia Martinez",
+    title: "Photography & Visual Arts Instructor",
+    location: "Austin, TX",
+    rating: 4.6,
+    reviews: 88,
+    categories: ["Photography", "Creative Arts"],
+    image:
+      "https://plus.unsplash.com/premium_photo-1682097066897-209d0d9e9ae5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGhvdG9ncmFwaHl8ZW58MHx8MHx8fDA%3D",
+    status: "New",
+  },
+  {
+    id: 8,
+    name: "James Wilson",
+    title: "Math & Science Tutor",
+    location: "Remote",
+    rating: 4.9,
+    reviews: 191,
+    categories: ["Mathematics", "Physics"],
+    image:
+      "https://images.unsplash.com/photo-1664382953518-4a664ab8a8c9?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dGVhY2hlcnxlbnwwfHwwfHx8MA%3D%3D",
+  },
+  {
+    id: 9,
+    name: "Sophia Patel",
+    title: "Health & Wellness Coach",
+    location: "Chicago, IL",
+    rating: 4.7,
+    reviews: 104,
+    categories: ["Nutrition", "Self Care"],
+    image:
+      "https://images.unsplash.com/photo-1511174511562-5f7f18b874f8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGhlYWx0aHxlbnwwfHwwfHx8MA%3D%3D",
+    status: "Featured",
+  },
+];
+
 export default function ExpertsPage() {
   const router = useRouter();
   return (
     <main className="bg-white text-gray-800">
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -18,81 +125,111 @@ export default function ExpertsPage() {
               "url('https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2070&auto=format&fit=crop')",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-neutral-900/95 to-neutral-900/80" />
+          <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/60 via-neutral-900/40 to-neutral-900/60" />
         </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="space-y-8">
-            {/* Decorative Elements */}
-            <div className="flex justify-center">
-              <div className="w-20 h-1 bg-green-500 rounded-full" />
-            </div>
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-8 sm:px-12 lg:px-16 py-20">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left Content */}
+            <div className="text-left space-y-10">
+              <div className="inline-block px-5 py-2.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium">
+                Expert Network
+              </div>
 
-            {/* Main Heading */}
-            <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight">
-              Connect with Top{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
-                Experts
-              </span>
-            </h1>
+              <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-tight">
+                Connect with Top{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
+                  Experts
+                </span>
+              </h1>
 
-            {/* Subheading */}
-            <p className="text-lg md:text-xl text-neutral-200 max-w-3xl mx-auto leading-relaxed">
-              Discover a diverse range of experts who can help you level up your
-              career, hobby, or personal growth journey. Get personalized
-              guidance from industry leaders.
-            </p>
+              <p className="text-xl text-neutral-200 leading-relaxed max-w-2xl">
+                Discover a diverse range of experts who can help you level up
+                your career, hobby, or personal growth journey. Get personalized
+                guidance from industry leaders.
+              </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Link
-                href="/home/register"
-                className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Join Now
-              </Link>
-              <Link
-                href="/home"
-                className="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-colors duration-200 backdrop-blur-sm"
-              >
-                Explore
-              </Link>
-            </div>
+              <div className="flex flex-col sm:flex-row gap-6 items-start pt-4">
+                <Link
+                  href="/home/register"
+                  className="px-10 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-3 text-lg"
+                >
+                  <HiUserAdd className="text-2xl" />
+                  Join Now
+                </Link>
+                <Link
+                  href="/home/allexperts"
+                  className="px-10 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm flex items-center gap-3 text-lg"
+                >
+                  Explore Experts
+                </Link>
+              </div>
 
-            {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-12 max-w-4xl mx-auto">
-              {[
-                { number: "1000+", label: "Active Experts" },
-                { number: "50+", label: "Categories" },
-                { number: "95%", label: "Success Rate" },
-                { number: "24/7", label: "Support" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="inline-block px-4 py-2 rounded-lg bg-neutral-900/80 backdrop-blur-sm border border-neutral-700">
-                    <div className="text-3xl md:text-4xl font-bold text-green-500 mb-1">
-                      {stat.number}
-                    </div>
-                    <div className="text-sm text-neutral-300 font-medium">
-                      {stat.label}
+              {/* Stats Section */}
+              <div className="grid grid-cols-2 gap-8 pt-12">
+                {[
+                  { number: "1000+", label: "Active Experts" },
+                  { number: "50+", label: "Categories" },
+                  { number: "95%", label: "Success Rate" },
+                  { number: "24/7", label: "Support" },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-left">
+                    <div className="inline-block px-6 py-4 rounded-xl bg-neutral-900/40 backdrop-blur-sm border border-neutral-700/50">
+                      <div className="text-3xl font-bold text-green-500 mb-2">
+                        {stat.number}
+                      </div>
+                      <div className="text-base text-neutral-300 font-medium">
+                        {stat.label}
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Content - Featured Expert Card */}
+            <div className="hidden lg:block">
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
+                <div className="flex items-center gap-6 mb-8">
+                  <img
+                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2070&auto=format&fit=crop"
+                    alt="Featured Expert"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-green-500"
+                  />
+                  <div>
+                    <h3 className="text-white text-xl font-semibold">
+                      Sarah Johnson
+                    </h3>
+                    <p className="text-green-400 text-base">Featured Expert</p>
+                  </div>
                 </div>
-              ))}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3 text-white/80">
+                    <span className="text-yellow-400 text-xl">⭐</span>
+                    <span className="text-lg">4.9 (128 reviews)</span>
+                  </div>
+                  <p className="text-white/80 text-lg leading-relaxed">
+                    "Join our community of experts and share your knowledge with
+                    the world. Make a difference in people's lives through
+                    mentorship."
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {["Mentorship", "Career Growth", "Leadership"].map(
+                      (tag) => (
+                        <span
+                          key={tag}
+                          className="px-4 py-2 rounded-full bg-green-500/20 text-green-400 text-sm font-medium"
+                        >
+                          {tag}
+                        </span>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Decorative Bottom Wave */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg
-            className="w-full h-16 text-white"
-            viewBox="0 0 1440 100"
-            fill="currentColor"
-            preserveAspectRatio="none"
-          >
-            <path d="M0,50 C150,100 350,0 500,50 C650,100 850,0 1000,50 C1150,100 1350,0 1440,50 L1440,100 L0,100 Z" />
-          </svg>
         </div>
       </section>
 
@@ -101,37 +238,53 @@ export default function ExpertsPage() {
         <h2 className="text-3xl font-bold text-center mb-12">
           Meet Our <span className="text-green-600">Experts</span>
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {experts.map((expert, index) => (
-            <div key={index} className="border rounded-lg shadow-md p-4">
-              <Image
-                src={expert.image}
-                alt={expert.title}
-                width={600}
-                height={400}
-                className="rounded mb-4 object-cover h-48 w-full"
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {mentors.map((mentor) => (
+            <div
+              key={mentor.id}
+              className="bg-white rounded-lg shadow p-4 relative"
+            >
+              {mentor.status && (
+                <span className="absolute top-2 left-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
+                  {mentor.status}
+                </span>
+              )}
+              <img
+                src={mentor.image}
+                alt={mentor.name}
+                className="w-full h-48 object-cover rounded mb-4"
               />
-              <h3 className="text-xl font-semibold mb-2">{expert.title}</h3>
-              <p className="text-sm mb-4">{expert.description}</p>
-              <div className="flex flex-wrap gap-2 text-xs text-green-700 font-medium mb-4">
-                {expert.tags.map((tag, idx) => (
-                  <span key={idx} className="bg-green-100 px-2 py-1 rounded">
-                    {tag}
+              <h2 className="text-lg font-semibold mb-1">{mentor.name}</h2>
+              <p className="text-sm text-gray-600 mb-1">{mentor.title}</p>
+              <p className="text-xs text-gray-400 mb-2">{mentor.location}</p>
+              <div className="flex items-center text-sm mb-2">
+                <span className="text-yellow-500 mr-1">⭐</span>
+                {mentor.rating} ({mentor.reviews} reviews)
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs mb-4">
+                {mentor.categories.map((cat, i) => (
+                  <span
+                    key={i}
+                    className="bg-gray-100 px-2 py-1 rounded text-gray-700"
+                  >
+                    {cat}
                   </span>
                 ))}
               </div>
               <Link href={"/home/profile"}>
-                <button className="text-green-600 hover:underline">
-                  View profile →
+                <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                  View Profile
                 </button>
               </Link>
             </div>
           ))}
         </div>
         <div className="text-center mt-8">
-          <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
-            View All
-          </button>
+          <Link href="/home/allexperts">
+            <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
+              View All
+            </button>
+          </Link>
         </div>
       </section>
 
@@ -159,7 +312,7 @@ export default function ExpertsPage() {
               industries. Get personalized Expertship, career advice, and
               more—all in one platform.
             </p>
-            <Link href={"/home"}>
+            <Link href={"/home/allexperts"}>
               <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
                 Explore
               </button>
@@ -175,7 +328,7 @@ export default function ExpertsPage() {
               experienced, this is your gateway to impactful learning and
               growth.
             </p>
-            <Link href={"/home"}>
+            <Link href={"/home/about"}>
               <button className="bg-white text-black px-6 py-2 border border-black rounded hover:bg-gray-200">
                 Learn More
               </button>

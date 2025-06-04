@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { MessageCircle, CheckCircle, X } from "lucide-react";
+import Link from "next/link";
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("About");
+  const [activeTab, setActiveTab] = useState("Posts");
   const [isFollowing, setIsFollowing] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
@@ -17,6 +18,30 @@ export default function ProfilePage() {
     name: "Sarah Johnson",
     specialty: "Piano Instructor & Music Theory Specialist",
   };
+
+  // Restore post data
+  const profilePosts = [
+    {
+      id: "post-1",
+      author: "Sarah Johnson",
+      time: "almost 2 years ago",
+      text: "Excited to announce that I'm now offering online piano lessons for students worldwide! Whether you're a beginner or looking to advance your skills, I'd love to help you on your musical journey. Contact me for availability and rates.",
+      image:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      likes: 24,
+      comments: 1,
+    },
+    {
+      id: "post-2",
+      author: "Sarah Johnson",
+      time: "almost 2 years ago",
+      text: "Just wrapped up our spring recital! So proud of all my students who performed today. Their hard work and dedication really shone in their performances. Here are some key highlights from the event.",
+      image:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      likes: 15,
+      comments: 3,
+    },
+  ];
 
   const toggleFollow = () => {
     setIsFollowing(!isFollowing);
@@ -152,11 +177,61 @@ export default function ProfilePage() {
       case "Portfolio":
         return (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold mb-2">Work Portfolio</h2>
-            {/* Add portfolio items here */}
-            <p className="text-sm text-gray-700">
-              Portfolio content goes here.
-            </p>
+            <h2 className="text-lg font-semibold mb-2 text-primary">
+              Work Portfolio
+            </h2>
+
+            <div className="space-y-4">
+              {/* Portfolio Item 1 */}
+              <div className="bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition">
+                <h3 className="text-md font-bold text-gray-800">
+                  🔧 Full Stack E-Commerce Platform
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Developed a full-featured MERN stack e-commerce site with
+                  admin dashboard, cart, wishlist, and checkout flow.
+                </p>
+                <div className="mt-2 text-sm text-green-600 font-semibold">
+                  💰 Earned: ₹25,000
+                </div>
+              </div>
+
+              {/* Portfolio Item 2 */}
+              <div className="bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition">
+                <h3 className="text-md font-bold text-gray-800">
+                  📊 Admin Dashboard for Analytics
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Built a responsive analytics dashboard with charts, dynamic
+                  data from APIs, and user management.
+                </p>
+                <div className="mt-2 text-sm text-green-600 font-semibold">
+                  💰 Earned: ₹18,000
+                </div>
+              </div>
+
+              {/* Portfolio Item 3 */}
+              <div className="bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition">
+                <h3 className="text-md font-bold text-gray-800">
+                  🎨 Portfolio Website for Designer
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Created a sleek, animated portfolio for a client using
+                  Next.js, Tailwind CSS, and Framer Motion.
+                </p>
+                <div className="mt-2 text-sm text-green-600 font-semibold">
+                  💰 Earned: ₹10,000
+                </div>
+              </div>
+            </div>
+
+            {/* Earnings Summary */}
+            <div className="border-t pt-4">
+              <h3 className="text-md font-bold text-gray-800">
+                📈 Total Earnings
+              </h3>
+              <p className="text-xl font-bold text-green-700">₹53,000+</p>
+            </div>
           </div>
         );
       case "Reviews":
@@ -268,12 +343,6 @@ export default function ProfilePage() {
               >
                 Message
               </button>
-              <button className="border border-gray-300 px-4 py-2 rounded-lg">
-                Contact
-              </button>
-              <button className="border border-gray-300 px-4 py-2 rounded-lg">
-                Book Appointment
-              </button>
             </div>
           </div>
 
@@ -282,7 +351,7 @@ export default function ProfilePage() {
             {/* Tabs */}
             <div className="border-b py-2">
               <div className="flex gap-8 text-gray-600 text-sm">
-                {["About", "Services", "Portfolio", "Reviews"].map((tab) => (
+                {["Posts", "Services", "Portfolio", "Reviews"].map((tab) => (
                   <span
                     key={tab}
                     className={`cursor-pointer hover:text-black font-medium ${
@@ -300,59 +369,36 @@ export default function ProfilePage() {
 
             {/* Tab Content */}
             <div className="space-y-6">
-              {activeTab === "About" && (
+              {activeTab === "Posts" && (
                 <div className="space-y-6">
                   {/* Posts section */}
-                  <div className="border rounded-lg shadow-md">
-                    <div className="p-4">
-                      <h3 className="font-semibold">Sarah Johnson</h3>
-                      <p className="text-xs text-gray-500">
-                        almost 2 years ago
-                      </p>
-                      <p className="mt-2 text-sm">
-                        Excited to announce that I'm now offering online piano
-                        lessons for students worldwide! Whether you're a
-                        beginner or looking to advance your skills, I'd love to
-                        help you on your musical journey. Contact me for
-                        availability and rates.
-                      </p>
-                    </div>
-                    <img
-                      src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                      className="w-full h-72 object-cover rounded-b-lg mt-2"
-                      alt="Piano post"
-                    />
-                    {/* Optional: Add Like, Comment, Share buttons here */}
-                    <div className="p-4 flex items-center gap-4 text-gray-500 text-sm">
-                      <span>24 likes</span>
-                      <span>1 comment</span>
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg shadow-md">
-                    <div className="p-4">
-                      <h3 className="font-semibold">Sarah Johnson</h3>
-                      <p className="text-xs text-gray-500">
-                        almost 2 years ago
-                      </p>
-                      <p className="mt-2 text-sm">
-                        Just wrapped up our spring recital! So proud of all my
-                        students who performed today. Their hard work and
-                        dedication really shone in their performances. Here are
-                        some key highlights from the event.
-                      </p>
-                    </div>
-                    <img
-                      src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                      className="w-full h-72 object-cover rounded-b-lg mt-2"
-                      alt="Recital post"
-                    />
-                    {/* Optional: Add Like, Comment, Share buttons here */}
-                    <div className="p-4 flex items-center gap-4 text-gray-500 text-sm">
-                      <span>24 likes</span>
-                      <span>1 comment</span>
-                    </div>
-                  </div>
+                  {profilePosts.map((post) => (
+                    <Link
+                      key={post.id}
+                      href={`/home/profile/posts/${post.id}`}
+                      className="block hover:shadow-lg transition-shadow"
+                    >
+                      <div className="border rounded-lg shadow-md">
+                        <div className="p-4">
+                          <h3 className="font-semibold">{post.author}</h3>
+                          <p className="text-xs text-gray-500">{post.time}</p>
+                          <p className="mt-2 text-sm text-gray-700">
+                            {post.text}
+                          </p>
+                        </div>
+                        <img
+                          src={post.image}
+                          className="w-full h-72 object-cover rounded-b-lg mt-2"
+                          alt="Post image"
+                        />
+                        {/* Optional: Add Like, Comment, Share buttons here */}
+                        <div className="p-4 flex items-center gap-4 text-gray-500 text-sm">
+                          <span>{post.likes} likes</span>
+                          <span>{post.comments} comments</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               )}
               {activeTab === "Services" && renderContent()}

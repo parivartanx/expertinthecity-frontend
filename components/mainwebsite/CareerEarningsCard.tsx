@@ -1,8 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
+const MIN_YEARS = 1;
+const MAX_YEARS = 10;
+const BASE_EARNINGS = 20000;
+
 const ExpertEarningsCard = () => {
+  const [years, setYears] = useState(5);
+  const earnings = years * BASE_EARNINGS;
+  const barWidth = ((years - MIN_YEARS) / (MAX_YEARS - MIN_YEARS)) * 100;
+
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white rounded-3xl p-8 md:p-12 w-full gap-10 mx-auto mt-10">
       {/* Left Content */}
@@ -32,43 +40,35 @@ const ExpertEarningsCard = () => {
 
       {/* Right Card */}
       <div className="w-full md:w-1/2 bg-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm">
-        {/* Services Dropdown */}
-        <div>
-          <label className="block text-gray-700 font-semibold mb-2">
-            Select Service
-          </label>
-          <div className="relative">
-            <select className="appearance-none w-full border border-gray-300 rounded-lg py-2 px-3 pr-10 text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500">
-              <option>Web Development</option>
-              <option>Graphic Design</option>
-              <option>Marketing Strategy</option>
-              <option>SEO Optimization</option>
-              <option>App UI/UX</option>
-            </select>
-            <ChevronDown className="absolute top-2.5 right-3 w-5 h-5 text-gray-500 pointer-events-none" />
-          </div>
-        </div>
-
         {/* Experience */}
         <div className="mt-6">
           <label className="block text-gray-700 font-semibold mb-2">
             Years of Experience
           </label>
-          <div className="w-full bg-gray-200 h-2 rounded-full">
-            <div className="bg-green-500 h-2 w-[50%] rounded-full"></div>
-          </div>
-          <p className="text-sm text-gray-600 mt-1">5 years selected</p>
+
+          <input
+            type="range"
+            min={MIN_YEARS}
+            max={MAX_YEARS}
+            value={years}
+            onChange={(e) => setYears(Number(e.target.value))}
+            className="w-full mt-2 accent-green-500"
+          />
+          <p className="text-sm text-gray-600 mt-1">
+            {years} year{years > 1 ? "s" : ""} selected
+          </p>
         </div>
 
         {/* Earnings */}
         <div className="mt-6">
           <p className="text-gray-700 font-medium">Based on our data...</p>
           <h2 className="text-3xl font-bold text-gray-900">
-            $120,000{" "}
+            ${earnings.toLocaleString()}{" "}
             <span className="text-lg font-medium text-gray-700">in 1 year</span>
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            That’s $500 a day — all from doing what you love.
+            That’s ${(earnings / 365).toFixed(0)} a day — all from doing what
+            you love.
           </p>
         </div>
 
