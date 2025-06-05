@@ -12,7 +12,7 @@ const ExpertHeroSection = () => {
   const [serviceType, setServiceType] = useState("need");
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center border-t border-gray-100 overflow-hidden">
+    <div className="relative min-h-screen md:min-h-[110vh] flex flex-col justify-center border-t border-gray-100 overflow-hidden">
       {/* Background Image with Overlay */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"

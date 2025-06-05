@@ -138,49 +138,49 @@ export default function ExpertsPage() {
               </div>
 
               <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-tight">
-                Connect with Top{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
-                  Experts
-                </span>
-              </h1>
+              Connect with Top{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
+                Experts
+              </span>
+            </h1>
 
               <p className="text-xl text-neutral-200 leading-relaxed max-w-2xl">
                 Discover a diverse range of experts who can help you level up
                 your career, hobby, or personal growth journey. Get personalized
-                guidance from industry leaders.
-              </p>
+              guidance from industry leaders.
+            </p>
 
               <div className="flex flex-col sm:flex-row gap-6 items-start pt-4">
-                <Link
-                  href="/home/register"
+              <Link
+                href="/home/register"
                   className="px-10 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-3 text-lg"
-                >
+              >
                   <HiUserAdd className="text-2xl" />
-                  Join Now
-                </Link>
-                <Link
-                  href="/home/allexperts"
+                Join Now
+              </Link>
+              <Link
+                href="/home/allexperts"
                   className="px-10 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm flex items-center gap-3 text-lg"
-                >
+              >
                   Explore Experts
-                </Link>
-              </div>
+              </Link>
+            </div>
 
-              {/* Stats Section */}
+            {/* Stats Section */}
               <div className="grid grid-cols-2 gap-8 pt-12">
-                {[
-                  { number: "1000+", label: "Active Experts" },
-                  { number: "50+", label: "Categories" },
-                  { number: "95%", label: "Success Rate" },
-                  { number: "24/7", label: "Support" },
-                ].map((stat) => (
+              {[
+                { number: "1000+", label: "Active Experts" },
+                { number: "50+", label: "Categories" },
+                { number: "95%", label: "Success Rate" },
+                { number: "24/7", label: "Support" },
+              ].map((stat) => (
                   <div key={stat.label} className="text-left">
                     <div className="inline-block px-6 py-4 rounded-xl bg-neutral-900/40 backdrop-blur-sm border border-neutral-700/50">
                       <div className="text-3xl font-bold text-green-500 mb-2">
-                        {stat.number}
-                      </div>
+                      {stat.number}
+                    </div>
                       <div className="text-base text-neutral-300 font-medium">
-                        {stat.label}
+                      {stat.label}
                       </div>
                     </div>
                   </div>

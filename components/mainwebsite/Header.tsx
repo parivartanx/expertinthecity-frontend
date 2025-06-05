@@ -60,10 +60,30 @@ const Header = () => {
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [mobileDropdown, setMobileDropdown] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  const [scrollp, setScrollp] = React.useState(0);
   const router = useRouter();
+  console.log(scrollp);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      // const viewportHeight = window.innerHeight;
+      setScrollp(scrollPosition);
+      // console.log(scrollPosition);
+      setIsScrolled(scrollPosition > 900);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <header className="w-full bg-white border-b border-neutral-200 px-4 py-2 flex items-center justify-between sticky top-0 z-[999] h-[60px]">
+    <header
+      className={`w-full border-b bg-white border-neutral-200 px-4 py-2 flex items-center justify-between sticky top-0 z-[999] h-[60px] ${
+        isScrolled ? "md:backdrop-blur-xl md:bg-transparent" : ""
+      }`}
+    >
       {/* Logo */}
       <Link href="/home" className="flex flex-col leading-tight items-start">
         <span className="text-xl font-extrabold text-green-700">Expert</span>
