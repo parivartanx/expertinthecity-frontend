@@ -29,14 +29,12 @@ const ExpertHeroSection = () => {
       {/* Content Section */}
       <div className="relative z-20 w-full flex flex-col items-center justify-center p-10 text-white mx-auto">
         <h1 className="text-4xl font-extrabold mb-6 leading-tight text-center">
-          Unlock Your Earning Potential with{" "}
-          <span className="text-green-400">Expert</span> Guidance
+          Turn Your Expertise into Income. <br />
+          <span className="text-green-400">On Your Term !</span>
         </h1>
         <p className="mb-6 text-neutral-200 text-lg font-light text-center max-w-2xl">
-          Discover a world of knowledge with ExpertInTheCity, where skilled
-          professionals are ready to guide you in various fields. Whether you're
-          looking to learn teaching, music, or wellness, our platform connects
-          you with the right mentor to achieve your goals.
+          Whether you're building a weekend side hustle, creating a Plan B, or
+          stepping into freedom from the 9-to-5—this is your platform to grow.
         </p>
         {/* Toggle Buttons */}
         <div className="flex gap-6 mb-4 justify-center">

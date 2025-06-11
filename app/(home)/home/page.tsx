@@ -56,20 +56,71 @@ export default function HomePage() {
     },
   ];
 
-  // Define categories with React Icons
-  const categories = [
-    { name: "Plumbing", icon: FaWrench },
-    { name: "Electrical", icon: FaBolt },
-    { name: "Cleaning", icon: FaBroom },
-    { name: "Gardening", icon: FaSeedling },
-    { name: "Tutoring", icon: FaBook },
-    { name: "Photography", icon: FaCamera },
-    { name: "Personal Training", icon: FaDumbbell },
-    { name: "Catering", icon: FaUtensils },
-    { name: "Accounting", icon: FaChartBar },
-    { name: "Legal Services", icon: FaBalanceScale },
-    { name: "Web Design", icon: FaLaptopCode },
-    { name: "Pet Care", icon: FaPaw },
+  // Define grouped categories
+  const groupedCategories = [
+    {
+      name: "Professional & Business Support",
+      subcategories: [
+        "Financial Advice & Investment Planning",
+        "Tax Planning & Cross-Border Compliance",
+        "Legal Consultations & Contract Help",
+        "Business Mentorship & Start-Up Support",
+        "Real Estate Help & Relocation Support",
+        "IT Consultants & Tech Solutions",
+        "Crypto & Blockchain Experts",
+        "Career Counsellors & Transition Coaches",
+        "Personal Branding, Resume & LinkedIn Strategy",
+      ],
+    },
+    {
+      name: "Health, Wellness & Medical Guidance",
+      subcategories: [
+        "General Wellness Coaching (Nutrition, Sleep, Stress)",
+        "Mental Health & Emotional Resilience Coaching",
+        "Fitness Trainers & Online Health Programs",
+        "Yoga, Pilates & Holistic Movement Instructors",
+        "Medical Experts & Health Educators (non-diagnostic or second-opinion services)",
+        "Preventive Health & Lifestyle Medicine Consultants",
+      ],
+    },
+    {
+      name: "Career & Education Support",
+      subcategories: [
+        "Career Counselling for Students & Professionals",
+        "College Admissions & Study Abroad Advisors",
+        "Upskilling Mentors & Job Market Guidance",
+        "CV, Cover Letter, LinkedIn & Interview Prep Experts",
+      ],
+    },
+    {
+      name: "Life & Lifestyle Guidance",
+      subcategories: [
+        "Travel & Relocation Consultants",
+        "Parenting Coaches & Family Advisors",
+        "Relationship Coaches & Conflict Mediators",
+        "Life Coaching & Mindset Mentorship",
+      ],
+    },
+    {
+      name: "Creative, Art & Expression",
+      subcategories: [
+        "Art Mentors & Portfolio Reviewers",
+        "Design & Illustration Coaching",
+        "Photography & Filmmaking Mentors",
+        "Writing, Blogging & Creative Content Experts",
+        "Music Instructors, Producers & Vocal Coaches",
+        "Dance, Theatre & Performing Arts Coaches",
+      ],
+    },
+    {
+      name: "Sports, Performance & Movement",
+      subcategories: [
+        "Sports Coaches (Football, Tennis, Cricket, etc.)",
+        "Athlete Mindset & Performance Coaching",
+        "Dance Instructors & Competitive Prep",
+        "Body Mechanics, Flexibility & Strength Trainers",
+      ],
+    },
   ];
 
   return (
@@ -93,29 +144,32 @@ export default function HomePage() {
           Browse our most requested services and find the right professional for
           your needs.
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 text-center mb-8">
-          {/* Map over the categories array with React Icons */}
-          {categories.map((category) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-center mb-8">
+          {groupedCategories.map((category) => (
             <Link
               key={category.name}
-              href={`/home/categories/${category.name
-                .toLowerCase()
-                .replace(/\s+/g, "-")}`}
+              href={`/home/categories/${encodeURIComponent(
+                category.name.toLowerCase().replace(/\s+/g, "-")
+              )}/subcategories`}
             >
-              <div className="flex flex-col items-center gap-3 p-4 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200">
-                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-2xl mb-1 border border-green-200">
-                  <category.icon /> {/* Use the React Icon component */}
-                </div>
-                <span className="text-sm font-semibold text-neutral-900">
+              <div className="flex flex-col items-center gap-3 p-8 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200 border border-green-200 bg-green-50">
+                <span className="text-xl font-bold text-green-800 mb-2">
                   {category.name}
                 </span>
+                <ul className="text-sm text-neutral-700 list-disc list-inside text-left">
+                  {category.subcategories.slice(0, 3).map((sub, idx) => (
+                    <li key={idx}>{sub}</li>
+                  ))}
+                  {category.subcategories.length > 3 && (
+                    <li className="text-gray-400">...and more</li>
+                  )}
+                </ul>
               </div>
             </Link>
           ))}
         </div>
         <div className="flex justify-center">
           <Link href={"/home/categories"}>
-            {" "}
             <button className="mt-2 px-6 py-2 rounded border border-neutral-300 bg-white text-green-700 font-semibold hover:bg-green-50 flex items-center gap-2 shadow-sm">
               View All Categories
               <span className="text-lg">→</span>

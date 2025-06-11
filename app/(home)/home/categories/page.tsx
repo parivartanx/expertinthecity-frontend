@@ -1,40 +1,185 @@
 "use client";
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import {
-  FaWrench,
-  FaBolt,
-  FaBroom,
-  FaSeedling,
-  FaBook,
-  FaCamera,
-  FaDumbbell,
-  FaUtensils,
-  FaChartBar,
-  FaBalanceScale,
-  FaLaptopCode,
-  FaPaw,
-} from "react-icons/fa";
 
-const categories = [
-  { title: "Plumbing", icon: FaWrench },
-  { title: "Electrical", icon: FaBolt },
-  { title: "Cleaning", icon: FaBroom },
-  { title: "Gardening", icon: FaSeedling },
-  { title: "Tutoring", icon: FaBook },
-  { title: "Photography", icon: FaCamera },
-  { title: "Personal Training", icon: FaDumbbell },
-  { title: "Catering", icon: FaUtensils },
-  { title: "Accounting", icon: FaChartBar },
-  { title: "Legal Services", icon: FaBalanceScale },
-  { title: "Web Design", icon: FaLaptopCode },
-  { title: "Pet Care", icon: FaPaw },
+// Grouped categories and subcategories
+const groupedCategories = [
+  {
+    name: "Professional & Business Support",
+    subcategories: [
+      "Financial Advice & Investment Planning",
+      "Tax Planning & Cross-Border Compliance",
+      "Legal Consultations & Contract Help",
+      "Business Mentorship & Start-Up Support",
+      "Real Estate Help & Relocation Support",
+      "IT Consultants & Tech Solutions",
+      "Crypto & Blockchain Experts",
+      "Career Counsellors & Transition Coaches",
+      "Personal Branding, Resume & LinkedIn Strategy",
+    ],
+  },
+  {
+    name: "Health, Wellness & Medical Guidance",
+    subcategories: [
+      "General Wellness Coaching (Nutrition, Sleep, Stress)",
+      "Mental Health & Emotional Resilience Coaching",
+      "Fitness Trainers & Online Health Programs",
+      "Yoga, Pilates & Holistic Movement Instructors",
+      "Medical Experts & Health Educators (non-diagnostic or second-opinion services)",
+      "Preventive Health & Lifestyle Medicine Consultants",
+    ],
+  },
+  {
+    name: "Career & Education Support",
+    subcategories: [
+      "Career Counselling for Students & Professionals",
+      "College Admissions & Study Abroad Advisors",
+      "Upskilling Mentors & Job Market Guidance",
+      "CV, Cover Letter, LinkedIn & Interview Prep Experts",
+    ],
+  },
+  {
+    name: "Life & Lifestyle Guidance",
+    subcategories: [
+      "Travel & Relocation Consultants",
+      "Parenting Coaches & Family Advisors",
+      "Relationship Coaches & Conflict Mediators",
+      "Life Coaching & Mindset Mentorship",
+    ],
+  },
+  {
+    name: "Creative, Art & Expression",
+    subcategories: [
+      "Art Mentors & Portfolio Reviewers",
+      "Design & Illustration Coaching",
+      "Photography & Filmmaking Mentors",
+      "Writing, Blogging & Creative Content Experts",
+      "Music Instructors, Producers & Vocal Coaches",
+      "Dance, Theatre & Performing Arts Coaches",
+    ],
+  },
+  {
+    name: "Sports, Performance & Movement",
+    subcategories: [
+      "Sports Coaches (Football, Tennis, Cricket, etc.)",
+      "Athlete Mindset & Performance Coaching",
+      "Dance Instructors & Competitive Prep",
+      "Body Mechanics, Flexibility & Strength Trainers",
+    ],
+  },
 ];
 
-const pageSize = 6;
+// Subcategory to experts mapping (sample for 2 subcategories, add more as needed)
+const subcategoryExperts: Record<string, any[]> = {
+  "financial-advice-&-investment-planning": [
+    {
+      id: 1,
+      name: "Priya Mehta",
+      title: "Certified Financial Planner",
+      location: "Mumbai, India",
+      rating: 4.9,
+      reviews: 210,
+      categories: ["Financial Advice", "Investment Planning"],
+      image: "https://randomuser.me/api/portraits/women/65.jpg",
+      status: "Featured",
+    },
+    {
+      id: 2,
+      name: "John Carter",
+      title: "Investment Strategist",
+      location: "London, UK",
+      rating: 4.8,
+      reviews: 180,
+      categories: ["Investment Planning", "Wealth Management"],
+      image: "https://randomuser.me/api/portraits/men/45.jpg",
+    },
+    {
+      id: 3,
+      name: "Amit Shah",
+      title: "Mutual Funds Advisor",
+      location: "Delhi, India",
+      rating: 4.7,
+      reviews: 150,
+      categories: ["Financial Advice", "Mutual Funds"],
+      image: "https://randomuser.me/api/portraits/men/33.jpg",
+    },
+  ],
+  "tax-planning-&-cross-border-compliance": [
+    {
+      id: 4,
+      name: "Ritu Agarwal",
+      title: "Tax Consultant",
+      location: "Bangalore, India",
+      rating: 4.8,
+      reviews: 120,
+      categories: ["Tax Planning", "Cross-Border Compliance"],
+      image: "https://randomuser.me/api/portraits/women/32.jpg",
+    },
+    {
+      id: 5,
+      name: "David Kim",
+      title: "International Tax Advisor",
+      location: "Singapore",
+      rating: 4.7,
+      reviews: 98,
+      categories: ["Tax Planning", "International Compliance"],
+      image: "https://randomuser.me/api/portraits/men/56.jpg",
+    },
+    {
+      id: 6,
+      name: "Fatima Noor",
+      title: "Cross-Border Tax Specialist",
+      location: "Dubai, UAE",
+      rating: 4.9,
+      reviews: 134,
+      categories: ["Cross-Border Compliance", "Tax Planning"],
+      image: "https://randomuser.me/api/portraits/women/41.jpg",
+    },
+  ],
+};
+const fallbackExperts = [
+  {
+    id: 101,
+    name: "Alex Morgan",
+    title: "General Expert",
+    location: "Remote",
+    rating: 4.5,
+    reviews: 50,
+    categories: ["General"],
+    image: "https://randomuser.me/api/portraits/men/99.jpg",
+  },
+  {
+    id: 102,
+    name: "Maria Lopez",
+    title: "General Expert",
+    location: "Remote",
+    rating: 4.6,
+    reviews: 60,
+    categories: ["General"],
+    image: "https://randomuser.me/api/portraits/women/98.jpg",
+  },
+  {
+    id: 103,
+    name: "Chen Wei",
+    title: "General Expert",
+    location: "Remote",
+    rating: 4.7,
+    reviews: 70,
+    categories: ["General"],
+    image: "https://randomuser.me/api/portraits/men/97.jpg",
+  },
+];
 
-export default function MentorCategoriesPage() {
+export default function CategoriesPage() {
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
+    null
+  );
+
+  // Get experts for selected subcategory
+  const subcatKey = selectedSubcategory?.toLowerCase() || "";
+  const experts = subcategoryExperts[subcatKey] || fallbackExperts;
+
   return (
     <div className="px-6 py-10">
       {/* Banner Section */}
@@ -70,45 +215,96 @@ export default function MentorCategoriesPage() {
           Browse our most requested services and find the right professional for
           your needs.
         </p>
-
-        {/* Existing Search and Filter Section */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-center mb-8">
-          <input
-            type="text"
-            placeholder="Search by name, skill or keyword"
-            className="w-full md:w-80 border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none"
-          />
-          <select className="w-full md:w-52 border border-gray-300 rounded px-4 py-2 text-sm">
-            <option>All Categories</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Your Location"
-            className="w-full md:w-52 border border-gray-300 rounded px-4 py-2 text-sm focus:outline-none"
-          />
-          <button className="w-full md:w-auto bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 text-sm">
-            More Filters
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {categories.map((category) => (
-            <Link
-              key={category.title}
-              href={`/home/categories/${category.title
-                .toLowerCase()
-                .replace(/\s+/g, "-")}`}
-              className="flex flex-col items-center text-center p-4 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {groupedCategories.map((cat) => (
+            <div
+              key={cat.name}
+              className="bg-green-50 border border-green-200 rounded-lg p-6"
             >
-              <div className="w-16 h-16 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl mb-3">
-                <category.icon />
-              </div>
-              <p className="text-sm font-medium text-gray-800">
-                {category.title}
-              </p>
-            </Link>
+              <button
+                className="w-full text-left text-xl font-bold text-green-800 mb-2 focus:outline-none"
+                onClick={() =>
+                  setOpenCategory(openCategory === cat.name ? null : cat.name)
+                }
+              >
+                {cat.name}
+              </button>
+              {openCategory === cat.name && (
+                <ul className="space-y-2 mt-2">
+                  {cat.subcategories.map((subcat) => (
+                    <li key={subcat}>
+                      <button
+                        className={`w-full text-left px-3 py-2 rounded hover:bg-green-100 font-medium text-green-900 ${
+                          selectedSubcategory ===
+                          subcat.toLowerCase().replace(/\s+/g, "-")
+                            ? "bg-green-200"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          setSelectedSubcategory(
+                            subcat.toLowerCase().replace(/\s+/g, "-")
+                          )
+                        }
+                      >
+                        {subcat}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           ))}
         </div>
+        {selectedSubcategory && (
+          <div className="mt-12">
+            <h3 className="text-2xl font-bold text-green-700 mb-6 text-center">
+              Experts for "{selectedSubcategory.replace(/-/g, " ")}"
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {experts.map((mentor: any) => (
+                <div
+                  key={mentor.id}
+                  className="bg-white rounded-lg shadow p-4 relative"
+                >
+                  {mentor.status && (
+                    <span className="absolute top-2 left-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
+                      {mentor.status}
+                    </span>
+                  )}
+                  <img
+                    src={mentor.image}
+                    alt={mentor.name}
+                    className="w-full h-48 object-cover rounded mb-4"
+                  />
+                  <h2 className="text-lg font-semibold mb-1">{mentor.name}</h2>
+                  <p className="text-sm text-gray-600 mb-1">{mentor.title}</p>
+                  <p className="text-xs text-gray-400 mb-2">
+                    {mentor.location}
+                  </p>
+                  <div className="flex items-center text-sm mb-2">
+                    <span className="text-yellow-500 mr-1">⭐</span>
+                    {mentor.rating} ({mentor.reviews} reviews)
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs mb-4">
+                    {mentor.categories.map((cat: string, i: number) => (
+                      <span
+                        key={i}
+                        className="bg-gray-100 px-2 py-1 rounded text-gray-700"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                  <Link href={"/home/profile"}>
+                    <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                      View Profile
+                    </button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       <div className="mt-16 bg-gray-50 py-12  rounded-lg text-center">
