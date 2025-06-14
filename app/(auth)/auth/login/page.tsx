@@ -4,15 +4,75 @@ import { useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { useAuthStore } from "@/lib/mainwebsite/auth-store";
+import { axiosInstance } from "@/lib/mainwebsite/axios";
+import { auth, googleProvider } from "@/lib/mainwebsite/firebase";
+import { signInWithPopup } from "firebase/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { login, isLoading, error, isAuthenticated, user, clearError } =
+    useAuthStore();
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted with:", { email, password });
+
+    try {
+      console.log("Attempting login...");
+      await login(email, password);
+      console.log("Login successful!");
+      console.log("Current auth state:", {
+        isAuthenticated,
+        user,
+        isLoading,
+        error,
+      });
+      // Use router.push for client-side navigation
+      router.push("/home");
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      console.log(
+        "Current error state:",
+        error?.response?.data?.message || "Login failed"
+      );
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      const response = await axiosInstance.post("/api/auth/google", {
+        idToken: idToken,
+      });
+
+      console.log(response.data);
+
+      if (response.data.status === "success") {
+        const { user, accessToken, refreshToken } = response.data.data;
+
+        // Store tokens and update auth store
+        useAuthStore.getState().setUser(user, accessToken, refreshToken);
+
+        // Redirect to home
+        router.push("/home");
+      }
+    } catch (error: any) {
+      // Only show error if it's not a popup closed error
+      if (error.code !== "auth/popup-closed-by-user") {
+        console.error("Google sign-in failed:", error);
+        alert(error.response?.data?.message || "Failed to sign in with Google");
+      }
+    }
   };
 
   return (
@@ -52,9 +112,14 @@ export default function LoginPage() {
             </p>
 
             <form
-              onSubmit={(e) => e.preventDefault()} // Add onSubmit handler if needed
+              onSubmit={handleSubmit}
               className="w-full flex flex-col gap-4 mb-4 text-left"
             >
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded relative">
+                  {error}
+                </div>
+              )}
               <div className="space-y-1">
                 <label
                   htmlFor="email"
@@ -67,7 +132,10 @@ export default function LoginPage() {
                   type="email"
                   className="block w-full border border-neutral-300 rounded-md shadow-sm px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) clearError();
+                  }}
                   required
                 />
               </div>
@@ -83,7 +151,10 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   className="block w-full border border-neutral-300 rounded-md shadow-sm px-3 py-2 pr-10 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) clearError();
+                  }}
                   required
                 />
                 <div
@@ -100,9 +171,10 @@ export default function LoginPage() {
 
               <button
                 type="submit"
+                disabled={isLoading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
               >
-                Sign In
+                {isLoading ? "Signing in..." : "Sign In"}
               </button>
             </form>
 
@@ -115,7 +187,9 @@ export default function LoginPage() {
                   <span className="px-2 bg-white text-gray-500">Or</span>
                 </div>
               </div>
+
               <button
+                onClick={handleGoogleLogin}
                 className="w-full flex items-center justify-center gap-2 border border-neutral-300 rounded-md shadow-sm py-2 px-4 text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 type="button"
               >

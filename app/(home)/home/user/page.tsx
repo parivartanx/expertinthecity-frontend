@@ -3,8 +3,11 @@ import { useState, useEffect } from "react";
 import { MessageCircle, CheckCircle, X } from "lucide-react";
 import { FaEdit, FaImage, FaPaperclip } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 
 export default function ProfilePage() {
+  const { user } = useAuthStore();
+  console.log(user);
   const [activeTab, setActiveTab] = useState("About");
   const [isFollowing, setIsFollowing] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
@@ -136,7 +139,7 @@ export default function ProfilePage() {
             <div className="space-y-6">
               <div className="border rounded-lg shadow-md">
                 <div className="p-4">
-                  <h3 className="font-semibold">Sarah Johnson</h3>
+                  <h3 className="font-semibold">{user?.name}</h3>
                   <p className="text-xs text-gray-500">almost 2 years ago</p>
                   <p className="mt-2 text-sm">
                     Excited to announce that I'm now offering online piano
@@ -229,19 +232,8 @@ export default function ProfilePage() {
               className="w-24 h-24 rounded-full border-4 border-white -mt-12 object-cover"
             />
             <div>
-              <div className="flex items-center justify-start gap-2 md:gap-4 flex-col  md:flex-row">
-                <h1 className="text-2xl font-bold">Sarah Johnson</h1>
-                {/* Follow Button */}
-                <button
-                  className={`px-2 py-1 rounded-lg ${
-                    isFollowing
-                      ? "bg-gray-300 text-gray-800"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                  onClick={toggleFollow}
-                >
-                  {isFollowing ? "Following" : "Follow"}
-                </button>
+              <div className="flex items-center justify-start gap-2 md:gap-4 flex-col md:flex-row">
+                <h1 className="text-2xl font-bold">{user?.name || "User"}</h1>
               </div>
 
               <p className="text-green-600 font-semibold mt-2">
@@ -253,32 +245,16 @@ export default function ProfilePage() {
                 <span>128 followers</span>
                 <span>543 profile views</span>
               </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {[
-                  "Piano",
-                  "Music Theory",
-                  "Composition",
-                  "Sight Reading",
-                  "Performance",
-                ].map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-gray-200 text-sm px-2 py-1 rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
           {/* Edit Profile Button */}
           <button
-            className="flex items-center justify-center top-6 right-6 bg-white border border-green-600 text-green-600 px-4 py-1 rounded-2xl font-semibold gap-2  hover:bg-green-50 transition-all"
+            className="flex items-center justify-center top-6 right-6 text-[12px] md:text-[12px] bg-white border border-green-600 text-green-600 px-4 py-1 rounded-2xl font-semibold gap-2  hover:bg-green-50 transition-all"
             onClick={() => {
               router.push("/home/edit");
             }}
           >
-            <FaEdit className="text-lg" /> Edit Profile
+            <FaEdit className="" /> Edit Profile
           </button>
         </div>
 
@@ -304,21 +280,6 @@ export default function ProfilePage() {
                 <p className="font-semibold">January 2020</p>
                 <p className="text-gray-600">Member Since</p>
               </div>
-            </div>
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-2 mt-4">
-              <button
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
-                onClick={handleMessageClick}
-              >
-                Message
-              </button>
-              <button className="border border-gray-300 px-4 py-2 rounded-lg">
-                Contact
-              </button>
-              <button className="border border-gray-300 px-4 py-2 rounded-lg">
-                Book Appointment
-              </button>
             </div>
           </div>
 
@@ -384,7 +345,9 @@ export default function ProfilePage() {
                   <div className="space-y-6 mt-6">
                     <div className="border rounded-lg shadow-md">
                       <div className="p-4">
-                        <h3 className="font-semibold">Sarah Johnson</h3>
+                        <h3 className="font-semibold">
+                          {user?.name || "User"}
+                        </h3>
                         <p className="text-xs text-gray-500">
                           almost 2 years ago
                         </p>
@@ -408,7 +371,9 @@ export default function ProfilePage() {
                     </div>
                     <div className="border rounded-lg shadow-md">
                       <div className="p-4">
-                        <h3 className="font-semibold">Sarah Johnson</h3>
+                        <h3 className="font-semibold">
+                          {user?.name || "User"}
+                        </h3>
                         <p className="text-xs text-gray-500">
                           almost 2 years ago
                         </p>

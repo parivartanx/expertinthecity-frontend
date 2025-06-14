@@ -19,6 +19,22 @@ import {
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { RiCustomerService2Line } from "react-icons/ri";
 import { IconType } from "react-icons";
+import { useAuthStore } from "@/lib/mainwebsite/auth-store";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface NavItem {
   name: string;
@@ -61,27 +77,44 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [mobileDropdown, setMobileDropdown] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
-  const [scrollp, setScrollp] = React.useState(0);
   const router = useRouter();
-  console.log(scrollp);
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   React.useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
-      // const viewportHeight = window.innerHeight;
-      setScrollp(scrollPosition);
-      // console.log(scrollPosition);
-      setIsScrolled(scrollPosition > 900);
+      const viewportHeight = window.innerHeight;
+      setIsScrolled(scrollPosition > viewportHeight);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    router.push("/home");
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <header
-      className={`w-full border-b bg-white border-neutral-200 px-4 py-2 flex items-center justify-between sticky top-0 z-[999] h-[60px] ${
-        isScrolled ? "md:backdrop-blur-xl md:bg-transparent" : ""
+      className={`w-full border-b border-neutral-200 px-4 py-2 flex items-center justify-between sticky top-0 z-[999] h-[60px] ${
+        isScrolled
+          ? "bg-white  lg:backdrop-blur-lg lg:bg-transparent"
+          : "bg-white md:bg-white"
       }`}
     >
       {/* Logo */}
@@ -169,7 +202,7 @@ const Header = () => {
       </div> */}
 
       {/* Auth Buttons */}
-      <div className=" flex gap-2 items-center">
+      <div className="flex gap-2 items-center">
         <div
           onClick={() => {
             router.push("/home/search");
@@ -186,20 +219,93 @@ const Header = () => {
           <AiOutlineMenu className="text-2xl" />
         </button>
         <div className="hidden lg:flex gap-2 ml-2">
-          <Link
-            href="/auth/login"
-            className="border border-green-700 text-green-700 px-3 py-2 rounded-3xl hover:bg-green-50 flex items-center gap-2 text-sm font-medium"
-          >
-            <IoIosLogOut className="text-lg" />
-            Login
-          </Link>
-          <Link
-            href="/auth/signup"
-            className="bg-green-700 text-white px-3 py-2 rounded-3xl  hover:bg-green-800 flex items-center gap-2 text-sm font-medium"
-          >
-            <FaRegUser className="text-md" />
-            Join
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 hover:opacity-80 transition-all">
+                    <Avatar className="h-8 w-8 border-2 border-green-700">
+                      <AvatarImage src={user?.avatar} alt={user?.name} />
+                      <AvatarFallback>
+                        {getInitials(user?.name || "")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium md:hidden">
+                      {user?.name}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2 p-2">
+                  <div className="px-2 py-1.5 mb-1 border-b border-neutral-200">
+                    <p className="text-sm font-medium text-neutral-900">
+                      {user?.name}
+                    </p>
+                    <p className="text-xs text-neutral-500">{user?.email}</p>
+                  </div>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/home/user")}
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-neutral-700 hover:text-green-700 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
+                  >
+                    <FaRegUser className="h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogoutClick}
+                    className="flex items-center gap-2 px-2 py-2 text-sm text-neutral-700 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer transition-colors"
+                  >
+                    <IoIosLogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Logout Confirmation Modal */}
+              <Dialog open={showLogoutModal} onOpenChange={setShowLogoutModal}>
+                <DialogContent className="max-w-[90%] sm:max-w-[425px] z-[999999] rounded-lg shadow-lg">
+                  <DialogHeader>
+                    <DialogTitle>Confirm Logout</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to logout from your account?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="flex gap-2 sm:gap-0">
+                    <button
+                      onClick={() => setShowLogoutModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-md transition-colors border outline-none"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowLogoutModal(false);
+                        handleLogout();
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
+                className="border border-green-700 text-green-700 px-3 py-2 rounded-3xl hover:bg-green-50 flex items-center gap-2 text-sm font-medium"
+              >
+                <IoIosLogOut className="text-lg" />
+                Login
+              </Link>
+              <Link
+                href="/auth/signup"
+                className="bg-green-700 text-white px-3 py-2 rounded-3xl hover:bg-green-800 flex items-center gap-2 text-sm font-medium"
+              >
+                <FaRegUser className="text-md" />
+                Join
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
@@ -223,14 +329,7 @@ const Header = () => {
             onClick={() => setMobileOpen(false)}
             aria-label="Close menu"
           >
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-              <path
-                d="M18 6L6 18M6 6l12 12"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
+            <IoMdClose className="text-2xl" />
           </button>
 
           {/* Logo */}
@@ -304,22 +403,54 @@ const Header = () => {
 
           {/* Auth Buttons */}
           <div className="mt-6 flex flex-col gap-2">
-            <Link
-              href="/auth/login"
-              className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 flex items-center gap-2 text-sm"
-              onClick={() => setMobileOpen(false)}
-            >
-              <IoIosLogOut className="text-lg" />
-              Login
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 flex items-center gap-2 text-sm"
-              onClick={() => setMobileOpen(false)}
-            >
-              <FaRegUser className="text-md" />
-              Join
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <div
+                  onClick={() => {
+                    router.push("/home/user");
+                    setMobileOpen(false);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  <Avatar className="h-8 w-8 border-2 border-green-700">
+                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarFallback>
+                      {getInitials(user?.name || "")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">{user?.name}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 flex items-center gap-2 text-sm"
+                >
+                  <IoIosLogOut className="text-lg" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="border border-green-700 text-green-700 px-3 py-1 rounded hover:bg-green-50 flex items-center gap-2 text-sm"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <IoIosLogOut className="text-lg" />
+                  Login
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="bg-green-700 text-white px-3 py-1 rounded hover:bg-green-800 flex items-center gap-2 text-sm"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <FaRegUser className="text-md" />
+                  Join
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
