@@ -53,7 +53,7 @@ const ExpertHeroSection = () => {
 
   const handleSearch = (query: string) => {
     if (query.trim()) {
-      router.push(`/home/allexperts?search=${encodeURIComponent(query.trim())}`);
+      router.push(`/allexperts?search=${encodeURIComponent(query.trim())}`);
     }
   };
 
@@ -273,7 +273,7 @@ const ExpertHeroSection = () => {
             transition={{ delay: 1.4, duration: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-12 px-4 sm:px-0"
           >
-            <Link href="/home/allexperts" className="w-full sm:w-auto">
+            <Link href="/allexperts" className="w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -283,7 +283,7 @@ const ExpertHeroSection = () => {
                 Find an Expert
               </motion.button>
             </Link>
-            <Link href="/home/experts" className="w-full sm:w-auto">
+            <Link href="/experts" className="w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

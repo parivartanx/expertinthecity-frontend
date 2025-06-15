@@ -106,7 +106,7 @@ const CommunityChat = () => {
       <div className="sticky top-0 left-0 z-30 flex items-center gap-3 px-4 py-3 bg-white border-b border-[#E6E6E6] shadow-sm w-full min-h-[56px] md:min-h-[64px]">
         <FaArrowLeft
           className="text-green-600 text-lg md:text-xl cursor-pointer hover:bg-green-50 rounded-full p-1 transition"
-          onClick={() => router.push("/home/chats")}
+          onClick={() => router.push("/chats")}
         />
         <span className="text-base md:text-lg font-semibold text-green-600 whitespace-nowrap">
           Back to Chats

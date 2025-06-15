@@ -55,7 +55,7 @@ export default function SignupPage() {
       console.log("Attempting signup...");
       await signup(email, password, name, role);
       console.log("Signup successful!");
-      router.push("/home");
+      router.push("/");
     } catch (error: any) {
       console.error("Signup failed:", error);
       console.log(
@@ -81,7 +81,7 @@ export default function SignupPage() {
         useAuthStore.getState().setUser(user, accessToken, refreshToken);
 
         // Redirect to home
-        router.push("/home");
+        router.push("/");
       }
     } catch (error: any) {
       // Only show error if it's not a popup closed error
@@ -101,7 +101,7 @@ export default function SignupPage() {
 
       <div
         className="absolute top-4 right-4 z-[1000] text-white bg-neutral-800 p-1 md:text-white rounded-full md:text-md cursor-pointer hover:opacity-80 transition-all ease-in-out duration-300"
-        onClick={() => router.push("/home")}
+        onClick={() => router.push("/")}
       >
         <IoCloseOutline />
       </div>

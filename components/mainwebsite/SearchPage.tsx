@@ -97,7 +97,7 @@ const SearchPage = () => {
           {results.map((r, i) => (
             <div
               key={i}
-              onClick={() => (window.location.href = "/home/profile")}
+              onClick={() => (window.location.href = "/profile")}
               className="group cursor-pointer bg-white rounded-2xl border border-green-100 hover:border-green-300 shadow-sm hover:shadow-md transition-all p-6 flex flex-col items-center text-center"
             >
               <img
@@ -121,7 +121,7 @@ const SearchPage = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.location.href = "/home/profile";
+                  window.location.href = "/profile";
                 }}
                 className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white bg-green-600 px-4 py-2 rounded-full hover:bg-green-700 transition-all"
               >

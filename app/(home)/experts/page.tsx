@@ -152,14 +152,14 @@ export default function ExpertsPage() {
 
               <div className="flex flex-col sm:flex-row gap-6 items-start pt-4">
               <Link
-                href="/home/register"
+                href="/register"
                   className="px-10 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-3 text-lg"
               >
                   <HiUserAdd className="text-2xl" />
                 Join Now
               </Link>
               <Link
-                href="/home/allexperts"
+                href="/allexperts"
                   className="px-10 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm flex items-center gap-3 text-lg"
               >
                   Explore Experts
@@ -271,7 +271,7 @@ export default function ExpertsPage() {
                   </span>
                 ))}
               </div>
-              <Link href={"/home/profile"}>
+              <Link href={"/profile"}>
                 <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
                   View Profile
                 </button>
@@ -280,7 +280,7 @@ export default function ExpertsPage() {
           ))}
         </div>
         <div className="text-center mt-8">
-          <Link href="/home/allexperts">
+          <Link href="/allexperts">
             <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
               View All
             </button>
@@ -290,7 +290,7 @@ export default function ExpertsPage() {
 
       <div className="flex w-full my-8 items-center justify-center bg-gradient-to-r from-green-50 to-green-100 py-6">
         <Link
-          href="/home/register"
+          href="/register"
           className="inline-flex items-center gap-3 px-8 py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         >
           <HiUserAdd className="text-2xl" />
@@ -312,7 +312,7 @@ export default function ExpertsPage() {
               industries. Get personalized Expertship, career advice, and
               more—all in one platform.
             </p>
-            <Link href={"/home/allexperts"}>
+            <Link href={"/allexperts"}>
               <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
                 Explore
               </button>
@@ -328,7 +328,7 @@ export default function ExpertsPage() {
               experienced, this is your gateway to impactful learning and
               growth.
             </p>
-            <Link href={"/home/about"}>
+            <Link href={"/about"}>
               <button className="bg-white text-black px-6 py-2 border border-black rounded hover:bg-gray-200">
                 Learn More
               </button>

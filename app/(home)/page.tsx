@@ -1,7 +1,6 @@
 "use client";
 
 import Achievements from "@/components/mainwebsite/Achievements";
-
 import CareerEarningsCard from "@/components/mainwebsite/CareerEarningsCard";
 import ExpertHeroSection from "@/components/mainwebsite/ExpertHeroSection";
 import FAQ from "@/components/mainwebsite/FAQ";
@@ -148,7 +147,7 @@ export default function HomePage() {
           {groupedCategories.map((category) => (
             <Link
               key={category.name}
-              href={`/home/categories/${encodeURIComponent(
+              href={`/categories/${encodeURIComponent(
                 category.name.toLowerCase().replace(/\s+/g, "-")
               )}/subcategories`}
             >
@@ -169,7 +168,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="flex justify-center">
-          <Link href={"/home/categories"}>
+          <Link href={"/categories"}>
             <button className="mt-2 px-6 py-2 rounded border border-neutral-300 bg-white text-green-700 font-semibold hover:bg-green-50 flex items-center gap-2 shadow-sm">
               View All Categories
               <span className="text-lg">→</span>
@@ -208,7 +207,7 @@ export default function HomePage() {
               <p className="text-sm text-neutral-600 mb-4 text-center">
                 {expert.description}
               </p>
-              <Link href={`/home/profile`}>
+              <Link href={`/profile`}>
                 <button className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 font-semibold">
                   View Profile
                 </button>
@@ -218,7 +217,7 @@ export default function HomePage() {
         </div>
         <div className="w-full flex items-center justify-center mt-6">
           <Link
-            href={"/home/experts"}
+            href={"/experts"}
             className="text-center p-2 bg-green-700  my-5 text-white  rounded font-bold"
           >
             View More
@@ -231,4 +230,4 @@ export default function HomePage() {
       <FAQ />
     </main>
   );
-}
+} 

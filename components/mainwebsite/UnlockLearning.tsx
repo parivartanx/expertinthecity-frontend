@@ -22,12 +22,12 @@ export default function UnlockLearning() {
           </p>
 
           <div className="flex gap-4 justify-center md:justify-start">
-            <Link href={"/home/search"}>
+            <Link href={"/search"}>
               <button className="bg-green-700 text-white text-sm px-5 py-2 rounded hover:bg-green-800 transition">
                 Find an Expert
               </button>
             </Link>
-            <Link href={"/home/experts"}>
+            <Link href={"/experts"}>
               <button className="border border-green-700 text-green-700 text-sm px-5 py-2 rounded hover:bg-green-50 transition">
                 Explore
               </button>

@@ -187,7 +187,7 @@ export default function CategoriesPage() {
         className="relative h-60 flex items-center justify-center text-center rounded-lg overflow-hidden mb-12"
         style={{
           backgroundImage:
-            "url('https://cdn.pixabay.com/photo/2020/05/19/12/48/home-office-5190614_1280.jpg')",
+            "url('https://cdn.pixabay.com/photo/2020/05/19/12/48-office-5190614_1280.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -295,7 +295,7 @@ export default function CategoriesPage() {
                       </span>
                     ))}
                   </div>
-                  <Link href={"/home/profile"}>
+                  <Link href={"/profile"}>
                     <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
                       View Profile
                     </button>

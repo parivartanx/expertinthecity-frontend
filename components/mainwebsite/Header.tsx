@@ -50,22 +50,22 @@ interface NavItem {
 }
 
 const navLinks: NavItem[] = [
-  { name: "Home", href: "/home", icon: BsHouseDoor },
-  { name: "Experts", href: "/home/experts", icon: BsPeople },
-  { name: "Categories", href: "/home/categories", icon: BsGrid },
-  { name: "Chats", href: "/home/chats", icon: BsChatDots },
+  { name: "Home", href: "/", icon: BsHouseDoor },
+  { name: "Experts", href: "/experts", icon: BsPeople },
+  { name: "Categories", href: "/categories", icon: BsGrid },
+  { name: "Chats", href: "/chats", icon: BsChatDots },
   {
     name: "More Info",
     href: "#",
     icon: BsInfoCircle,
     dropdown: true,
     items: [
-      { name: "Community", href: "/home/community", icon: HiOutlineUserGroup },
-      { name: "Testimonial", href: "/home/testimonial", icon: BsPeople },
-      { name: "About Us", href: "/home/about", icon: BsInfoCircle },
+      { name: "Community", href: "/community", icon: HiOutlineUserGroup },
+      { name: "Testimonial", href: "/testimonial", icon: BsPeople },
+      { name: "About Us", href: "/about", icon: BsInfoCircle },
       {
         name: "Contact Us",
-        href: "/home/contact",
+        href: "/contact",
         icon: RiCustomerService2Line,
       },
     ],
@@ -159,7 +159,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    router.push("/home");
+    router.push("/");
   };
 
   const handleLogoutClick = () => {
@@ -178,7 +178,7 @@ const Header = () => {
     <>
       <header
         className={`w-full px-4 py-2 flex items-center justify-between fixed top-0 z-[999] h-[60px] transition-all duration-300 ${
-          pathname === "/home" 
+          pathname === "/" || pathname === "/"
             ? isScrolled
               ? "bg-white/80 backdrop-blur-md border-b border-green-200/50"
               : "bg-transparent"
@@ -186,11 +186,11 @@ const Header = () => {
         }`}
       >
         {/* Logo */}
-        <Link href="/home" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-center gap-2 group">
           <div className="relative flex items-center gap-2">
             {/* City Icon */}
             <div className="relative">
-              <HiOfficeBuilding className={`text-3xl ${pathname === "/home" && !isScrolled ? 'text-white' : 'text-green-600'} transition-colors duration-300`} />
+              <HiOfficeBuilding className={`text-3xl ${(pathname === "/" || pathname === "/") && !isScrolled ? 'text-white' : 'text-green-600'} transition-colors duration-300`} />
             </div>
             
             <div className="flex flex-col leading-tight">
@@ -204,7 +204,7 @@ const Header = () => {
                 
                 {/* "in" text */}
                 <span 
-                  className={`text-xs font-medium ${pathname === "/home" && !isScrolled ? 'text-white/90' : 'text-green-600'} -mt-1`}
+                  className={`text-xs font-medium ${(pathname === "/" || pathname === "/") && !isScrolled ? 'text-white/90' : 'text-green-600'} -mt-1`}
                 >
                   in
                 </span>
@@ -212,7 +212,7 @@ const Header = () => {
               
               {/* "THE CITY" text */}
               <span 
-                className={`text-sm font-bold tracking-wider ${pathname === "/home" && !isScrolled ? 'text-white' : 'text-green-600'} -mt-1`}
+                className={`text-sm font-bold tracking-wider ${(pathname === "/" || pathname === "/") && !isScrolled ? 'text-white' : 'text-green-600'} -mt-1`}
               >
                 THE CITY
               </span>
@@ -222,12 +222,12 @@ const Header = () => {
 
         {/* Search Bar - LinkedIn Style */}
         <div className="hidden lg:flex items-center ml-8">
-          <div className={`relative flex items-center ${pathname === "/home" && !isScrolled ? 'bg-white/10 backdrop-blur-sm border-white/20' : 'bg-neutral-100 border-neutral-200'} border rounded-full px-4 py-1.5 w-[280px]`}>
-            <CiSearch className={`text-xl ${pathname === "/home" && !isScrolled ? 'text-white/80' : 'text-neutral-500'}`} />
+          <div className={`relative flex items-center ${(pathname === "/" || pathname === "/") && !isScrolled ? 'bg-white/10 backdrop-blur-sm border-white/20' : 'bg-neutral-100 border-neutral-200'} border rounded-full px-4 py-1.5 w-[280px]`}>
+            <CiSearch className={`text-xl ${(pathname === "/" || pathname === "/") && !isScrolled ? 'text-white/80' : 'text-neutral-500'}`} />
             <input
               type="text"
               placeholder="Search experts..."
-              className={`w-full bg-transparent border-none outline-none px-2 text-sm ${pathname === "/home" && !isScrolled ? 'text-white placeholder-white/60' : 'text-neutral-900 placeholder-neutral-500'}`}
+              className={`w-full bg-transparent border-none outline-none px-2 text-sm ${(pathname === "/" || pathname === "/") && !isScrolled ? 'text-white placeholder-white/60' : 'text-neutral-900 placeholder-neutral-500'}`}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
               value={searchQuery}
@@ -244,7 +244,7 @@ const Header = () => {
                       <div
                         key={expert.id}
                         className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
-                        onClick={() => router.push('/home/profile')}
+                        onClick={() => router.push('/profile')}
                       >
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={expert.avatar} alt={expert.name} />
@@ -269,7 +269,7 @@ const Header = () => {
                       <div
                         key={category.id}
                         className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
-                        onClick={() => router.push('/home/profile')}
+                        onClick={() => router.push('/profile')}
                       >
                         <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
                           {category.icon}
@@ -284,7 +284,7 @@ const Header = () => {
                   {/* View All Results Button */}
                   <div className="p-3 border-t border-green-100">
                     <Link
-                      href="/home/search"
+                      href="/search"
                       className="w-full py-2 text-sm font-medium text-green-600 hover:bg-green-50 rounded-md transition-colors flex items-center justify-center gap-2 block"
                     >
                       <span>View all results</span>
@@ -308,8 +308,8 @@ const Header = () => {
                 href={link.href}
                 className={`${
                   pathname === link.href 
-                    ? pathname === "/home" && !isScrolled ? "text-white" : "text-green-600"
-                    : pathname === "/home" && !isScrolled ? "text-white/80" : "text-green-600"
+                    ? (pathname === "/" || pathname === "/") && !isScrolled ? "text-white" : "text-green-600"
+                    : (pathname === "/" || pathname === "/") && !isScrolled ? "text-white/80" : "text-green-600"
                 } hover:text-green-600 transition px-1 flex items-center gap-2`}
               >
                 <link.icon className="text-lg" />
@@ -322,8 +322,8 @@ const Header = () => {
                   onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                   className={`flex items-center gap-2 px-1 transition ${
                     showDropdown 
-                      ? pathname === "/home" && !isScrolled ? "text-white" : "text-green-600"
-                      : pathname === "/home" && !isScrolled ? "text-white/80" : "text-green-600"
+                      ? (pathname === "/" || pathname === "/") && !isScrolled ? "text-white" : "text-green-600"
+                      : (pathname === "/" || pathname === "/") && !isScrolled ? "text-white/80" : "text-green-600"
                   } hover:text-green-600`}
                 >
                   <link.icon className="text-lg" />
@@ -357,7 +357,7 @@ const Header = () => {
         <div className="flex gap-2 items-center">
           {/* Mobile Hamburger */}
           <button
-            className={`lg:hidden p-2 hover:bg-white/10 rounded ${pathname === "/home" && !isScrolled ? 'text-white' : 'text-green-600'}`}
+            className={`lg:hidden p-2 hover:bg-white/10 rounded ${pathname === "/" && !isScrolled ? 'text-white' : 'text-green-600'}`}
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
@@ -375,7 +375,7 @@ const Header = () => {
                           {getInitials(user?.name || "")}
                         </AvatarFallback>
                       </Avatar>
-                      <span className={`text-sm font-medium md:hidden ${pathname === "/home" && !isScrolled ? 'text-white' : 'text-green-600'}`}>
+                      <span className={`text-sm font-medium md:hidden ${pathname === "/" && !isScrolled ? 'text-white' : 'text-green-600'}`}>
                         {user?.name}
                       </span>
                     </button>
@@ -388,7 +388,7 @@ const Header = () => {
                       <p className="text-xs text-neutral-500">{user?.email}</p>
                     </div>
                     <DropdownMenuItem
-                      onClick={() => router.push("/home/user")}
+                      onClick={() => router.push("/user")}
                       className="flex items-center gap-2 px-2 py-2 text-sm text-neutral-700 hover:text-green-600 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
                     >
                       <FaRegUser className="h-4 w-4" />
@@ -435,9 +435,9 @@ const Header = () => {
               </>
             ) : (
               <Link
-                href="/home/login"
+                href="/login"
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  pathname === "/home" && !isScrolled
+                  pathname === "/" && !isScrolled
                     ? "bg-green-600 text-white hover:bg-green-700"
                     : "bg-green-600 text-white hover:bg-green-700"
                 }`}
@@ -485,7 +485,7 @@ const Header = () => {
             </button>
 
             {/* Logo */}
-            <Link href="/home" onClick={() => setMobileOpen(false)}>
+            <Link href="/" onClick={() => setMobileOpen(false)}>
               <div className="flex flex-col mb-4">
                 <span className="text-lg font-extrabold text-green-600">
                   Expert
@@ -495,6 +495,92 @@ const Header = () => {
                 </span>
               </div>
             </Link>
+
+            {/* Mobile Search Bar */}
+            <div className="mb-4">
+              <div className="relative flex items-center bg-neutral-100 border border-neutral-200 rounded-full px-4 py-1.5">
+                <CiSearch className="text-xl text-neutral-500" />
+                <input
+                  type="text"
+                  placeholder="Search experts..."
+                  className="w-full bg-transparent border-none outline-none px-2 text-sm text-neutral-900 placeholder-neutral-500"
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              {/* Mobile Search Results Dropdown */}
+              {searchFocused && searchQuery.trim() && (
+                <div className="absolute left-4 right-4 mt-2 bg-white rounded-lg shadow-lg border border-green-200/50 overflow-hidden z-50">
+                  <div className="p-3 border-b border-green-100">
+                    <h3 className="text-sm font-semibold text-neutral-900 mb-2">Experts</h3>
+                    <div className="space-y-2">
+                      {filteredResults.experts.map(expert => (
+                        <div
+                          key={expert.id}
+                          className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
+                          onClick={() => {
+                            router.push('/profile');
+                            setMobileOpen(false);
+                          }}
+                        >
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={expert.avatar} alt={expert.name} />
+                            <AvatarFallback>{expert.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-neutral-900 truncate">{expert.name}</p>
+                            <p className="text-xs text-neutral-500 truncate">{expert.title}</p>
+                          </div>
+                          <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                            {expert.category}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="p-3">
+                    <h3 className="text-sm font-semibold text-neutral-900 mb-2">Categories</h3>
+                    <div className="space-y-2">
+                      {filteredResults.categories.map(category => (
+                        <div
+                          key={category.id}
+                          className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
+                          onClick={() => {
+                            router.push('/profile');
+                            setMobileOpen(false);
+                          }}
+                        >
+                          <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                            {category.icon}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-neutral-900">{category.name}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* View All Results Button */}
+                    <div className="p-3 border-t border-green-100">
+                      <Link
+                        href="/search"
+                        className="w-full py-2 text-sm font-medium text-green-600 hover:bg-green-50 rounded-md transition-colors flex items-center justify-center gap-2 block"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <span>View all results</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Mobile Nav */}
             <nav className="flex flex-col gap-3">
@@ -555,11 +641,11 @@ const Header = () => {
 
             {/* Auth Buttons */}
             <div className="mt-6 flex flex-col gap-2">
-              {pathname === "/home" && !isScrolled ? (
+              {pathname === "/" && !isScrolled ? (
                 <>
                   <div
                     onClick={() => {
-                      router.push("/home/user");
+                      router.push("/user");
                       setMobileOpen(false);
                     }}
                     className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-green-50 rounded-lg transition-colors"

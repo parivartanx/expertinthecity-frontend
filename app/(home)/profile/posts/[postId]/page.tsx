@@ -48,7 +48,7 @@ export default function SinglePostPage({
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
           <h1 className="text-2xl font-bold text-gray-800">Post not found</h1>
           <Link
-            href="/home/profile"
+            href="/profile"
             className="text-green-600 hover:underline mt-4 inline-block"
           >
             Back to Profile
@@ -76,7 +76,7 @@ export default function SinglePostPage({
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow">
         {/* Back button */}
         <div className="p-4 border-b">
-          <Link href="/home/profile" className="text-green-600 hover:underline">
+          <Link href="/profile" className="text-green-600 hover:underline">
             ← Back to Profile
           </Link>
         </div>

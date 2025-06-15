@@ -62,7 +62,7 @@ export default function Footer() {
             {categories.slice(0, 6).map((category) => (
               <li key={category.slug}>
                 <Link
-                  href={`/home/categories/${category.slug}`}
+                  href={`/categories/${category.slug}`}
                   className="hover:text-green-600 flex items-center gap-2"
                 >
                   <category.icon className="text-sm" />
@@ -80,7 +80,7 @@ export default function Footer() {
             {categories.slice(6).map((category) => (
               <li key={category.slug}>
                 <Link
-                  href={`/home/categories/${category.slug}`}
+                  href={`/categories/${category.slug}`}
                   className="hover:text-green-600 flex items-center gap-2"
                 >
                   <category.icon className="text-sm" />
@@ -97,7 +97,7 @@ export default function Footer() {
           <ul className="space-y-1 text-gray-700">
             <li>
               <Link
-                href="/home/terms-of-service"
+                href="/terms-of-service"
                 className="hover:text-green-600"
               >
                 Terms of Service
@@ -105,7 +105,7 @@ export default function Footer() {
             </li>
             <li>
               <Link
-                href="/home/privacy-policy"
+                href="/privacy-policy"
                 className="hover:text-green-600"
               >
                 Privacy Policy
@@ -129,12 +129,12 @@ export default function Footer() {
           <h4 className="font-semibold mb-2">Resources</h4>
           <ul className="space-y-1 text-gray-700">
             <li>
-              <Link href="/home/about" className="hover:text-green-600">
+              <Link href="/about" className="hover:text-green-600">
                 About Us
               </Link>
             </li>
             <li>
-              <Link href="/home/contact" className="hover:text-green-600">
+              <Link href="/contact" className="hover:text-green-600">
                 Contact Us
               </Link>
             </li>
@@ -160,7 +160,7 @@ export default function Footer() {
           <p className="text-xs text-gray-600">
             By joining, you consent to our{" "}
             <Link
-              href="/home/privacy-policy"
+              href="/privacy-policy"
               className="text-green-600 hover:underline"
             >
               Privacy Policy
@@ -174,13 +174,13 @@ export default function Footer() {
       <div className="border-t text-sm text-gray-600 py-4 px-4 flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto">
         <p>© 2024 ExpertInTheCity. All rights reserved.</p>
         <div className="flex space-x-4 mt-2 md:mt-0 text-green-600">
-          <Link href="/home/privacy-policy" className="hover:underline">
+          <Link href="/privacy-policy" className="hover:underline">
             Privacy Policy
           </Link>
-          <Link href="/home/terms-of-service" className="hover:underline">
+          <Link href="/terms-of-service" className="hover:underline">
             Terms of Use
           </Link>
-          <Link href="/home/cookie-policy" className="hover:underline">
+          <Link href="/cookie-policy" className="hover:underline">
             Cookie Policy
           </Link>
         </div>

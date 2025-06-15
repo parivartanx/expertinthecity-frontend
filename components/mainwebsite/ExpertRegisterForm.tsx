@@ -87,7 +87,7 @@ const ExpertRegisterForm = () => {
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-2 md:px-0">
-      <Link href={"/home/experts"}>
+      <Link href={"/experts"}>
         <button className="flex items-center text-sm text-gray-500 mb-4 hover:underline">
           <FaArrowLeft className="mr-2" /> Back to Become a Provider
         </button>

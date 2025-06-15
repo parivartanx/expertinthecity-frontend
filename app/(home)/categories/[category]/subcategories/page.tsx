@@ -96,7 +96,7 @@ export default function SubcategoriesPage() {
   const handleSubcategoryClick = (subcategory: string) => {
     // For now, just alert. Later, route to experts page.
     router.push(
-      `/home/categories/${encodeURIComponent(
+      `/categories/${encodeURIComponent(
         category as string
       )}/subcategories/${encodeURIComponent(
         subcategory.toLowerCase().replace(/\s+/g, "-")

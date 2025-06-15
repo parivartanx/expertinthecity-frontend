@@ -77,7 +77,7 @@ const ExpertEarningsCard = () => {
           </p>
         </div>
 
-        <Link href={"/home/register"}>
+        <Link href={"/register"}>
           <button className="mt-6 w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition">
             Start Earning Today
           </button>

@@ -204,7 +204,7 @@ const ChatUI = () => {
         <div className="flex gap-4">
           <IoIosNotificationsOutline
             onClick={() => {
-              router.push("/home/notifications");
+              router.push("/notifications");
             }}
             className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer"
           />
@@ -315,7 +315,7 @@ const ChatUI = () => {
       {/* Sticky Join Community Button */}
       <div className="sticky bottom-0 left-0 w-full flex justify-center bg-white py-3 z-10 border-t border-[#E6E6E6]">
         <button
-          onClick={() => router.push("/home/community")}
+          onClick={() => router.push("/community")}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold rounded-full shadow-md hover:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm md:text-base"
         >
           <HiOutlineUserGroup className="text-xl md:text-2xl" />
@@ -332,7 +332,7 @@ const ChatUI = () => {
         <div className="flex items-center gap-2 md:gap-3">
           <FaArrowLeft
             className="text-green-600 text-lg md:text-xl cursor-pointer hover:bg-green-50 rounded-full p-1 transition"
-            onClick={() => router.push("/home")}
+            onClick={() => router.push("/")}
           />
           <span className="text-base md:text-lg font-semibold text-green-600 whitespace-nowrap">
             Back to Home

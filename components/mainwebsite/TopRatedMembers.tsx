@@ -49,13 +49,13 @@ const TopRatedMentors = () => {
           </div>
 
           <div className="flex gap-4">
-            <Link href={"/home/experts"}>
+            <Link href={"/experts"}>
               {" "}
               <button className="border border-green-600 text-green-600 px-5 py-2 rounded hover:bg-green-50 transition">
                 Explore
               </button>
             </Link>
-            <Link href={"/home/about"}>
+            <Link href={"/about"}>
               {" "}
               <button className="flex items-center gap-1 text-green-600 hover:underline">
                 Learn More <span>›</span>

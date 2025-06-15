@@ -81,13 +81,13 @@ export default function AboutPage() {
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link
-                  href="/home"
+                  href="/"
                   className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
                 >
                   Join Our Network
                 </Link>
                 <Link
-                  href="/home"
+                  href="/"
                   className="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20 flex items-center justify-center"
                 >
                   Learn More
