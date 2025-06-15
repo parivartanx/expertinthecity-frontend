@@ -672,7 +672,7 @@ const Header = () => {
               ) : (
                 <>
                   <Link
-                    href="/auth/login"
+                    href="/login"
                     className="border border-green-600 text-green-600 px-3 py-1 rounded hover:bg-green-50 flex items-center gap-2 text-sm"
                     onClick={() => setMobileOpen(false)}
                   >
@@ -680,7 +680,7 @@ const Header = () => {
                     Login
                   </Link>
                   <Link
-                    href="/auth/signup"
+                    href="/signup"
                     className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 flex items-center gap-2 text-sm"
                     onClick={() => setMobileOpen(false)}
                   >

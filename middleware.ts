@@ -6,16 +6,16 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const isAuthenticated = request.cookies.get("isAuthenticated")?.value === "true";
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  const isLoginRoute = request.nextUrl.pathname === "/login";
+  const isLoginRoute = request.nextUrl.pathname === "/admin/login";
 
   // If user is authenticated and tries to access login page, redirect to dashboard
   if (isAuthenticated && isLoginRoute) {
     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
-  // If user is not authenticated and tries to access admin routes, redirect to login
-  if (isAdminRoute && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // If user is not authenticated and tries to access admin routes (except login), redirect to login
+  if (isAdminRoute && !isAuthenticated && !isLoginRoute) {
+    return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
   return NextResponse.next();

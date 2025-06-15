@@ -112,12 +112,12 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/auth/login" className="hover:text-green-600">
+              <Link href="/login" className="hover:text-green-600">
                 Login
               </Link>
             </li>
             <li>
-              <Link href="/auth/signup" className="hover:text-green-600">
+              <Link href="/signup" className="hover:text-green-600">
                 Register
               </Link>
             </li>

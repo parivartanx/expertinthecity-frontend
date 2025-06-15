@@ -347,12 +347,12 @@ export default function ExpertsPage() {
           learning journey.
         </p>
         <div className="flex justify-center gap-4">
-          <Link href={"/auth/signup"}>
+          <Link href={"/signup"}>
             <button className="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
               Sign Up
             </button>
           </Link>
-          <Link href={"/auth/login"}>
+          <Link href={"/login"}>
             <button className="bg-white text-black border border-black px-6 py-2 rounded hover:bg-gray-200">
               Log In
             </button>
