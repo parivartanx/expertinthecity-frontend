@@ -29,7 +29,7 @@ export default function DashboardPage() {
       };
     });
     setCombinedUserData(combined);
-  }, []);
+  }, [])
 
   return (
     <div className="space-y-6">
