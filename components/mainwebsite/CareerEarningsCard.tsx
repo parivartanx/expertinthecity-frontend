@@ -6,6 +6,11 @@ const MIN_YEARS = 1;
 const MAX_YEARS = 10;
 const BASE_EARNINGS = 20000;
 
+// Format number with commas
+const formatNumber = (num: number) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
 const ExpertEarningsCard = () => {
   const [years, setYears] = useState(5);
   const earnings = years * BASE_EARNINGS;
@@ -28,7 +33,7 @@ const ExpertEarningsCard = () => {
         </p>
         <div className="flex gap-10 mt-6 text-green-600 font-semibold text-lg">
           <div>
-            <div className="text-2xl font-bold">5000+</div>
+            <div className="text-2xl font-bold">5,000+</div>
             <div className="text-sm text-gray-600">Active Clients</div>
           </div>
           <div>
@@ -63,11 +68,11 @@ const ExpertEarningsCard = () => {
         <div className="mt-6">
           <p className="text-gray-700 font-medium">Based on our data...</p>
           <h2 className="text-3xl font-bold text-gray-900">
-            ${earnings.toLocaleString()}{" "}
+            ${formatNumber(earnings)}{" "}
             <span className="text-lg font-medium text-gray-700">in 1 year</span>
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            That’s ${(earnings / 365).toFixed(0)} a day — all from doing what
+            That's ${formatNumber(Math.floor(earnings / 365))} a day — all from doing what
             you love.
           </p>
         </div>
