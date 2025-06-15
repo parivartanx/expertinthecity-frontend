@@ -16,7 +16,7 @@ import { User } from "@/lib/auth";
 
 interface HeaderProps {
   user: User | null;
-}
+};
 
 export function Header({ user }: HeaderProps) {
   const { theme, setTheme } = useTheme();
