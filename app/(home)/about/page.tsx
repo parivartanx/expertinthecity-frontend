@@ -88,7 +88,7 @@ export default function AboutPage() {
                 </Link>
                 <Link
                   href="/"
-                  className="px-8 py-3 bg-white/10 text-white rounded-lg font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-white/20 flex items-center justify-center"
+                  className="px-8 py-3 bg-white/10 text-black rounded-lg font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm border border-gray/50 flex items-center justify-center "
                 >
                   Learn More
                 </Link>

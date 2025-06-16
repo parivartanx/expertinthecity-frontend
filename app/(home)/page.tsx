@@ -10,6 +10,8 @@ import TestimonialSection from "@/components/mainwebsite/TestimonialSection";
 import TopRatedMentors from "@/components/mainwebsite/TopRatedMembers";
 import UnlockLearning from "@/components/mainwebsite/UnlockLearning";
 import Link from "next/link";
+import { useState } from "react";
+import { HiChevronRight } from "react-icons/hi";
 
 // Import React Icons for categories
 import {
@@ -122,6 +124,8 @@ export default function HomePage() {
     },
   ];
 
+  const [activeTab, setActiveTab] = useState(groupedCategories[0].name);
+
   return (
     <main
       className="font-sans bg-white text-neutral-900"
@@ -143,29 +147,41 @@ export default function HomePage() {
           Browse our most requested services and find the right professional for
           your needs.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-center mb-8">
-          {groupedCategories.map((category) => (
-            <Link
-              key={category.name}
-              href={`/categories/${encodeURIComponent(
-                category.name.toLowerCase().replace(/\s+/g, "-")
-              )}/subcategories`}
-            >
-              <div className="flex flex-col items-center gap-3 p-8 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors duration-200 border border-green-200 bg-green-50">
-                <span className="text-xl font-bold text-green-800 mb-2">
-                  {category.name}
-                </span>
-                <ul className="text-sm text-neutral-700 list-disc list-inside text-left">
-                  {category.subcategories.slice(0, 3).map((sub, idx) => (
-                    <li key={idx}>{sub}</li>
-                  ))}
-                  {category.subcategories.length > 3 && (
-                    <li className="text-gray-400">...and more</li>
-                  )}
-                </ul>
-              </div>
-            </Link>
-          ))}
+        <div className="w-full max-w-5xl mx-auto mb-12">
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-3 justify-center mb-8">
+            {groupedCategories.map((cat) => (
+              <button
+                key={cat.name}
+                className={`px-6 py-2 rounded-full font-semibold text-base transition-all duration-200 focus:outline-none border border-green-700/30 shadow-sm
+                  ${
+                    activeTab === cat.name
+                      ? "bg-lime-400 text-black"
+                      : "bg-gray-600 text-gray-200 hover:bg-gray-700"
+                  }
+                `}
+                onClick={() => setActiveTab(cat.name)}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+          {/* Subcategories Capsules Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 justify-items-center">
+            {groupedCategories
+              .find((cat) => cat.name === activeTab)
+              ?.subcategories.map((subcat) => (
+                <a
+                  key={subcat}
+                  href={`/allexperts?category=${encodeURIComponent(
+                    subcat.toLowerCase().replace(/\s+/g, "-")
+                  )}`}
+                  className="px-6 py-4 rounded-2xl   font-semibold text-center shadow-lg bg-lime-400 text-black transition-all duration-200 text-base cursor-pointer w-full"
+                >
+                  {subcat}
+                </a>
+              ))}
+          </div>
         </div>
         <div className="flex justify-center">
           <Link href={"/categories"}>
@@ -230,4 +246,4 @@ export default function HomePage() {
       <FAQ />
     </main>
   );
-} 
+}

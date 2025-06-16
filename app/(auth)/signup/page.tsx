@@ -29,7 +29,9 @@ export default function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [otherPreference, setOtherPreference] = useState("");
-  const [role, setRole] = useState<"USER" | "EXPERT">("USER");
+  const [suggestedUsers, setSuggestedUsers] = useState<any[]>([]);
+  const [following, setFollowing] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { signup, isLoading, error, clearError } = useAuthStore();
 
@@ -49,19 +51,52 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted with:", { email, password, name, role });
-
-    try {
-      console.log("Attempting signup...");
-      await signup(email, password, name, role);
-      console.log("Signup successful!");
+    if (step === 1) {
+      try {
+        await signup(email, password, name, "USER");
+        setStep(2); // Go to preferences step
+      } catch (error: any) {
+        console.error("Signup failed:", error);
+      }
+    } else if (step === 2) {
+      // Submit preferences
+      setLoading(true);
+      try {
+        await axiosInstance.patch("/api/users/profile", {
+          interests: selectedPreferences,
+        });
+        // Fetch suggested users (mock or real API)
+        // Replace with your API call if available
+        setSuggestedUsers([
+          {
+            id: 1,
+            name: "Priya Mehta",
+            avatar: "https://randomuser.me/api/portraits/women/65.jpg",
+            title: "Certified Financial Planner",
+          },
+          {
+            id: 2,
+            name: "John Carter",
+            avatar: "https://randomuser.me/api/portraits/men/45.jpg",
+            title: "Investment Strategist",
+          },
+          {
+            id: 3,
+            name: "Amit Shah",
+            avatar: "https://randomuser.me/api/portraits/men/33.jpg",
+            title: "Mutual Funds Advisor",
+          },
+        ]);
+        setStep(3); // Go to follow users step
+      } catch (err) {
+        console.log(err);
+        alert("Failed to update preferences.");
+      } finally {
+        setLoading(false);
+      }
+    } else if (step === 3) {
+      // Optionally send follow data to API here
       router.push("/");
-    } catch (error: any) {
-      console.error("Signup failed:", error);
-      console.log(
-        "Current error state:",
-        error?.response?.data?.message || "Signup failed"
-      );
     }
   };
 
@@ -69,27 +104,25 @@ export default function SignupPage() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
-
       const response = await axiosInstance.post("/api/auth/google", {
-        idToken: idToken,
+        idToken,
       });
-
       if (response.data.status === "success") {
         const { user, accessToken, refreshToken } = response.data.data;
-
-        // Store tokens and update auth store
         useAuthStore.getState().setUser(user, accessToken, refreshToken);
-
-        // Redirect to home
-        router.push("/");
+        setStep(2); // Go to preferences step
       }
     } catch (error: any) {
-      // Only show error if it's not a popup closed error
       if (error.code !== "auth/popup-closed-by-user") {
-        console.error("Google sign-in failed:", error);
         alert(error.response?.data?.message || "Failed to sign in with Google");
       }
     }
+  };
+
+  const handleFollowToggle = (id: number) => {
+    setFollowing((prev) =>
+      prev.includes(id) ? prev.filter((uid) => uid !== id) : [...prev, id]
+    );
   };
 
   return (
@@ -153,12 +186,16 @@ export default function SignupPage() {
             <h2 className="text-2xl font-bold mb-1 text-center">
               {step === 1
                 ? "Create Your Account"
-                : "Tell Us About Your Interests"}
+                : step === 2
+                ? "Tell Us About Your Interests"
+                : "Suggested Users to Follow"}
             </h2>
             <p className="text-sm text-neutral-600 mb-6 text-center">
               {step === 1
                 ? "Join the network and connect with verified experts."
-                : "Select topics you're interested in to personalize your experience."}
+                : step === 2
+                ? "Select topics you're interested in to personalize your experience."
+                : "Follow users to get updates and build your network."}
             </p>
 
             <form
@@ -240,39 +277,6 @@ export default function SignupPage() {
                       )}
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="block text-sm font-medium text-neutral-700">
-                      I want to join as
-                    </label>
-                    <div className="flex gap-4 mt-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="role"
-                          value="USER"
-                          checked={role === "USER"}
-                          onChange={() => setRole("USER")}
-                          className="h-4 w-4 text-green-600 focus:ring-green-500 border-neutral-300"
-                        />
-                        <span className="ml-2 text-sm text-neutral-700">
-                          Learner
-                        </span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="role"
-                          value="EXPERT"
-                          checked={role === "EXPERT"}
-                          onChange={() => setRole("EXPERT")}
-                          className="h-4 w-4 text-green-600 focus:ring-green-500 border-neutral-300"
-                        />
-                        <span className="ml-2 text-sm text-neutral-700">
-                          Expert
-                        </span>
-                      </label>
-                    </div>
-                  </div>
                   <div className="flex items-start">
                     <div className="flex items-center h-5">
                       <input
@@ -304,8 +308,15 @@ export default function SignupPage() {
                       </label>
                     </div>
                   </div>
+                  <button
+                    type="submit"
+                    disabled={!agree || isLoading}
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                  >
+                    {isLoading ? "Signing up..." : "Sign Up"}
+                  </button>
                 </>
-              ) : (
+              ) : step === 2 ? (
                 <div className="space-y-4 text-left">
                   <div className="grid grid-cols-2 gap-3">
                     {preferences.map((preference) => (
@@ -343,20 +354,61 @@ export default function SignupPage() {
                       />
                     </div>
                   )}
+                  <button
+                    type="submit"
+                    disabled={loading || selectedPreferences.length === 0}
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                  >
+                    {loading ? "Saving..." : "Continue"}
+                  </button>
                 </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={(step === 1 && !agree) || isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-              >
-                {isLoading
-                  ? "Creating account..."
-                  : step === 1
-                  ? "Continue"
-                  : "Complete Sign Up"}
-              </button>
+              ) : step === 3 ? (
+                <div className="space-y-4 text-left">
+                  <h2 className="text-xl font-bold mb-1">
+                    Suggested Users to Follow
+                  </h2>
+                  <p className="text-gray-500 mb-6 text-sm">
+                    Follow users to get updates and build your network.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    {suggestedUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-4 bg-gray-50 border rounded-lg p-4"
+                      >
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold">{user.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {user.title}
+                          </div>
+                        </div>
+                        <button
+                          className={`px-4 py-1 rounded-full font-medium text-sm transition-all duration-200 ${
+                            following.includes(user.id)
+                              ? "bg-green-600 text-white"
+                              : "bg-gray-200 text-gray-700 hover:bg-green-100"
+                          }`}
+                          type="button"
+                          onClick={() => handleFollowToggle(user.id)}
+                        >
+                          {following.includes(user.id) ? "Following" : "Follow"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-neutral-800 hover:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-800 mt-4"
+                  >
+                    Finish & Go to Home
+                  </button>
+                </div>
+              ) : null}
 
               {step === 2 && (
                 <button
