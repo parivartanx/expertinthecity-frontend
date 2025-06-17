@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
+import { HiChevronRight } from "react-icons/hi";
 
 // Grouped categories and subcategories
 const groupedCategories = [
@@ -215,43 +216,35 @@ export default function CategoriesPage() {
           Browse our most requested services and find the right professional for
           your needs.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
           {groupedCategories.map((cat) => (
             <div
               key={cat.name}
-              className="bg-green-50 border border-green-200 rounded-lg p-6"
+              className="relative bg-white/90 border border-green-100 rounded-2xl shadow-lg p-6 flex flex-col items-start transition-all duration-200 hover:shadow-2xl group"
             >
-              <button
-                className="w-full text-left text-xl font-bold text-green-800 mb-2 focus:outline-none"
-                onClick={() =>
-                  setOpenCategory(openCategory === cat.name ? null : cat.name)
-                }
-              >
-                {cat.name}
-              </button>
-              {openCategory === cat.name && (
-                <ul className="space-y-2 mt-2">
-                  {cat.subcategories.map((subcat) => (
-                    <li key={subcat}>
-                      <button
-                        className={`w-full text-left px-3 py-2 rounded hover:bg-green-100 font-medium text-green-900 ${
-                          selectedSubcategory ===
-                          subcat.toLowerCase().replace(/\s+/g, "-")
-                            ? "bg-green-200"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          setSelectedSubcategory(
-                            subcat.toLowerCase().replace(/\s+/g, "-")
-                          )
-                        }
-                      >
-                        {subcat}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {/* Main Category */}
+              <div className="w-full mb-4">
+                <div className="text-lg md:text-xl font-bold text-green-800 mb-2 px-1">
+                  {cat.name}
+                </div>
+                <div className="border-b border-green-100 mb-2" />
+              </div>
+              {/* Subcategories List */}
+              <ul className="w-full space-y-1">
+                {cat.subcategories.map((subcat) => (
+                  <li key={subcat}>
+                    <Link
+                      href={`/allexperts?category=${encodeURIComponent(
+                        subcat.toLowerCase().replace(/\s+/g, "-")
+                      )}`}
+                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-green-900 bg-green-50 hover:bg-green-100 transition-all text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-200`}
+                    >
+                      <span>{subcat}</span>
+                      <HiChevronRight className="text-lg text-green-400" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>

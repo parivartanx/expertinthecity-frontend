@@ -138,49 +138,49 @@ export default function ExpertsPage() {
               </div>
 
               <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight leading-tight">
-              Connect with Top{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
-                Experts
-              </span>
-            </h1>
+                Connect with Top{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600">
+                  Experts
+                </span>
+              </h1>
 
               <p className="text-xl text-neutral-200 leading-relaxed max-w-2xl">
                 Discover a diverse range of experts who can help you level up
                 your career, hobby, or personal growth journey. Get personalized
-              guidance from industry leaders.
-            </p>
+                guidance from industry leaders.
+              </p>
 
               <div className="flex flex-col sm:flex-row gap-6 items-start pt-4">
-              <Link
-                href="/register"
+                <Link
+                  href="/becomeanexpert"
                   className="px-10 py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-3 text-lg"
-              >
+                >
                   <HiUserAdd className="text-2xl" />
-                Join Now
-              </Link>
-              <Link
-                href="/allexperts"
+                  Join Now
+                </Link>
+                <Link
+                  href="/allexperts"
                   className="px-10 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm flex items-center gap-3 text-lg"
-              >
+                >
                   Explore Experts
-              </Link>
-            </div>
+                </Link>
+              </div>
 
-            {/* Stats Section */}
+              {/* Stats Section */}
               <div className="grid grid-cols-2 gap-8 pt-12">
-              {[
-                { number: "1000+", label: "Active Experts" },
-                { number: "50+", label: "Categories" },
-                { number: "95%", label: "Success Rate" },
-                { number: "24/7", label: "Support" },
-              ].map((stat) => (
+                {[
+                  { number: "1000+", label: "Active Experts" },
+                  { number: "50+", label: "Categories" },
+                  { number: "95%", label: "Success Rate" },
+                  { number: "24/7", label: "Support" },
+                ].map((stat) => (
                   <div key={stat.label} className="text-left">
                     <div className="inline-block px-6 py-4 rounded-xl bg-neutral-900/40 backdrop-blur-sm border border-neutral-700/50">
                       <div className="text-3xl font-bold text-green-500 mb-2">
-                      {stat.number}
-                    </div>
+                        {stat.number}
+                      </div>
                       <div className="text-base text-neutral-300 font-medium">
-                      {stat.label}
+                        {stat.label}
                       </div>
                     </div>
                   </div>
@@ -242,37 +242,74 @@ export default function ExpertsPage() {
           {mentors.map((mentor) => (
             <div
               key={mentor.id}
-              className="bg-white rounded-lg shadow p-4 relative"
+              className="relative bg-white/60 backdrop-blur-lg border border-green-100 rounded-3xl shadow-xl p-6 flex flex-col items-center transition-transform duration-200 hover:-translate-y-1 hover:shadow-2xl group overflow-hidden"
             >
+              {/* Status Badge */}
               {mentor.status && (
-                <span className="absolute top-2 left-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
+                <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md z-10">
                   {mentor.status}
                 </span>
               )}
-              <img
-                src={mentor.image}
-                alt={mentor.name}
-                className="w-full h-48 object-cover rounded mb-4"
-              />
-              <h2 className="text-lg font-semibold mb-1">{mentor.name}</h2>
-              <p className="text-sm text-gray-600 mb-1">{mentor.title}</p>
-              <p className="text-xs text-gray-400 mb-2">{mentor.location}</p>
-              <div className="flex items-center text-sm mb-2">
-                <span className="text-yellow-500 mr-1">⭐</span>
-                {mentor.rating} ({mentor.reviews} reviews)
+              {/* Profile Image */}
+              <div className="mb-4 z-10 flex justify-center w-full">
+                <img
+                  src={mentor.image}
+                  alt={mentor.name}
+                  className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover mx-auto group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
-              <div className="flex flex-wrap gap-2 text-xs mb-4">
-                {mentor.categories.map((cat, i) => (
-                  <span
-                    key={i}
-                    className="bg-gray-100 px-2 py-1 rounded text-gray-700"
-                  >
-                    {cat}
-                  </span>
-                ))}
+              {/* Name & Title */}
+              <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">
+                {mentor.name}
+              </h2>
+              <p className="text-sm text-green-600 font-medium mb-1 text-center">
+                {mentor.title}
+              </p>
+              <p className="text-xs text-gray-400 mb-2 text-center">
+                {mentor.location}
+              </p>
+              {/* Rating */}
+              <div className="flex items-center justify-center text-sm mb-2">
+                <span className="text-yellow-400 mr-1">★</span>
+                <span className="font-semibold text-gray-700">
+                  {mentor.rating}
+                </span>
+                <span className="text-gray-500 ml-1">
+                  ({mentor.reviews} reviews)
+                </span>
               </div>
+              {/* Categories - Wire Design */}
+              {mentor.categories.length > 0 && (
+                <div className="flex flex-col items-center mb-4 w-full">
+                  {/* Main Category */}
+                  <div className="font-semibold text-green-700 text-sm mb-1">
+                    {mentor.categories[0]}
+                  </div>
+                  {/* Wire and Subcategories */}
+                  {mentor.categories.length > 1 && (
+                    <div className="flex items-center w-full justify-center">
+                      {/* Wire left */}
+                      <div className="h-0.5 bg-green-200 flex-1" />
+                      {/* Subcategories */}
+                      <div className="flex gap-2 px-2">
+                        {mentor.categories.slice(1).map((cat, i) => (
+                          <span
+                            key={i}
+                            className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium border border-green-200"
+                          >
+                            {cat}
+                          </span>
+                        ))}
+                      </div>
+                      {/* Wire right */}
+                      <div className="h-0.5 bg-green-200 flex-1" />
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* View Profile Button */}
               <Link href={"/profile"}>
-                <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-2 rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all mt-2">
                   View Profile
                 </button>
               </Link>

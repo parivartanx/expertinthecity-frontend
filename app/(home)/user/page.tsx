@@ -213,33 +213,24 @@ export default function ProfilePage() {
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
-      <div className=" mx-auto bg-white overflow-hidden rounded-2xl shadow">
-        {/* Cover Image */}
-        <div
-          className="h-60 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url(https://cdn.pixabay.com/photo/2016/03/09/15/29/books-1246674_1280.jpg)",
-          }}
-        ></div>
-
+      <div className="mx-auto bg-white overflow-hidden rounded-2xl shadow">
         {/* Profile Header */}
-        <div className="flex flex-col md:flex-row p-6 md:items-start md:justify-between gap-4 md:gap-8 relative">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex flex-col md:flex-row p-8 pt-16 md:items-start md:justify-between gap-6 md:gap-8 relative">
+          <div className="flex flex-col md:flex-row gap-6 items-center">
             <img
               src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
               alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-white -mt-12 object-cover"
+              className="w-28 h-28 rounded-full border-4 border-white object-cover shadow-md"
             />
-            <div>
-              <div className="flex items-center justify-start gap-2 md:gap-4 flex-col md:flex-row">
-                <h1 className="text-2xl font-bold">{user?.name || "User"}</h1>
+            <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 md:gap-4 flex-col md:flex-row">
+                <h1 className="text-3xl font-bold">{user?.name || "User"}</h1>
               </div>
 
-              <p className="text-green-600 font-semibold mt-2">
+              <p className="text-green-600 font-semibold mt-3 text-lg">
                 Piano Instructor & Music Theory Specialist
               </p>
-              <div className="text-sm text-gray-500 flex flex-wrap gap-2 items-center mt-1">
+              <div className="text-sm text-gray-500 flex flex-wrap justify-center md:justify-start gap-3 items-center mt-2">
                 <span>New York, NY</span>
                 <span className="text-yellow-500">★ 4.9 (124 reviews)</span>
                 <span>128 followers</span>
@@ -249,7 +240,7 @@ export default function ProfilePage() {
           </div>
           {/* Edit Profile Button */}
           <button
-            className="flex items-center justify-center top-6 right-6 text-[12px] md:text-[12px] bg-white border border-green-600 text-green-600 px-4 py-1 rounded-2xl font-semibold gap-2  hover:bg-green-50 transition-all"
+            className="flex items-center justify-center text-[12px] md:text-[12px] bg-white border border-green-600 text-green-600 px-5 py-2 rounded-2xl font-semibold gap-2 hover:bg-green-50 transition-all shadow-sm"
             onClick={() => {
               router.push("/edit");
             }}
@@ -259,7 +250,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Main Content: Two Columns */}
-        <div className="grid md:grid-cols-3 gap-6 p-6 pt-0">
+        <div className="grid md:grid-cols-3 gap-8 p-8 pt-4">
           {/* Left Column: About Text, Stats, and Action Buttons */}
           <div className="md:col-span-1 space-y-4">
             <h2 className="text-lg font-semibold mb-2">About</h2>
@@ -401,6 +392,37 @@ export default function ProfilePage() {
               {activeTab === "Portfolio" && renderContent()}
               {activeTab === "Reviews" && renderContent()}
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-2 z-50">
+          <div className="flex justify-around items-center">
+            <button
+              className={`flex flex-col items-center p-2 ${
+                activeTab === "About" ? "text-green-600" : "text-gray-600"
+              }`}
+              onClick={() => setActiveTab("About")}
+            >
+              <MessageCircle className="w-6 h-6" />
+              <span className="text-xs mt-1">About</span>
+            </button>
+            <button
+              className={`flex flex-col items-center p-2 ${
+                activeTab === "Reviews" ? "text-green-600" : "text-gray-600"
+              }`}
+              onClick={() => setActiveTab("Reviews")}
+            >
+              <MessageCircle className="w-6 h-6" />
+              <span className="text-xs mt-1">Reviews</span>
+            </button>
+            <button
+              className="flex flex-col items-center p-2 text-green-600"
+              onClick={() => router.push("/become-an-expert")}
+            >
+              <MessageCircle className="w-6 h-6" />
+              <span className="text-xs mt-1">Become Expert</span>
+            </button>
           </div>
         </div>
       </div>
