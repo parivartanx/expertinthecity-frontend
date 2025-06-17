@@ -136,7 +136,6 @@ export default function HomePage() {
       <ExpertHeroSection />
       <Achievements />
       <FeaturedInMarquee />
-      <CareerEarningsCard />
 
       {/* Categories */}
       <section className="py-12 px-4 max-w-6xl mx-auto">
