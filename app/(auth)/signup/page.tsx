@@ -62,7 +62,7 @@ export default function SignupPage() {
       // Submit preferences
       setLoading(true);
       try {
-        await axiosInstance.patch("/api/users/profile", {
+        await axiosInstance.patch("/users/profile", {
           interests: selectedPreferences,
         });
         // Fetch suggested users (mock or real API)
@@ -104,7 +104,7 @@ export default function SignupPage() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
-      const response = await axiosInstance.post("/api/auth/google", {
+      const response = await axiosInstance.post("/auth/google", {
         idToken,
       });
       if (response.data.status === "success") {

@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axiosInstance.post("/api/auth/login", {
+          const response = await axiosInstance.post("/auth/login", {
             email,
             password,
           });
@@ -84,7 +84,7 @@ export const useAuthStore = create<AuthState>()(
             role,
           });
 
-          const response = await axiosInstance.post("/api/auth/register", {
+          const response = await axiosInstance.post("/auth/register", {
             email,
             password,
             name,
@@ -143,6 +143,12 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
         });
+        
+        // Clear user profile from user store
+        if (typeof window !== 'undefined') {
+          const { useUserStore } = require('./user-store');
+          useUserStore.getState().clearProfile();
+        }
       },
 
       clearError: () => set({ error: null }),

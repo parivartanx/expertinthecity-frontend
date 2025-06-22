@@ -475,7 +475,7 @@ const Header = () => {
                       <p className="text-xs text-neutral-500">{user?.email}</p>
                     </div>
                     <DropdownMenuItem
-                      onClick={() => router.push("/user")}
+                      onClick={() => router.push("/profile")}
                       className="flex items-center gap-2 px-2 py-2 text-sm text-neutral-700 hover:text-green-600 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
                     >
                       <FaRegUser className="h-4 w-4" />
