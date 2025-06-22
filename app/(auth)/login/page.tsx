@@ -51,7 +51,7 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
 
-      const response = await axiosInstance.post("/api/auth/google", {
+      const response = await axiosInstance.post("/auth/google", {
         idToken: idToken,
       });
 

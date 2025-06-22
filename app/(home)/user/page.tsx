@@ -242,7 +242,7 @@ export default function ProfilePage() {
           <button
             className="flex items-center justify-center text-[12px] md:text-[12px] bg-white border border-green-600 text-green-600 px-5 py-2 rounded-2xl font-semibold gap-2 hover:bg-green-50 transition-all shadow-sm"
             onClick={() => {
-              router.push("/edit");
+              router.push("/profile/update");
             }}
           >
             <FaEdit className="" /> Edit Profile

@@ -155,7 +155,7 @@ export default function HomePage() {
                 className={`px-6 py-2 rounded-full font-semibold text-base transition-all duration-200 focus:outline-none border border-green-700/30 shadow-sm
                   ${
                     activeTab === cat.name
-                      ? "bg-lime-400 text-black"
+                      ? "bg-green-400 text-black"
                       : "bg-gray-600 text-gray-200 hover:bg-gray-700"
                   }
                 `}
@@ -175,7 +175,7 @@ export default function HomePage() {
                   href={`/allexperts?category=${encodeURIComponent(
                     subcat.toLowerCase().replace(/\s+/g, "-")
                   )}`}
-                  className="px-6 py-4 rounded-2xl   font-semibold text-center shadow-lg bg-lime-400 text-black transition-all duration-200 text-base cursor-pointer w-full"
+                  className="px-6 py-4 rounded-2xl   font-semibold text-center shadow-lg bg-green-400 text-black transition-all duration-200 text-base cursor-pointer w-full"
                 >
                   {subcat}
                 </a>

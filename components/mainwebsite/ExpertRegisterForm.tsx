@@ -6,6 +6,8 @@ import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useExpertStore } from "@/lib/mainwebsite/expert-store";
+import { useUserStore } from "@/lib/mainwebsite/user-store";
 
 const steps = [
   "Personal Information",
@@ -64,6 +66,8 @@ const suggestedUsers = [
 const ExpertRegisterForm = () => {
   const router = useRouter();
   const { isAuthenticated, user, login } = useAuthStore();
+  const { createExpertProfile, isLoading, error } = useExpertStore();
+  const { profile } = useUserStore();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<{
     fullName: string;
@@ -76,7 +80,7 @@ const ExpertRegisterForm = () => {
     bio: string;
     experience: string;
     certifications: string;
-    profilePhoto: null;
+    profilePhoto: string | null;
     portfolioFiles: any[];
     portfolioMedia: any[];
     linkedin: string;
@@ -115,18 +119,25 @@ const ExpertRegisterForm = () => {
   const [following, setFollowing] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Auto-fill form if user is authenticated
+  // Auto-fill form if user is authenticated and profile is available
   useEffect(() => {
     if (isAuthenticated && user) {
       setForm((prev) => ({
         ...prev,
-        fullName: user.name || "",
-        email: user.email || "",
-        // phone: user.phone || "", // Removed because User type does not have phone
-        // Add other fields if available in user object
+        fullName: user.name || profile?.name || "",
+        email: user.email || profile?.email || "",
+        bio: profile?.bio || "",
+        location:
+          (profile?.location && typeof profile.location === 'object' && profile.location !== null && (profile.location as { address?: string }).address) ||
+          (profile?.address && typeof profile.address === 'object' && profile.address !== null && (profile.address as { address?: string }).address) ||
+          "",
+        profilePhoto: profile?.avatar || null,
       }));
+      if (profile?.interests && profile.interests.length > 0) {
+        setSelectedInterests(profile.interests);
+      }
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, profile]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -200,6 +211,43 @@ const ExpertRegisterForm = () => {
     setFollowing((prev) =>
       prev.includes(id) ? prev.filter((uid) => uid !== id) : [...prev, id]
     );
+  };
+
+  // Submit application handler
+  const handleSubmitApplication = async () => {
+    setLoading(true);
+    try {
+      // Build payload according to ExpertProfile interface
+      const payload = {
+        name: form.fullName,
+        email: form.email,
+        password: form.password,
+        bio: form.bio,
+        avatar: typeof form.profilePhoto === 'string' ? form.profilePhoto : undefined, // Only pass string or undefined
+        interests: selectedInterests,
+        tags: [], // Add tags if you collect them
+        location: {
+          address: form.location,
+          country: "", // Add country if collected
+          pincode: "", // Add pincode if collected
+        },
+        expertDetails: {
+          headline: form.category,
+          summary: form.bio,
+          expertise: [form.category],
+          experience: Number(form.experience) || undefined,
+          about: form.bio,
+          availability: form.availability.join(", "),
+          // Add more fields as needed from form
+        },
+      };
+      await createExpertProfile(payload);
+      setStep(4); // Move to next step (preferences)
+    } catch (err) {
+      alert("Failed to submit application.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -697,9 +745,10 @@ const ExpertRegisterForm = () => {
               </button>
               <button
                 className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold"
-                disabled={!form.agree}
+                disabled={!form.agree || loading || isLoading}
+                onClick={handleSubmitApplication}
               >
-                Submit Application
+                {loading || isLoading ? "Submitting..." : "Submit Application"}
               </button>
             </div>
           </>

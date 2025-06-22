@@ -1,17 +1,78 @@
 "use client";
 import { useState, useEffect } from "react";
-import { MessageCircle, CheckCircle, X } from "lucide-react";
+import { MessageCircle, CheckCircle, X, Edit, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { useAuthStore } from "@/lib/mainwebsite/auth-store";
+import { useUserStore } from "@/lib/mainwebsite/user-store";
+
+const INTEREST_LABELS: Record<string, string> = {
+  TECHNOLOGY: "Technology",
+  BUSINESS: "Business",
+  HEALTHCARE: "Healthcare",
+  EDUCATION: "Education",
+  ARTS: "Arts",
+  SCIENCE: "Science",
+  ENGINEERING: "Engineering",
+  LAW: "Law",
+  FINANCE: "Finance",
+  MARKETING: "Marketing",
+  DESIGN: "Design",
+  MEDIA: "Media",
+  SPORTS: "Sports",
+  CULINARY: "Culinary",
+  LANGUAGES: "Languages",
+  PSYCHOLOGY: "Psychology",
+  ENVIRONMENT: "Environment",
+  AGRICULTURE: "Agriculture",
+  CONSTRUCTION: "Construction",
+  HOSPITALITY: "Hospitality",
+  RETAIL: "Retail",
+  TRANSPORTATION: "Transportation",
+  ENTERTAINMENT: "Entertainment",
+  NON_PROFIT: "Non Profit",
+  GOVERNMENT: "Government",
+  OTHER: "Other",
+};
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("Posts");
-  const [isFollowing, setIsFollowing] = useState(false);
   const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   const [chatMessage, setChatMessage] = useState("");
   const [isSendingChat, setIsSendingChat] = useState(false);
   const [chatModalStep, setChatModalStep] = useState("initial"); // 'initial', 'input', 'captcha', 'sending'
   const [captchaText, setCaptchaText] = useState("");
   const [captchaInput, setCaptchaInput] = useState("");
+
+  const { user } = useAuthStore();
+  const { profile, isLoading, error, fetchUserProfile, isProfileLoaded } = useUserStore();
+  const isExpert = user?.role === "EXPERT";
+  const isUser = user?.role === "USER";
+
+  // Fetch user profile on component mount
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user, fetchUserProfile]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Profile Page - User Role Debug:", {
+      user,
+      userRole: user?.role,
+      isExpert,
+      isUser,
+      profile,
+      availableTabs: getAvailableTabs()
+    });
+  }, [user, isExpert, isUser, profile]);
+
+  // Set default tab based on user role
+  useEffect(() => {
+    if (isUser) {
+      setActiveTab("About");
+    }
+  }, [isUser]);
 
   // Placeholder for expert data - replace with actual data fetching
   const expert = {
@@ -43,9 +104,54 @@ export default function ProfilePage() {
     },
   ];
 
-  const toggleFollow = () => {
-    setIsFollowing(!isFollowing);
-  };
+  // Mock data for followed experts
+  const followedExperts = [
+    {
+      id: "expert-1",
+      name: "Dr. Sarah Johnson",
+      specialty: "Piano Instructor & Music Theory",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      rating: 4.9,
+      reviews: 124,
+      location: "New York, NY"
+    },
+    {
+      id: "expert-2",
+      name: "Michael Chen",
+      specialty: "Web Development & React",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      rating: 4.8,
+      reviews: 89,
+      location: "San Francisco, CA"
+    },
+    {
+      id: "expert-3",
+      name: "Dr. Emily Rodriguez",
+      specialty: "Data Science & Machine Learning",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      rating: 4.7,
+      reviews: 156,
+      location: "Austin, TX"
+    },
+    {
+      id: "expert-4",
+      name: "James Wilson",
+      specialty: "Digital Marketing & SEO",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      rating: 4.6,
+      reviews: 67,
+      location: "Chicago, IL"
+    },
+    {
+      id: "expert-5",
+      name: "Lisa Thompson",
+      specialty: "Graphic Design & Branding",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
+      rating: 4.9,
+      reviews: 203,
+      location: "Los Angeles, CA"
+    }
+  ];
 
   const handleMessageClick = () => {
     setIsChatModalOpen(true);
@@ -114,54 +220,155 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <div>
               <h2 className="text-lg font-semibold mb-2">About</h2>
-              <p className="text-sm text-gray-700">
-                Professional pianist with over 15 years of teaching experience.
-                Specializing in classical piano and music theory for all ages
-                and skill levels. I believe in creating a supportive and
-                engaging learning environment where students can develop their
-                musical abilities while enjoying the process.
+              <p className="text-sm text-gray-700 flex items-center gap-2">
+                {profile?.bio ? (
+                  profile.bio
+                ) : (
+                  <>
+                    No bio set.
+                    <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add bio</Link>
+                  </>
+                )}
               </p>
             </div>
-            <div className="space-y-6">
-              <div className="border rounded-lg shadow-md">
-                <div className="p-4">
-                  <h3 className="font-semibold">Sarah Johnson</h3>
-                  <p className="text-xs text-gray-500">almost 2 years ago</p>
-                  <p className="mt-2 text-sm">
-                    Excited to announce that I'm now offering online piano
-                    lessons for students worldwide! Whether you're a beginner or
-                    looking to advance your skills, I'd love to help you on your
-                    musical journey. Contact me for availability and rates.
-                  </p>
+            {isExpert && (
+              <div className="space-y-6">
+                <div className="border rounded-lg shadow-md">
+                  <div className="p-4">
+                    <h3 className="font-semibold">Sarah Johnson</h3>
+                    <p className="text-xs text-gray-500">almost 2 years ago</p>
+                    <p className="mt-2 text-sm">
+                      Excited to announce that I'm now offering online piano
+                      lessons for students worldwide! Whether you're a beginner or
+                      looking to advance your skills, I'd love to help you on your
+                      musical journey. Contact me for availability and rates.
+                    </p>
+                  </div>
+                  <img
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
+                    className="w-full h-48 object-cover rounded-b-lg mt-2"
+                    alt="Piano post"
+                  />
                 </div>
-                <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                  className="w-full h-48 object-cover rounded-b-lg mt-2"
-                  alt="Piano post"
-                />
-              </div>
 
-              <div className="border rounded-lg shadow-md">
-                <div className="p-4">
-                  <h3 className="font-semibold">Sarah Johnson</h3>
-                  <p className="text-xs text-gray-500">almost 2 years ago</p>
-                  <p className="mt-2 text-sm">
-                    Just wrapped up our spring recital! So proud of all my
-                    students who performed today. Their hard work and dedication
-                    really shone in their performances. Here are some key
-                    highlights from the event.
-                  </p>
+                <div className="border rounded-lg shadow-md">
+                  <div className="p-4">
+                    <h3 className="font-semibold">Sarah Johnson</h3>
+                    <p className="text-xs text-gray-500">almost 2 years ago</p>
+                    <p className="mt-2 text-sm">
+                      Just wrapped up our spring recital! So proud of all my
+                      students who performed today. Their hard work and dedication
+                      really shone in their performances. Here are some key
+                      highlights from the event.
+                    </p>
+                  </div>
+                  <img
+                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
+                    className="w-full h-48 object-cover rounded-b-lg mt-2"
+                    alt="Recital post"
+                  />
                 </div>
-                <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                  className="w-full h-48 object-cover rounded-b-lg mt-2"
-                  alt="Recital post"
-                />
               </div>
+            )}
+            {isUser && (
+              <div className="space-y-6">
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-3">Community Stats</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 className="font-medium text-gray-800">Followers</h4>
+                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.followers || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 className="font-medium text-gray-800">Following</h4>
+                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.following || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 className="font-medium text-gray-800">Posts</h4>
+                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.posts || 0}</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <h4 className="font-medium text-gray-800">Chats Initiated</h4>
+                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.comments || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {profile?.interests && profile.interests.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {profile.interests.map((interest) => (
+                  <span
+                    key={interest}
+                    className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full"
+                  >
+                    {INTEREST_LABELS[interest] || interest}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      case "Following":
+        if (!isUser) return null;
+        const followingList = profile?.following || [];
+        return (
+          <div className="space-y-6">
+            <div className="bg-white border rounded-lg shadow-sm">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-800">Experts You Follow</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {followingList.length > 0
+                    ? `You're following ${followingList.length} expert${followingList.length > 1 ? 's' : ''}`
+                    : "You're not following any experts yet."}
+                </p>
+              </div>
+              {followingList.length > 0 ? (
+                <div className="divide-y">
+                  {followingList.map((item) => (
+                    <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center space-x-4">
+                        <img
+                          src={item.following.avatar || '/default-avatar.png'}
+                          alt={item.following.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-800 truncate">
+                                {item.following.name}
+                              </h4>
+                              <p className="text-xs text-gray-600 truncate">
+                                {item.following.role}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full transition-colors">
+                                Message
+                              </button>
+                              <button className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full transition-colors">
+                                View Profile
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8">
+                  <UserPlus className="w-20 h-20 mb-4 text-green-300" />
+                  <p className="text-gray-500 mb-2 text-center">You're not following any experts yet.</p>
+                  <Link href="/allexperts" className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold mt-2">Find Experts to Follow</Link>
+                </div>
+              )}
             </div>
           </div>
         );
       case "Services":
+        if (!isExpert) return null;
         return (
           <div className="space-y-6">
             <h2 className="text-lg font-semibold mb-2">Services Offered</h2>
@@ -175,6 +382,7 @@ export default function ProfilePage() {
           </div>
         );
       case "Portfolio":
+        if (!isExpert) return null;
         return (
           <div className="space-y-6">
             <h2 className="text-lg font-semibold mb-2 text-primary">
@@ -235,6 +443,7 @@ export default function ProfilePage() {
           </div>
         );
       case "Reviews":
+        if (!isExpert) return null;
         return (
           <div className="space-y-6">
             <h2 className="text-lg font-semibold mb-2">Client Reviews</h2>
@@ -247,167 +456,287 @@ export default function ProfilePage() {
     }
   };
 
+  // Get available tabs based on user role
+  const getAvailableTabs = () => {
+    if (isUser) {
+      return ["About", "Following"];
+    }
+    return ["Posts", "Services", "Portfolio", "Reviews"];
+  };
+
+  const availableTabs = getAvailableTabs();
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
-      <div className=" mx-auto bg-white overflow-hidden rounded-2xl shadow">
-        {/* Cover Image */}
-        <div
-          className="h-60 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url(https://cdn.pixabay.com/photo/2016/03/09/15/29/books-1246674_1280.jpg)",
-          }}
-        ></div>
-
-        {/* Profile Header */}
-        <div className="flex flex-col md:flex-row p-6 md:items-start md:justify-between gap-4 md:gap-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <img
-              src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-              alt="Profile"
-              className="w-24 h-24 rounded-full border-4 border-white -mt-12 object-cover"
-            />
-            <div>
-              <div className="flex items-center justify-start gap-2 md:gap-4 flex-col  md:flex-row">
-                <h1 className="text-2xl font-bold">Sarah Johnson</h1>
-                {/* Follow Button */}
-                <button
-                  className={`px-2 py-1 rounded-lg ${
-                    isFollowing
-                      ? "bg-gray-300 text-gray-800"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                  onClick={toggleFollow}
-                >
-                  {isFollowing ? "Following" : "Follow"}
-                </button>
-              </div>
-
-              <p className="text-green-600 font-semibold mt-2">
-                Piano Instructor & Music Theory Specialist
-              </p>
-              <div className="text-sm text-gray-500 flex flex-wrap gap-2 items-center mt-1">
-                <span>New York, NY</span>
-                <span className="text-yellow-500">★ 4.9 (124 reviews)</span>
-                <span>128 followers</span>
-                <span>543 profile views</span>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {[
-                  "Piano",
-                  "Music Theory",
-                  "Composition",
-                  "Sight Reading",
-                  "Performance",
-                ].map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-gray-200 text-sm px-2 py-1 rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+      {/* Loading State */}
+      {(isLoading || !profile) && (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading profile...</p>
           </div>
         </div>
+      )}
 
-        {/* Main Content: Two Columns */}
-        <div className="grid md:grid-cols-3 gap-6 p-6 pt-0">
-          {/* Left Column: About Text, Stats, and Action Buttons */}
-          <div className="md:col-span-1 space-y-4">
-            <h2 className="text-lg font-semibold mb-2">About</h2>
-            <p className="text-sm text-gray-700">
-              Professional pianist with over 15 years of teaching experience.
-              Specializing in classical piano and music theory for all ages and
-              skill levels. I believe in creating a supportive and engaging
-              learning environment where students can develop their musical
-              abilities while enjoying the process.
-            </p>
-            {/* Info Blocks */}
-            <div className="text-sm space-y-4 mt-4 md:mt-0">
-              <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                <p className="font-semibold">156</p>
-                <p className="text-gray-600">Jobs Completed</p>
-              </div>
-              <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                <p className="font-semibold">January 2020</p>
-                <p className="text-gray-600">Member Since</p>
-              </div>
-            </div>
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-2 mt-4">
+      {/* Error State */}
+      {error && (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center max-w-md mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Profile</h3>
+              <p className="text-red-600 mb-4">{error}</p>
               <button
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
-                onClick={handleMessageClick}
+                onClick={fetchUserProfile}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
               >
-                Message
+                Try Again
               </button>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Right Column: Tabs and Content */}
-          <div className="md:col-span-2 space-y-6">
-            {/* Tabs */}
-            <div className="border-b py-2">
-              <div className="flex gap-8 text-gray-600 text-sm">
-                {["Posts", "Services", "Portfolio", "Reviews"].map((tab) => (
-                  <span
-                    key={tab}
-                    className={`cursor-pointer hover:text-black font-medium ${
-                      activeTab === tab
-                        ? "text-black border-b-2 border-green-600"
-                        : ""
-                    }`}
-                    onClick={() => setActiveTab(tab)}
+      {/* Profile Content */}
+      {!isLoading && !error && profile && (
+        <div className=" mx-auto bg-white overflow-hidden rounded-2xl shadow">
+          {/* Cover Image */}
+          <div
+            className="h-60 bg-cover bg-center"
+            style={{
+              backgroundImage:
+                "url(https://cdn.pixabay.com/photo/2016/03/09/15/29/books-1246674_1280.jpg)",
+            }}
+          ></div>
+
+          {/* Profile Header */}
+          <div className="flex flex-col md:flex-row p-6 md:items-start md:justify-between gap-4 md:gap-8">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <img
+                src={profile?.avatar || "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"}
+                alt="Profile"
+                className="w-24 h-24 rounded-full border-4 border-white -mt-12 object-cover"
+              />
+              <div>
+                <div className="flex items-center justify-start gap-2 md:gap-4 flex-col  md:flex-row">
+                  <h1 className="text-2xl font-bold">{profile?.name || user?.name || "User"}</h1>
+                  {/* Show email for USER */}
+                  {isUser && profile?.email && (
+                    <span className="text-gray-500 text-sm">{profile.email}</span>
+                  )}
+                  {/* Edit Button */}
+                  <Link
+                    href="/profile/update"
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   >
-                    {tab}
+                    <Edit size={16} />
+                    Update Profile
+                  </Link>
+                </div>
+
+                <p className="text-green-600 font-semibold mt-2">
+                  {isExpert ? (profile?.expertDetails?.headline || "Expert") : "Member"}
+                </p>
+                <div className="text-sm text-gray-500 flex flex-wrap gap-2 items-center mt-1">
+                  <span>
+                    {profile?.location && typeof profile.location === 'object' && !Array.isArray(profile.location) ? (
+                      <>
+                        {(profile.location as {address?: string})?.address}
+                        {(profile.location as {address?: string, country?: string})?.address && (profile.location as {country?: string})?.country ? ', ' : ''}
+                        {(profile.location as {country?: string})?.country}
+                        {(profile.location as {pincode?: string})?.pincode && ` (${(profile.location as {pincode?: string})?.pincode})`}
+                      </>
+                    ) : (
+                      <>
+                        Location not set
+                        <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add location</Link>
+                      </>
+                    )}
                   </span>
-                ))}
+                  <span>{profile?._count?.followers || 0} followers</span>
+                  <span>{profile?._count?.following || 0} following</span>
+                  <span>{profile?._count?.posts || 0} posts</span>
+                </div>
+                {/* Show email and member since date for USER */}
+                {isUser && (
+                  <div className="mt-2 text-sm text-gray-700 flex flex-col gap-1">
+                    <span>Email: <span className="font-medium">{profile.email}</span></span>
+                    <span>Member since: <span className="font-medium">{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</span></span>
+                  </div>
+                )}
+                {/* Show tags as badges */}
+                {profile?.tags && profile.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {profile.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="bg-gray-200 text-xs px-2 py-1 rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* Show interests as pretty badges for USER */}
+                {isUser && profile?.interests && profile.interests.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {profile.interests.map((interest) => (
+                      <span
+                        key={interest}
+                        className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full"
+                      >
+                        {INTEREST_LABELS[interest] || interest}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Tab Content */}
-            <div className="space-y-6">
-              {activeTab === "Posts" && (
-                <div className="space-y-6">
-                  {/* Posts section */}
-                  {profilePosts.map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/profile/posts/${post.id}`}
-                      className="block hover:shadow-lg transition-shadow"
-                    >
-                      <div className="border rounded-lg shadow-md">
-                        <div className="p-4">
-                          <h3 className="font-semibold">{post.author}</h3>
-                          <p className="text-xs text-gray-500">{post.time}</p>
-                          <p className="mt-2 text-sm text-gray-700">
-                            {post.text}
-                          </p>
-                        </div>
-                        <img
-                          src={post.image}
-                          className="w-full h-72 object-cover rounded-b-lg mt-2"
-                          alt="Post image"
-                        />
-                        {/* Optional: Add Like, Comment, Share buttons here */}
-                        <div className="p-4 flex items-center gap-4 text-gray-500 text-sm">
-                          <span>{post.likes} likes</span>
-                          <span>{post.comments} comments</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+          {/* Main Content: Two Columns */}
+          <div className="grid md:grid-cols-3 gap-6 p-6 pt-0">
+            {/* Left Column: Stats and Action Buttons (removed About section) */}
+            <div className="md:col-span-1 space-y-4">
+              {/* Info Blocks */}
+              <div className="text-sm space-y-4 mt-4 md:mt-0">
+                {isExpert ? (
+                  <>
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
+                      <p className="font-semibold">{profile?._count?.posts || 0}</p>
+                      <p className="text-gray-600">Posts</p>
+                    </div>
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
+                      <p className="font-semibold">{profile?._count?.following || 0}</p>
+                      <p className="text-gray-600 flex items-center gap-2">
+                        Experts Followed
+                        {(!profile?._count?.following || profile._count.following === 0) && (
+                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
+                        )}
+                      </p>
+                    </div>
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
+                      <p className="font-semibold">
+                        {profile?.createdAt
+                          ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                          : "Not set"}
+                      </p>
+                      <p className="text-gray-600 flex items-center gap-2">
+                        Member Since
+                        {!profile?.createdAt && (
+                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
+                        )}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
+                      <p className="font-semibold">{profile?._count?.following || 0}</p>
+                      <p className="text-gray-600">Following</p>
+                    </div>
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
+                      <p className="font-semibold">
+                        {profile?.createdAt
+                          ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                          : "Not set"}
+                      </p>
+                      <p className="text-gray-600 flex items-center gap-2">
+                        Member Since
+                        {!profile?.createdAt && (
+                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
+                        )}
+                      </p>
+                    </div>
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
+                      <p className="font-semibold">{profile?._count?.comments || 0}</p>
+                      <p className="text-gray-600 flex items-center gap-2">
+                        Chats Initiated
+                        {(!profile?._count?.comments || profile._count.comments === 0) && (
+                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
+                        )}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* Action Buttons */}
+              {isExpert && (
+                <div className="flex flex-col gap-2 mt-4">
+                  <button
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                    onClick={handleMessageClick}
+                  >
+                    Message
+                  </button>
                 </div>
               )}
-              {activeTab === "Services" && renderContent()}
-              {activeTab === "Portfolio" && renderContent()}
-              {activeTab === "Reviews" && renderContent()}
+            </div>
+
+            {/* Right Column: Tabs and Content */}
+            <div className="md:col-span-2 space-y-6">
+              {/* Tabs */}
+              <div className="border-b py-2">
+                <div className="flex gap-8 text-gray-600 text-sm">
+                  {availableTabs.map((tab) => (
+                    <span
+                      key={tab}
+                      className={`cursor-pointer hover:text-black font-medium ${
+                        activeTab === tab
+                          ? "text-black border-b-2 border-green-600"
+                          : ""
+                      }`}
+                      onClick={() => setActiveTab(tab)}
+                    >
+                      {tab}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="space-y-6">
+                {activeTab === "Posts" && isExpert && (
+                  <div className="space-y-6">
+                    {/* Posts section */}
+                    {profilePosts.map((post) => (
+                      <Link
+                        key={post.id}
+                        href={`/profile/posts/${post.id}`}
+                        className="block hover:shadow-lg transition-shadow"
+                      >
+                        <div className="border rounded-lg shadow-md">
+                          <div className="p-4">
+                            <h3 className="font-semibold">{post.author}</h3>
+                            <p className="text-xs text-gray-500">{post.time}</p>
+                            <p className="mt-2 text-sm text-gray-700">
+                              {post.text}
+                            </p>
+                          </div>
+                          <img
+                            src={post.image}
+                            className="w-full h-72 object-cover rounded-b-lg mt-2"
+                            alt="Post image"
+                          />
+                          {/* Optional: Add Like, Comment, Share buttons here */}
+                          <div className="p-4 flex items-center gap-4 text-gray-500 text-sm">
+                            <span>{post.likes} likes</span>
+                            <span>{post.comments} comments</span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {activeTab === "Services" && renderContent()}
+                {activeTab === "Portfolio" && renderContent()}
+                {activeTab === "Reviews" && renderContent()}
+                {activeTab === "About" && renderContent()}
+                {activeTab === "Following" && renderContent()}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Chat Request Modal */}
       {isChatModalOpen && (
