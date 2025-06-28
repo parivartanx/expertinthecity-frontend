@@ -1,143 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { HiChevronRight } from "react-icons/hi";
+import { useCategoriesStore } from "@/lib/mainwebsite/categories-store";
 
-// Grouped categories and subcategories
-const groupedCategories = [
-  {
-    name: "Professional & Business Support",
-    subcategories: [
-      "Financial Advice & Investment Planning",
-      "Tax Planning & Cross-Border Compliance",
-      "Legal Consultations & Contract Help",
-      "Business Mentorship & Start-Up Support",
-      "Real Estate Help & Relocation Support",
-      "IT Consultants & Tech Solutions",
-      "Crypto & Blockchain Experts",
-      "Career Counsellors & Transition Coaches",
-      "Personal Branding, Resume & LinkedIn Strategy",
-    ],
-  },
-  {
-    name: "Health, Wellness & Medical Guidance",
-    subcategories: [
-      "General Wellness Coaching (Nutrition, Sleep, Stress)",
-      "Mental Health & Emotional Resilience Coaching",
-      "Fitness Trainers & Online Health Programs",
-      "Yoga, Pilates & Holistic Movement Instructors",
-      "Medical Experts & Health Educators (non-diagnostic or second-opinion services)",
-      "Preventive Health & Lifestyle Medicine Consultants",
-    ],
-  },
-  {
-    name: "Career & Education Support",
-    subcategories: [
-      "Career Counselling for Students & Professionals",
-      "College Admissions & Study Abroad Advisors",
-      "Upskilling Mentors & Job Market Guidance",
-      "CV, Cover Letter, LinkedIn & Interview Prep Experts",
-    ],
-  },
-  {
-    name: "Life & Lifestyle Guidance",
-    subcategories: [
-      "Travel & Relocation Consultants",
-      "Parenting Coaches & Family Advisors",
-      "Relationship Coaches & Conflict Mediators",
-      "Life Coaching & Mindset Mentorship",
-    ],
-  },
-  {
-    name: "Creative, Art & Expression",
-    subcategories: [
-      "Art Mentors & Portfolio Reviewers",
-      "Design & Illustration Coaching",
-      "Photography & Filmmaking Mentors",
-      "Writing, Blogging & Creative Content Experts",
-      "Music Instructors, Producers & Vocal Coaches",
-      "Dance, Theatre & Performing Arts Coaches",
-    ],
-  },
-  {
-    name: "Sports, Performance & Movement",
-    subcategories: [
-      "Sports Coaches (Football, Tennis, Cricket, etc.)",
-      "Athlete Mindset & Performance Coaching",
-      "Dance Instructors & Competitive Prep",
-      "Body Mechanics, Flexibility & Strength Trainers",
-    ],
-  },
-];
-
-// Subcategory to experts mapping (sample for 2 subcategories, add more as needed)
-const subcategoryExperts: Record<string, any[]> = {
-  "financial-advice-&-investment-planning": [
-    {
-      id: 1,
-      name: "Priya Mehta",
-      title: "Certified Financial Planner",
-      location: "Mumbai, India",
-      rating: 4.9,
-      reviews: 210,
-      categories: ["Financial Advice", "Investment Planning"],
-      image: "https://randomuser.me/api/portraits/women/65.jpg",
-      status: "Featured",
-    },
-    {
-      id: 2,
-      name: "John Carter",
-      title: "Investment Strategist",
-      location: "London, UK",
-      rating: 4.8,
-      reviews: 180,
-      categories: ["Investment Planning", "Wealth Management"],
-      image: "https://randomuser.me/api/portraits/men/45.jpg",
-    },
-    {
-      id: 3,
-      name: "Amit Shah",
-      title: "Mutual Funds Advisor",
-      location: "Delhi, India",
-      rating: 4.7,
-      reviews: 150,
-      categories: ["Financial Advice", "Mutual Funds"],
-      image: "https://randomuser.me/api/portraits/men/33.jpg",
-    },
-  ],
-  "tax-planning-&-cross-border-compliance": [
-    {
-      id: 4,
-      name: "Ritu Agarwal",
-      title: "Tax Consultant",
-      location: "Bangalore, India",
-      rating: 4.8,
-      reviews: 120,
-      categories: ["Tax Planning", "Cross-Border Compliance"],
-      image: "https://randomuser.me/api/portraits/women/32.jpg",
-    },
-    {
-      id: 5,
-      name: "David Kim",
-      title: "International Tax Advisor",
-      location: "Singapore",
-      rating: 4.7,
-      reviews: 98,
-      categories: ["Tax Planning", "International Compliance"],
-      image: "https://randomuser.me/api/portraits/men/56.jpg",
-    },
-    {
-      id: 6,
-      name: "Fatima Noor",
-      title: "Cross-Border Tax Specialist",
-      location: "Dubai, UAE",
-      rating: 4.9,
-      reviews: 134,
-      categories: ["Cross-Border Compliance", "Tax Planning"],
-      image: "https://randomuser.me/api/portraits/women/41.jpg",
-    },
-  ],
-};
+// Fallback experts data
 const fallbackExperts = [
   {
     id: 101,
@@ -172,14 +39,85 @@ const fallbackExperts = [
 ];
 
 export default function CategoriesPage() {
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
-    null
-  );
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  
+  // Get categories store
+  const {
+    categories,
+    subcategories,
+    isLoading,
+    error,
+    isLoaded,
+    fetchAllCategories,
+    fetchAllSubcategories,
+    clearError,
+  } = useCategoriesStore();
 
-  // Get experts for selected subcategory
-  const subcatKey = selectedSubcategory?.toLowerCase() || "";
-  const experts = subcategoryExperts[subcatKey] || fallbackExperts;
+  // Fetch categories on component mount
+  useEffect(() => {
+    if (!isLoaded) {
+      fetchAllCategories();
+    }
+  }, [isLoaded, fetchAllCategories]);
+
+  // Fetch subcategories when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0) {
+      fetchAllSubcategories();
+    }
+  }, [categories, fetchAllSubcategories]);
+
+  // Get experts for selected subcategory (using fallback for now)
+  const experts = fallbackExperts;
+
+  // Handle subcategory selection
+  const handleSubcategoryClick = (subcategoryName: string) => {
+    setSelectedSubcategory(subcategoryName);
+  };
+
+  // Clear error when component unmounts
+  useEffect(() => {
+    return () => {
+      clearError();
+    };
+  }, [clearError]);
+
+  // Loading state
+  if (isLoading && !isLoaded) {
+    return (
+      <div className="px-6 py-10">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading categories...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="px-6 py-10">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="text-center">
+            <div className="text-red-600 text-xl mb-4">⚠️</div>
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => {
+                clearError();
+                fetchAllCategories();
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-6 py-10">
@@ -216,42 +154,65 @@ export default function CategoriesPage() {
           Browse our most requested services and find the right professional for
           your needs.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          {groupedCategories.map((cat) => (
-            <div
-              key={cat.name}
-              className="relative bg-white/90 border border-green-100 rounded-2xl shadow-lg p-6 flex flex-col items-start transition-all duration-200 hover:shadow-2xl group"
+        
+        {categories.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 mb-4">No categories available at the moment.</p>
+            <button
+              onClick={fetchAllCategories}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              {/* Main Category */}
-              <div className="w-full mb-4">
-                <div className="text-lg md:text-xl font-bold text-green-800 mb-2 px-1">
-                  {cat.name}
+              Refresh Categories
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+            {categories.map((category) => (
+              <div
+                key={category.id}
+                className="relative bg-white/90 border border-green-100 rounded-2xl shadow-lg p-6 flex flex-col items-start transition-all duration-200 hover:shadow-2xl group"
+              >
+                {/* Main Category */}
+                <div className="w-full mb-4">
+                  <div className="text-lg md:text-xl font-bold text-green-800 mb-2 px-1">
+                    {category.name}
+                  </div>
+                  <div className="border-b border-green-100 mb-2" />
                 </div>
-                <div className="border-b border-green-100 mb-2" />
+                
+                {/* Subcategories List */}
+                <ul className="w-full space-y-1">
+                  {category.subcategories && category.subcategories.length > 0 ? (
+                    category.subcategories.map((subcategory) => (
+                      <li key={subcategory.id}>
+                        <Link
+                          href={`/allexperts?category=${encodeURIComponent(
+                            subcategory.name.toLowerCase().replace(/\s+/g, "-")
+                          )}`}
+                          className={`flex items-center justify-between px-3 py-2 rounded-lg text-green-900 bg-green-50 hover:bg-green-100 transition-all text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-200`}
+                          onClick={() => handleSubcategoryClick(subcategory.name)}
+                        >
+                          <span>{subcategory.name}</span>
+                          <HiChevronRight className="text-lg text-green-400" />
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-3 py-2 text-gray-500 text-sm">
+                      No subcategories available
+                    </li>
+                  )}
+                </ul>
               </div>
-              {/* Subcategories List */}
-              <ul className="w-full space-y-1">
-                {cat.subcategories.map((subcat) => (
-                  <li key={subcat}>
-                    <Link
-                      href={`/allexperts?category=${encodeURIComponent(
-                        subcat.toLowerCase().replace(/\s+/g, "-")
-                      )}`}
-                      className={`flex items-center justify-between px-3 py-2 rounded-lg text-green-900 bg-green-50 hover:bg-green-100 transition-all text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-200`}
-                    >
-                      <span>{subcat}</span>
-                      <HiChevronRight className="text-lg text-green-400" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Selected Subcategory Experts */}
         {selectedSubcategory && (
           <div className="mt-12">
             <h3 className="text-2xl font-bold text-green-700 mb-6 text-center">
-              Experts for "{selectedSubcategory.replace(/-/g, " ")}"
+              Experts for "{selectedSubcategory}"
             </h3>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {experts.map((mentor: any) => (
@@ -300,7 +261,8 @@ export default function CategoriesPage() {
         )}
       </section>
 
-      <div className="mt-16 bg-gray-50 py-12  rounded-lg text-center">
+      {/* Why Choose Our Experts Section */}
+      <div className="mt-16 bg-gray-50 py-12 rounded-lg text-center">
         <h2 className="text-2xl font-semibold mb-6">Why Choose Our Experts?</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-full mx-auto">
           <div>
