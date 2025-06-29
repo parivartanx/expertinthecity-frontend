@@ -2,6 +2,8 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
 
 interface Expert {
   id: number;
@@ -129,18 +131,49 @@ export default function SubcategoryExpertsPage() {
     /-/g,
     " "
   );
+  const {
+    experts,
+    isLoading,
+    error,
+    fetchExpertsBySubcategory,
+    clearError,
+  } = useAllExpertsStore();
+
+  useEffect(() => {
+    if (subcatKey) {
+      fetchExpertsBySubcategory(subcatKey);
+    }
+
+    return () => {
+      clearError();
+    };
+  }, [subcatKey, fetchExpertsBySubcategory, clearError]);
 
   // Get 3 experts for the subcategory, or fallback
-  const filteredExperts: Expert[] =
-    subcategoryExperts[subcatKey] || fallbackExperts;
+  // const filteredExperts: Expert[] =
+  //   subcategoryExperts[subcatKey] || fallbackExperts;
 
   return (
     <main className="max-w-7xl mx-auto py-16 px-4">
       <h1 className="text-3xl font-bold text-green-800 mb-8 text-center">
-        Experts for "{subcatName}"
+        Experts for {subcatName}
       </h1>
+
+      {/* adding loading */}
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading experts...</p>
+      )}
+
+      {/* Error */}
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
+      {/* Empty State */}
+      {!isLoading && experts.length === 0 && (
+        <p className="text-sm text-muted-foreground">No experts found for {subcatName}</p>
+      )}
+
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredExperts.map((mentor: Expert) => (
+        {experts.map((mentor) => (
           <div
             key={mentor.id}
             className="bg-white rounded-lg shadow p-4 relative"
@@ -163,7 +196,7 @@ export default function SubcategoryExpertsPage() {
               {mentor.rating} ({mentor.reviews} reviews)
             </div>
             <div className="flex flex-wrap gap-2 text-xs mb-4">
-              {mentor.categories.map((cat: string, i: number) => (
+              {(mentor.categories ?? []).map((cat: string, i: number) => (
                 <span
                   key={i}
                   className="bg-gray-100 px-2 py-1 rounded text-gray-700"
@@ -172,7 +205,7 @@ export default function SubcategoryExpertsPage() {
                 </span>
               ))}
             </div>
-            <Link href={"/profile"}>
+            <Link href={`/profile/${mentor.id}`}>
               <button className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
                 View Profile
               </button>
