@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { axiosInstance } from "./axios";
 
 interface Expert {
@@ -64,281 +65,481 @@ interface AllExpertsState {
   toggleRating: (rating: number) => void;
 }
 
-export const useExpertStore = create<AllExpertsState>()((set, get) => ({
-  experts: [],
-  isLoading: false,
-  error: null,
-  totalExperts: 0,
-  currentPage: 1,
-  totalPages: 1,
-  searchQuery: "",
-  location: "",
-  selectedServices: [],
-  selectedRatings: [],
-  filters: {},
+export const useAllExpertsStore = create<AllExpertsState>()(
+  persist(
+    (set, get) => ({
+      experts: [],
+      isLoading: false,
+      error: null,
+      totalExperts: 0,
+      currentPage: 1,
+      totalPages: 1,
+      searchQuery: "",
+      location: "",
+      selectedServices: [],
+      selectedRatings: [],
+      filters: {},
 
-  setSearchQuery: (query: string) => set({ searchQuery: query }),
+      setSearchQuery: (query: string) => set({ searchQuery: query }),
 
-  setLocation: (location: string) => set({ location }),
+      setLocation: (location: string) => set({ location }),
 
-  toggleService: (service: string) => {
-    const { selectedServices } = get();
-    const newServices = selectedServices.includes(service)
-      ? selectedServices.filter(s => s !== service)
-      : [...selectedServices, service];
-    set({ selectedServices: newServices });
-  },
+      toggleService: (service: string) => {
+        const { selectedServices } = get();
+        const newServices = selectedServices.includes(service)
+          ? selectedServices.filter(s => s !== service)
+          : [...selectedServices, service];
+        set({ selectedServices: newServices });
+      },
 
-  toggleRating: (rating: number) => {
-    const { selectedRatings } = get();
-    const newRatings = selectedRatings.includes(rating)
-      ? selectedRatings.filter(r => r !== rating)
-      : [...selectedRatings, rating];
-    set({ selectedRatings: newRatings });
-  },
+      toggleRating: (rating: number) => {
+        const { selectedRatings } = get();
+        const newRatings = selectedRatings.includes(rating)
+          ? selectedRatings.filter(r => r !== rating)
+          : [...selectedRatings, rating];
+        set({ selectedRatings: newRatings });
+      },
 
-  fetchExperts: async () => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const { searchQuery, location, selectedServices, selectedRatings } = get();
-      
-      // Build query parameters
-      const params: any = {
-        page: 1,
-        limit: 12
-      };
+      fetchExperts: async () => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const { searchQuery, location, selectedServices, selectedRatings } = get();
+          
+          // Build query parameters
+          const params: any = {
+            page: 1,
+            limit: 12
+          };
 
-      if (searchQuery) {
-        params.q = searchQuery;
-      }
+          if (searchQuery) {
+            params.q = searchQuery;
+          }
 
-      if (location) {
-        params.location = location;
-      }
+          if (location) {
+            params.location = location;
+          }
 
-      if (selectedServices.length > 0) {
-        params.services = selectedServices.join(',');
-      }
+          if (selectedServices.length > 0) {
+            params.services = selectedServices.join(',');
+          }
 
-      if (selectedRatings.length > 0) {
-        params.minRating = Math.min(...selectedRatings);
-      }
+          if (selectedRatings.length > 0) {
+            params.minRating = Math.min(...selectedRatings);
+          }
 
-      const response = await axiosInstance.get("/experts", { params });
+          const response = await axiosInstance.get("/experts", { params });
 
-      if (response.data.status === "success") {
-        const { experts, totalExperts, currentPage, totalPages } = response.data.data;
-        set({
-          experts,
-          totalExperts,
-          currentPage,
-          totalPages,
-          isLoading: false
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to fetch experts");
-      }
-    } catch (error: any) {
-      console.error("Error fetching experts:", error);
-      set({
-        error: error.response?.data?.message || error.message || "Failed to fetch experts",
-        isLoading: false,
-        experts: []
-      });
-    }
-  },
-
-  fetchExpertsBySubcategory: async (subcategory: string, page = 1, limit = 12) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const response = await axiosInstance.get(`/experts/subcategory/${subcategory}`, {
-        params: {
-          page,
-          limit,
-          ...get().filters
+          if (response.data.status === "success") {
+            const { experts, totalExperts, currentPage, totalPages } = response.data.data;
+            set({
+              experts,
+              totalExperts,
+              currentPage,
+              totalPages,
+              isLoading: false
+            });
+          } else {
+            throw new Error(response.data.message || "Failed to fetch experts");
+          }
+        } catch (error: any) {
+          console.error("Error fetching experts:", error);
+          
+          let errorMessage = "Failed to fetch experts";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Experts not found";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false,
+            experts: []
+          });
         }
-      });
+      },
 
-      if (response.data.status === "success") {
-        const { experts, totalExperts, currentPage, totalPages } = response.data.data;
-        set({
-          experts,
-          totalExperts,
-          currentPage,
-          totalPages,
-          isLoading: false,
-          filters: { ...get().filters, subcategory }
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to fetch experts");
-      }
-    } catch (error: any) {
-      console.error("Error fetching experts by subcategory:", error);
-      set({
-        error: error.response?.data?.message || error.message || "Failed to fetch experts",
-        isLoading: false,
-        experts: []
-      });
-    }
-  },
+      fetchExpertsBySubcategory: async (subcategory: string, page = 1, limit = 12) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          // Use the correct API endpoint for listing experts with subcategory filter
+          const response = await axiosInstance.get(`/experts`, {
+            params: {
+              page,
+              limit,
+              subcategory,
+              ...get().filters
+            }
+          });
 
-  fetchExpertsByCategory: async (category: string, page = 1, limit = 12) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const response = await axiosInstance.get(`/experts/category/${category}`, {
-        params: {
-          page,
-          limit,
-          ...get().filters
+          if (response.data.status === "success") {
+            const { experts, totalExperts, currentPage, totalPages } = response.data.data;
+            
+            // Transform the backend expert data to match frontend interface
+            const transformedExperts = experts.map((expert: any) => ({
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: expert.user?.location || "Remote",
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            }));
+            
+            set({
+              experts: transformedExperts,
+              totalExperts: totalExperts || experts.length,
+              currentPage: currentPage || page,
+              totalPages: totalPages || 1,
+              isLoading: false,
+              filters: { ...get().filters, subcategory }
+            });
+          } else {
+            throw new Error(response.data.message || "Failed to fetch experts");
+          }
+        } catch (error: any) {
+          console.error("Error fetching experts by subcategory:", error);
+          
+          let errorMessage = "Failed to fetch experts";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Experts not found";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false,
+            experts: []
+          });
         }
-      });
+      },
 
-      if (response.data.status === "success") {
-        const { experts, totalExperts, currentPage, totalPages } = response.data.data;
-        set({
-          experts,
-          totalExperts,
-          currentPage,
-          totalPages,
-          isLoading: false,
-          filters: { ...get().filters, category }
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to fetch experts");
-      }
-    } catch (error: any) {
-      console.error("Error fetching experts by category:", error);
-      set({
-        error: error.response?.data?.message || error.message || "Failed to fetch experts",
-        isLoading: false,
-        experts: []
-      });
-    }
-  },
+      fetchExpertsByCategory: async (category: string, page = 1, limit = 12) => {
+        try {
+          set({ isLoading: true, error: null });
+          // Use the correct API endpoint for listing experts with category filter (as a query param)
+          const response = await axiosInstance.get(`/experts`, {
+            params: {
+              page,
+              limit,
+              expertise: category, // assuming 'expertise' is the category field in backend
+              ...get().filters
+            }
+          });
 
-  fetchAllExperts: async (page = 1, limit = 12) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const response = await axiosInstance.get("/experts", {
-        params: {
-          page,
-          limit,
-          ...get().filters
+          if (response.data.status === "success") {
+            const { experts, totalExperts, currentPage, totalPages } = response.data.data;
+            // Transform the backend expert data to match frontend interface
+            const transformedExperts = experts.map((expert: any) => ({
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: expert.user?.location || "Remote",
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            }));
+            set({
+              experts: transformedExperts,
+              totalExperts: totalExperts || experts.length,
+              currentPage: currentPage || page,
+              totalPages: totalPages || 1,
+              isLoading: false,
+              filters: { ...get().filters, category }
+            });
+          } else {
+            throw new Error(response.data.message || "Failed to fetch experts");
+          }
+        } catch (error: any) {
+          console.error("Error fetching experts by category:", error);
+          let errorMessage = "Failed to fetch experts";
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Experts not found for this category";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          set({
+            error: errorMessage,
+            isLoading: false,
+            experts: []
+          });
         }
-      });
+      },
 
-      if (response.data.status === "success") {
-        const { experts, totalExperts, currentPage, totalPages } = response.data.data;
-        set({
-          experts,
-          totalExperts,
-          currentPage,
-          totalPages,
-          isLoading: false
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to fetch experts");
-      }
-    } catch (error: any) {
-      console.error("Error fetching all experts:", error);
-      set({
-        error: error.response?.data?.message || error.message || "Failed to fetch experts",
-        isLoading: false,
-        experts: []
-      });
-    }
-  },
+      fetchAllExperts: async (page = 1, limit = 12) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await axiosInstance.get("/experts", {
+            params: {
+              page,
+              limit,
+              ...get().filters
+            }
+          });
 
-  searchExperts: async (query: string, page = 1, limit = 12) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const response = await axiosInstance.get("/experts/search", {
-        params: {
-          q: query,
-          page,
-          limit,
-          ...get().filters
+          if (response.data.status === "success") {
+            const { experts, totalExperts, currentPage, totalPages } = response.data.data;
+            set({
+              experts,
+              totalExperts,
+              currentPage,
+              totalPages,
+              isLoading: false
+            });
+          } else {
+            throw new Error(response.data.message || "Failed to fetch experts");
+          }
+        } catch (error: any) {
+          console.error("Error fetching all experts:", error);
+          
+          let errorMessage = "Failed to fetch experts";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Experts not found";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false,
+            experts: []
+          });
         }
-      });
+      },
 
-      if (response.data.status === "success") {
-        const { experts, totalExperts, currentPage, totalPages } = response.data.data;
-        set({
-          experts,
-          totalExperts,
-          currentPage,
-          totalPages,
-          isLoading: false
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to search experts");
-      }
-    } catch (error: any) {
-      console.error("Error searching experts:", error);
-      set({
-        error: error.response?.data?.message || error.message || "Failed to search experts",
-        isLoading: false,
-        experts: []
-      });
-    }
-  },
+      searchExperts: async (query: string, page = 1, limit = 12) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await axiosInstance.get("/experts", {
+            params: {
+              search: query,
+              page,
+              limit,
+              ...get().filters
+            }
+          });
 
-  filterExperts: async (filters: Partial<AllExpertsState['filters']>, page = 1, limit = 12) => {
-    try {
-      set({ isLoading: true, error: null });
-      
-      const newFilters = { ...get().filters, ...filters };
-      set({ filters: newFilters });
-      
-      const response = await axiosInstance.get("/experts/filter", {
-        params: {
-          page,
-          limit,
-          ...newFilters
+          if (response.data.status === "success") {
+            const { experts } = response.data.data;
+            
+            // Transform the backend expert data to match frontend interface
+            const transformedExperts = experts.map((expert: any) => ({
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: expert.user?.location || "Remote",
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            }));
+            
+            set({
+              experts: transformedExperts,
+              totalExperts: experts.length,
+              currentPage: page,
+              totalPages: 1,
+              isLoading: false
+            });
+          } else {
+            throw new Error(response.data.message || "Failed to search experts");
+          }
+        } catch (error: any) {
+          console.error("Error searching experts:", error);
+          
+          let errorMessage = "Failed to search experts";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "No experts found for this search";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false,
+            experts: []
+          });
         }
-      });
+      },
 
-      if (response.data.status === "success") {
-        const { experts, totalExperts, currentPage, totalPages } = response.data.data;
-        set({
-          experts,
-          totalExperts,
-          currentPage,
-          totalPages,
-          isLoading: false
-        });
-      } else {
-        throw new Error(response.data.message || "Failed to filter experts");
-      }
-    } catch (error: any) {
-      console.error("Error filtering experts:", error);
-      set({
-        error: error.response?.data?.message || error.message || "Failed to filter experts",
+      filterExperts: async (filters: Partial<AllExpertsState['filters']>, page = 1, limit = 12) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const newFilters = { ...get().filters, ...filters };
+          set({ filters: newFilters });
+          
+          // Build query parameters for filtering
+          const params: any = {
+            page,
+            limit
+          };
+
+          if (filters.subcategory) {
+            params.subcategory = filters.subcategory;
+          }
+
+          if (filters.location) {
+            params.availability = filters.location;
+          }
+
+          if (filters.rating) {
+            // Note: Backend doesn't have rating filter yet, this would need to be implemented
+            console.warn("Rating filter not implemented in backend yet");
+          }
+
+          if (filters.availability) {
+            params.availability = filters.availability;
+          }
+
+          const response = await axiosInstance.get("/experts", { params });
+
+          if (response.data.status === "success") {
+            const { experts } = response.data.data;
+            
+            // Transform the backend expert data to match frontend interface
+            const transformedExperts = experts.map((expert: any) => ({
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: expert.user?.location || "Remote",
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            }));
+            
+            set({
+              experts: transformedExperts,
+              totalExperts: experts.length,
+              currentPage: page,
+              totalPages: 1,
+              isLoading: false
+            });
+          } else {
+            throw new Error(response.data.message || "Failed to filter experts");
+          }
+        } catch (error: any) {
+          console.error("Error filtering experts:", error);
+          
+          let errorMessage = "Failed to filter experts";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "No experts found with these filters";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false,
+            experts: []
+          });
+        }
+      },
+
+      clearExperts: () => set({
+        experts: [],
+        totalExperts: 0,
+        currentPage: 1,
+        totalPages: 1,
         isLoading: false,
-        experts: []
-      });
+        error: null
+      }),
+
+      clearError: () => set({ error: null }),
+
+      setFilters: (filters: Partial<AllExpertsState['filters']>) => {
+        set({ filters: { ...get().filters, ...filters } });
+      },
+
+      resetFilters: () => set({ filters: {} }),
+    }),
+    {
+      name: "all-experts-storage",
+      partialize: (state) => ({
+        experts: state.experts,
+        filters: state.filters,
+        searchQuery: state.searchQuery,
+        location: state.location,
+        selectedServices: state.selectedServices,
+        selectedRatings: state.selectedRatings,
+      }),
     }
-  },
-
-  clearExperts: () => set({
-    experts: [],
-    totalExperts: 0,
-    currentPage: 1,
-    totalPages: 1,
-    isLoading: false,
-    error: null
-  }),
-
-  clearError: () => set({ error: null }),
-
-  setFilters: (filters: Partial<AllExpertsState['filters']>) => {
-    set({ filters: { ...get().filters, ...filters } });
-  },
-
-  resetFilters: () => set({ filters: {} }),
-})); 
+  )
+); 
