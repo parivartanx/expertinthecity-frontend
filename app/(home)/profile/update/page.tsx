@@ -61,7 +61,7 @@ const INTEREST_LABELS: Record<string, string> = {
 };
 
 export default function UserUpdateProfilePage() {
-  const { profile, isLoading, updateUserProfile } = useUserStore();
+  const { profile, isLoading, updateProfile } = useUserStore();
   const [form, setForm] = useState({
     name: profile?.name || "",
     email: profile?.email || "",
@@ -121,7 +121,7 @@ export default function UserUpdateProfilePage() {
         country: form.address.country,
       };
     }
-    await updateUserProfile(updatedFields);
+    await updateProfile(updatedFields);
     setSaving(false);
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2000);

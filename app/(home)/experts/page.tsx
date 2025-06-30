@@ -3,116 +3,30 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HiUserAdd } from "react-icons/hi";
-
-const mentors = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    title: "Piano Instructor & Music Theory",
-    location: "New York, NY",
-    rating: 4.8,
-    reviews: 129,
-    categories: ["Music Theory", "Composition"],
-    image:
-      "https://images.unsplash.com/photo-1471478331149-c72f17e33c73?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bXVzaWN8ZW58MHx8MHx8fDA%3D",
-    status: "Featured",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    title: "Software Engineering Mentor",
-    location: "San Francisco, CA",
-    rating: 4.9,
-    reviews: 287,
-    categories: ["Web Development", "AI/ML"],
-    image:
-      "https://images.unsplash.com/photo-1726066012822-d22831b628d9?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxzZWFyY2h8MXx8c29mdHdhcmV8ZW58MHx8MHx8fDA%3D",
-  },
-  {
-    id: 3,
-    name: "Emma Davis",
-    title: "Certified Yoga Instructor",
-    location: "Los Angeles, CA",
-    rating: 4.7,
-    reviews: 180,
-    categories: ["Yoga", "Wellness"],
-    image:
-      "https://images.unsplash.com/photo-1661308411865-4fce7576bef8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHlvZ2ElMjBtZW50b2lyfGVufDB8fDB8fHww",
-    status: "Featured",
-  },
-  {
-    id: 4,
-    name: "David Rodriguez",
-    title: "Business Strategy Consultant",
-    location: "Remote",
-    rating: 4.6,
-    reviews: 94,
-    categories: ["Startup", "Finance"],
-    image:
-      "https://images.unsplash.com/photo-1551836022-b06985bceb24?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YnVzaW5lc3MlMjBtZW50b3J8ZW58MHx8MHx8fDA%3D",
-  },
-  {
-    id: 5,
-    name: "Jennifer Lee",
-    title: "Language Tutor - Spanish & French",
-    location: "Paris, France",
-    rating: 4.9,
-    reviews: 177,
-    categories: ["Languages", "Travel"],
-    image:
-      "https://plus.unsplash.com/premium_photo-1661384194958-20679b63484b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8bGFuZ2F1Z2UlMjBtZW50b3J8ZW58MHx8MHx8fDA%3D",
-  },
-  {
-    id: 6,
-    name: "Robert Kim",
-    title: "Audio Engineering & Music Production",
-    location: "Remote",
-    rating: 4.8,
-    reviews: 153,
-    categories: ["Sound Design", "Studio Setup"],
-    image:
-      "https://images.unsplash.com/photo-1611532736579-6b16e2b50449?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YXVkaW98ZW58MHx8MHx8fDA%3D",
-    status: "Featured",
-  },
-  {
-    id: 7,
-    name: "Olivia Martinez",
-    title: "Photography & Visual Arts Instructor",
-    location: "Austin, TX",
-    rating: 4.6,
-    reviews: 88,
-    categories: ["Photography", "Creative Arts"],
-    image:
-      "https://plus.unsplash.com/premium_photo-1682097066897-209d0d9e9ae5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cGhvdG9ncmFwaHl8ZW58MHx8MHx8fDA%3D",
-    status: "New",
-  },
-  {
-    id: 8,
-    name: "James Wilson",
-    title: "Math & Science Tutor",
-    location: "Remote",
-    rating: 4.9,
-    reviews: 191,
-    categories: ["Mathematics", "Physics"],
-    image:
-      "https://images.unsplash.com/photo-1664382953518-4a664ab8a8c9?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dGVhY2hlcnxlbnwwfHwwfHx8MA%3D%3D",
-  },
-  {
-    id: 9,
-    name: "Sophia Patel",
-    title: "Health & Wellness Coach",
-    location: "Chicago, IL",
-    rating: 4.7,
-    reviews: 104,
-    categories: ["Nutrition", "Self Care"],
-    image:
-      "https://images.unsplash.com/photo-1511174511562-5f7f18b874f8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGhlYWx0aHxlbnwwfHwwfHx8MA%3D%3D",
-    status: "Featured",
-  },
-];
+import { useEffect } from "react";
+import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
 
 export default function ExpertsPage() {
   const router = useRouter();
+  const {
+    experts,
+    isLoading,
+    error,
+    fetchExperts,
+  } = useAllExpertsStore();
+
+  useEffect(() => {
+    fetchExperts();
+  }, [fetchExperts]);
+
+  if (isLoading) {
+    return <div className="text-center py-20">Loading experts...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-20 text-red-500">{error}</div>;
+  }
+
   return (
     <main className="bg-white text-gray-800">
       {/* Hero Section */}
@@ -239,7 +153,7 @@ export default function ExpertsPage() {
           Meet Our <span className="text-green-600">Experts</span>
         </h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mentors.map((mentor) => (
+          {experts.map((mentor) => (
             <div
               key={mentor.id}
               className="relative bg-white/60 backdrop-blur-lg border border-green-100 rounded-3xl shadow-xl p-6 flex flex-col items-center transition-transform duration-200 hover:-translate-y-1 hover:shadow-2xl group overflow-hidden"
@@ -279,7 +193,7 @@ export default function ExpertsPage() {
                 </span>
               </div>
               {/* Categories - Wire Design */}
-              {mentor.categories.length > 0 && (
+              {mentor.categories && mentor.categories.length > 0 && (
                 <div className="flex flex-col items-center mb-4 w-full">
                   {/* Main Category */}
                   <div className="font-semibold text-green-700 text-sm mb-1">
@@ -399,53 +313,3 @@ export default function ExpertsPage() {
     </main>
   );
 }
-
-const experts = [
-  {
-    title: "Creative Writing",
-    description:
-      "Unlock your potential in global writing with Expertship from experienced professionals.",
-    tags: ["Writing", "Short Stories", "Professional Coaching"],
-    image:
-      "https://plus.unsplash.com/premium_photo-1664372145543-d60ba2756a7e?q=80&w=2669&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    title: "Hair Styling Expertise",
-    description:
-      "Enhance your skills in modern hair design and salon trends with pro-level coaching.",
-    tags: ["Hair Styling", "Salon Practice"],
-    image:
-      "https://plus.unsplash.com/premium_photo-1661668935701-2429eb4da878?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8aGFpciUyMHN0eWxpbmd8ZW58MHx8MHx8fDA%3D",
-  },
-  {
-    title: "Music Production",
-    description: "Learn the art of music creation from industry professionals.",
-    tags: ["Production", "Technology", "Session Process"],
-    image:
-      "https://images.unsplash.com/photo-1563330232-57114bb0823c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bXVzaWMlMjBwcm9kdWN0aW9ufGVufDB8fDB8fHww",
-  },
-  {
-    title: "Skincare Guidance",
-    description:
-      "Get access to skincare professionals to build custom routines.",
-    tags: ["Creative Routine", "Skin Coaching Techniques"],
-    image:
-      "https://images.unsplash.com/photo-1674867688579-f46e18cd57f5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHNraW4lMjBjYXJlJTIwZ3VpZGFuY2V8ZW58MHx8MHx8fDA%3D",
-  },
-  {
-    title: "Yoga Instruction",
-    description:
-      "Discover new vitality through personal virtual yoga sessions.",
-    tags: ["Wellness", "Mindfulness Practice", "Well-Being"],
-    image:
-      "https://plus.unsplash.com/premium_photo-1669446008800-9a124b0fd3a2?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    title: "Engineering Solutions",
-    description:
-      "Collaborate with experts to tackle complex challenges effectively.",
-    tags: ["Innovation", "Systems Design", "Project Management"],
-    image:
-      "https://images.unsplash.com/photo-1727522974631-c8779e7de5d2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGVuZ2luZWVyaW5nJTIwc29sdXRvbnN8ZW58MHx8MHx8fDA%3D",
-  },
-];

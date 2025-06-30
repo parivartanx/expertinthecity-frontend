@@ -65,7 +65,7 @@ const suggestedUsers = [
 
 const ExpertRegisterForm = () => {
   const router = useRouter();
-  const { isAuthenticated, user, login } = useAuthStore();
+  const { isAuthenticated, user, login, initializeAuth } = useAuthStore();
   const { createExpertProfile, isLoading, error } = useExpertStore();
   const { profile } = useUserStore();
   const [step, setStep] = useState(0);
@@ -118,6 +118,48 @@ const ExpertRegisterForm = () => {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [following, setFollowing] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Initialize auth state on component mount
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Verify session if user appears to be authenticated
+  useEffect(() => {
+    const verifySession = async () => {
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (isAuthenticated && accessToken && refreshToken && !user) {
+        // User appears to be authenticated but we don't have user data
+        // This might happen if the page was refreshed
+        try {
+          // Try to get user profile to verify session
+          const response = await axios.get("/API/users/profile", {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
+
+          if (response.data) {
+            // Session is valid, update user data
+            useAuthStore.getState().setUser(
+              response.data,
+              accessToken,
+              refreshToken
+            );
+          }
+        } catch (error) {
+          console.log("Session verification failed, clearing auth state");
+          // Session is invalid, clear auth state
+          useAuthStore.getState().logout();
+        }
+      }
+    };
+
+    verifySession();
+  }, [isAuthenticated, user]);
 
   // Auto-fill form if user is authenticated and profile is available
   useEffect(() => {
@@ -151,11 +193,44 @@ const ExpertRegisterForm = () => {
 
   const handleRegularLogin = async () => {
     try {
-      // Implement regular login logic here
+      // Clear any previous errors
+      setErrorMessage(null);
+
+      // Validate form data
+      if (!form.email || !form.password) {
+        setErrorMessage("Please enter both email and password");
+        return;
+      }
+
+      // Check if user is already authenticated and has valid tokens
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (isAuthenticated && user && accessToken && refreshToken) {
+        console.log("User already authenticated with valid tokens, proceeding to next step");
+        setStep(1);
+        return;
+      }
+
+      // Only attempt login if not already authenticated or missing tokens
+      console.log("Attempting login with:", { email: form.email });
       await login(form.email, form.password);
+
+      // If login successful, move to next step
+      console.log("Login successful, moving to next step");
       setStep(1);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+
+      // Get error message from auth store or use fallback
+      const authError = useAuthStore.getState().error;
+      const errorMessage = authError || error?.response?.data?.message || error?.message || "Login failed. Please check your credentials.";
+
+      // Show user-friendly error message
+      setErrorMessage(errorMessage);
+
+      // Clear the error from store
+      useAuthStore.getState().clearError();
     }
   };
 
@@ -250,6 +325,11 @@ const ExpertRegisterForm = () => {
     }
   };
 
+  // Clear error when user interacts with form
+  const clearError = () => {
+    setErrorMessage(null);
+  };
+
   return (
     <div className="max-w-3xl mx-auto py-10 px-2 md:px-0 overflow-y-auto">
       <Link href={"/experts"}>
@@ -266,12 +346,14 @@ const ExpertRegisterForm = () => {
         {steps.map((s, i) => (
           <button
             key={s}
-            className={`flex-1 py-2 px-2 text-sm md:text-base font-medium transition-colors duration-200 ${
-              step === i
-                ? "bg-white text-black border-b-2 border-green-600"
-                : "text-gray-500 hover:bg-gray-100"
-            }`}
-            onClick={() => setStep(i)}
+            className={`flex-1 py-2 px-2 text-sm md:text-base font-medium transition-colors duration-200 ${step === i
+              ? "bg-white text-black border-b-2 border-green-600"
+              : "text-gray-500 hover:bg-gray-100"
+              }`}
+            onClick={() => {
+              setStep(i);
+              clearError();
+            }}
             type="button"
           >
             {s}
@@ -326,32 +408,36 @@ const ExpertRegisterForm = () => {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Email Address
+                Email Address <span className="text-red-500">*</span>
               </label>
               <input
                 className="w-full border rounded-lg px-3 py-2"
                 value={form.email}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, email: e.target.value }));
+                  clearError();
+                }}
                 type="email"
                 placeholder="Enter your email address"
                 disabled={isAuthenticated}
+                required
               />
             </div>
             {!isAuthenticated && (
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <input
                   className="w-full border rounded-lg px-3 py-2"
                   value={form.password}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, password: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, password: e.target.value }));
+                    clearError();
+                  }}
                   type="password"
                   placeholder="Enter your password"
+                  required
                 />
               </div>
             )}
@@ -369,13 +455,20 @@ const ExpertRegisterForm = () => {
                 disabled={isAuthenticated}
               />
             </div>
+            {/* Error Display */}
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{errorMessage}</p>
+              </div>
+            )}
             <div className="flex justify-end">
               {!isAuthenticated ? (
                 <button
                   onClick={handleRegularLogin}
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold"
+                  disabled={!form.email || !form.password || isLoading}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  Login & Continue
+                  {isLoading ? "Logging in..." : "Login & Continue"}
                 </button>
               ) : (
                 <button
@@ -765,11 +858,10 @@ const ExpertRegisterForm = () => {
                 <button
                   key={interest}
                   type="button"
-                  className={`px-4 py-2 rounded-full border font-medium transition-all duration-200 ${
-                    selectedInterests.includes(interest)
-                      ? "bg-green-600 text-white border-green-600"
-                      : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-green-100"
-                  }`}
+                  className={`px-4 py-2 rounded-full border font-medium transition-all duration-200 ${selectedInterests.includes(interest)
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-green-100"
+                    }`}
                   onClick={() => handleInterestToggle(interest)}
                 >
                   {interest}
@@ -812,11 +904,10 @@ const ExpertRegisterForm = () => {
                     <div className="text-xs text-gray-500">{user.title}</div>
                   </div>
                   <button
-                    className={`px-4 py-1 rounded-full font-medium text-sm transition-all duration-200 ${
-                      following.includes(user.id)
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-green-100"
-                    }`}
+                    className={`px-4 py-1 rounded-full font-medium text-sm transition-all duration-200 ${following.includes(user.id)
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-green-100"
+                      }`}
                     onClick={() => handleFollowToggle(user.id)}
                   >
                     {following.includes(user.id) ? "Following" : "Follow"}

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { FaStar } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useExpertStore } from "@/lib/mainwebsite/all-experts-store";
+import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
 
 interface Expert {
   id: string;
@@ -36,7 +36,7 @@ const FilterSection = () => {
     toggleService,
     selectedRatings,
     toggleRating,
-    fetchExperts } = useExpertStore();
+    fetchExperts } = useAllExpertsStore();
   const [isVisible, setIsVisible] = useState(false);
 
   return (
@@ -111,7 +111,7 @@ export default function AllExperts() {
     location,
     selectedRatings,
     selectedServices
-  } = useExpertStore();
+  } = useAllExpertsStore();
 
   useEffect(() => {
     fetchExperts();
