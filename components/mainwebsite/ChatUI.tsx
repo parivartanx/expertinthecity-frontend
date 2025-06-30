@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaSearch,
   FaCheck,
@@ -19,183 +19,60 @@ import {
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { MdOutlineAttachFile } from "react-icons/md";
 import { useRouter } from "next/navigation";
-
-const chatList = [
-  {
-    id: 1,
-    name: "Odama Studio",
-    lastMessage: "Mas Happy Typing...",
-    time: "05:11 PM",
-    unread: 2,
-    pinned: true,
-    avatar:
-      "https://plus.unsplash.com/premium_photo-1671656349322-41de944d259b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZmFjZXxlbnwwfHwwfHx8MA%3D%3D",
-    typing: true,
-    selected: true,
-  },
-  {
-    id: 2,
-    name: "Hatypo Studio",
-    lastMessage: "Momon : Lahh gas!",
-    time: "16:01 PM",
-    unread: 0,
-    pinned: false,
-    avatar:
-      "https://plus.unsplash.com/premium_photo-1664203068007-52240d0ca48f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8ZmFjZXxlbnwwfHwwfHx8MA%3D%3D",
-    typing: false,
-    selected: false,
-    sent: true,
-  },
-  {
-    id: 3,
-    name: "Nolaaa",
-    lastMessage: "Keren banget",
-    time: "03:29 PM",
-    unread: 4,
-    pinned: false,
-    avatar:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZmFjZXxlbnwwfHwwfHx8MA%3D%3D",
-    typing: false,
-    selected: false,
-  },
-  {
-    id: 4,
-    name: "Mas Happy",
-    lastMessage: "Typing...",
-    time: "02:21 PM",
-    unread: 0,
-    pinned: false,
-    avatar:
-      "https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-    typing: true,
-    selected: false,
-  },
-  {
-    id: 5,
-    name: "Mas Rohmad",
-    lastMessage: "Zaa jo lali ngeshoft yaa",
-    time: "01:12 PM",
-    unread: 2,
-    pinned: false,
-    avatar:
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-    typing: false,
-    selected: false,
-  },
-  {
-    id: 6,
-    name: "Mas Listian",
-    lastMessage: "Mantapp za",
-    time: "12:10 AM",
-    unread: 1,
-    pinned: false,
-    avatar:
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-    typing: false,
-    selected: false,
-  },
-  {
-    id: 7,
-    name: "Rafi Rohmat",
-    lastMessage: "Voice message",
-    time: "Yesterday",
-    unread: 0,
-    pinned: false,
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-    typing: false,
-    selected: false,
-    voice: true,
-  },
-  {
-    id: 8,
-    name: "Caca",
-    lastMessage: "Oke suwun",
-    time: "Yesterday",
-    unread: 0,
-    pinned: false,
-    avatar:
-      "https://plus.unsplash.com/premium_photo-1664536392896-cd1743f9c02c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8ZmFjZXxlbnwwfHwwfHx8MA%3D%3D",
-    typing: false,
-    selected: false,
-    sent: true,
-  },
-  {
-    id: 9,
-    name: "Farhan",
-    lastMessage: "Zaa udah tak update di figma",
-    time: "Yesterday",
-    unread: 0,
-    pinned: false,
-    avatar:
-      "https://images.unsplash.com/photo-1499996860823-5214fcc65f8f?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8ZmFjZXxlbnwwfHwwfHx8MA%3D%3D",
-    typing: false,
-    selected: false,
-  },
-];
-
-const messages = [
-  {
-    id: 1,
-    sender: "Expert Dev",
-    time: "05:00 PM",
-    text: "Guys, next year we're planning a dev retreat in Japan! 🇯🇵💻",
-    isMe: false,
-  },
-  {
-    id: 2,
-    sender: "Expert Dev",
-    time: "05:00 PM",
-    text: "Let's start assigning tasks for the upcoming project sprint as well, same style as usual.",
-    isMe: false,
-  },
-  {
-    id: 3,
-    sender: "Aman",
-    time: "05:02 PM",
-    text: "Oyyy that's fireee!!! Count me in 🔥",
-    isMe: true,
-  },
-  {
-    id: 4,
-    sender: "Senior Dev",
-    time: "05:01 PM",
-    text: "For real?? That's dope!",
-    isMe: false,
-  },
-  {
-    id: 5,
-    sender: "Expert Dev",
-    time: "05:11 PM",
-    text: "@Aman @FrontendPro @UIQueen \nCan y'all check this new Figma draft?\nhttps://www.figma.com/file/devproject...",
-    isMe: false,
-    mention: true,
-  },
-  {
-    id: 6,
-    sender: "Aman",
-    time: "05:12 PM",
-    text: "All righty! Opening Figma rn 🔥 Let's gooo 🚀",
-    isMe: true,
-  },
-];
-
-const avatars = [
-  "https://plus.unsplash.com/premium_photo-1687832254672-bf177d8819df?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjV8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-  "https://images.unsplash.com/photo-1587397845856-e6cf49176c70?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjR8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzR8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-  "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NDR8fGZhY2V8ZW58MHx8MHx8fDA%3D",
-];
+import { useChatStore } from "@/lib/mainwebsite/chat-store";
 
 const ChatUI = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const filteredChats = chatList.filter(
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const {
+    chats,
+    messages,
+    fetchChats,
+    fetchMessages,
+    sendMessage,
+    isLoading,
+    currentChat,
+    setCurrentChat,
+    clearMessages,
+  } = useChatStore();
+
+  // Fetch chats on mount
+  useEffect(() => {
+    fetchChats();
+    // Cleanup messages listener on unmount
+    return () => {
+      clearMessages();
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  // Fetch messages when a chat is selected
+  useEffect(() => {
+    if (selectedChatId) {
+      fetchMessages(selectedChatId);
+      const chat = chats.find((c) => c.id === selectedChatId) || null;
+      setCurrentChat(chat);
+    }
+  }, [selectedChatId]);
+
+  // Filtered chats for search
+  const filteredChats = chats.filter(
     (chat) =>
-      chat.name.toLowerCase().includes(search.toLowerCase()) ||
-      chat.lastMessage.toLowerCase().includes(search.toLowerCase())
+      chat.name?.toLowerCase().includes(search.toLowerCase()) ||
+      chat.lastMessage?.content?.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Handle send message
+  const [input, setInput] = useState("");
+  const handleSend = async () => {
+    if (!input.trim() || !selectedChatId) return;
+    // TODO: Replace 'senderId' with actual user id from auth
+    await sendMessage(selectedChatId, "demo-user-id", input);
+    setInput("");
+  };
+
   // Sidebar content as a function for reuse
   const SidebarContent = () => (
     <>
@@ -228,16 +105,19 @@ const ChatUI = () => {
       </div>
       <div className="flex flex-col gap-1 px-2">
         {filteredChats
-          .filter((c) => c.pinned)
+          .filter((c) => c.isActive)
           .map((chat) => (
             <div
               key={chat.id}
-              className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer ${
-                chat.selected ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
-              }`}
+              className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer ${selectedChatId === chat.id ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
+                }`}
+              onClick={() => {
+                setSelectedChatId(chat.id);
+                setSidebarOpen(false);
+              }}
             >
               <img
-                src={chat.avatar}
+                src={chat.avatar || "/default-avatar.png"}
                 alt={chat.name}
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
               />
@@ -249,17 +129,14 @@ const ChatUI = () => {
                   <BsPinAngleFill className="text-green-600 text-xs" />
                 </div>
                 <div className="text-xs text-[#BDBDBD] flex items-center gap-1">
-                  {chat.lastMessage}
-                  {chat.typing && (
-                    <span className="ml-1 animate-pulse">...</span>
-                  )}
+                  {chat.lastMessage?.content}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span className="text-xs text-[#BDBDBD]">{chat.time}</span>
-                {chat.unread > 0 && (
+                <span className="text-xs text-[#BDBDBD]">{chat.lastMessage?.createdAt ? new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
+                {chat.unreadCount > 0 && (
                   <span className="bg-green-600 text-white text-xs rounded-full px-2 py-0.5">
-                    {chat.unread}
+                    {chat.unreadCount}
                   </span>
                 )}
               </div>
@@ -271,16 +148,19 @@ const ChatUI = () => {
       </div>
       <div className="flex-1 overflow-y-auto min-h-0 px-2 pb-4">
         {filteredChats
-          .filter((c) => !c.pinned)
+          .filter((c) => c.isActive)
           .map((chat) => (
             <div
               key={chat.id}
-              className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer ${
-                chat.selected ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
-              }`}
+              className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer ${selectedChatId === chat.id ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
+                }`}
+              onClick={() => {
+                setSelectedChatId(chat.id);
+                setSidebarOpen(false);
+              }}
             >
               <img
-                src={chat.avatar}
+                src={chat.avatar || "/default-avatar.png"}
                 alt={chat.name}
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
               />
@@ -289,23 +169,14 @@ const ChatUI = () => {
                   {chat.name}
                 </div>
                 <div className="text-xs text-[#BDBDBD] flex items-center gap-1">
-                  {chat.lastMessage}
-                  {chat.typing && (
-                    <span className="ml-1 animate-pulse">...</span>
-                  )}
-                  {chat.voice && (
-                    <FaMicrophone className="inline ml-1 text-[#BDBDBD] text-xs" />
-                  )}
-                  {chat.sent && (
-                    <FiCheck className="inline ml-1 text-[#4ADE80] text-xs" />
-                  )}
+                  {chat.lastMessage?.content}
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1">
-                <span className="text-xs text-[#BDBDBD]">{chat.time}</span>
-                {chat.unread > 0 && (
+                <span className="text-xs text-[#BDBDBD]">{chat.lastMessage?.createdAt ? new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
+                {chat.unreadCount > 0 && (
                   <span className="bg-green-600 text-white text-xs rounded-full px-2 py-0.5">
-                    {chat.unread}
+                    {chat.unreadCount}
                   </span>
                 )}
               </div>
@@ -342,9 +213,8 @@ const ChatUI = () => {
       <div className="flex flex-1 min-h-0 w-full pt-0">
         {/* Sidebar for desktop/tablet */}
         <div
-          className={`hidden md:flex w-[350px] bg-white border-r border-[#E6E6E6] flex-col min-h-0 ${
-            sidebarOpen ? "md:hidden" : ""
-          }`}
+          className={`hidden md:flex w-[350px] bg-white border-r border-[#E6E6E6] flex-col min-h-0 ${sidebarOpen ? "md:hidden" : ""
+            }`}
         >
           <SidebarContent />
         </div>
@@ -360,16 +230,14 @@ const ChatUI = () => {
         )}
         {/* Sidebar Drawer for mobile with transition (from left) */}
         <div
-          className={`fixed inset-0 z-40 flex transition-all duration-300 ${
-            sidebarOpen ? "pointer-events-auto" : "pointer-events-none"
-          }`}
+          className={`fixed inset-0 z-40 flex transition-all duration-300 ${sidebarOpen ? "pointer-events-auto" : "pointer-events-none"
+            }`}
           style={{ visibility: sidebarOpen ? "visible" : "hidden" }}
         >
           {/* Drawer (slides in from left) */}
           <div
-            className={`w-72 bg-white h-full flex flex-col p-0 transform transition-transform duration-300 ${
-              sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            }`}
+            className={`w-72 bg-white h-full flex flex-col p-0 transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
           >
             <div className="flex justify-between items-center px-4 py-3 border-b border-[#E6E6E6]">
               <h2 className="text-xl font-bold text-green-600">Chats</h2>
@@ -387,9 +255,8 @@ const ChatUI = () => {
           </div>
           {/* Overlay */}
           <div
-            className={`flex-1 bg-black bg-opacity-40 transition-opacity duration-300 ${
-              sidebarOpen ? "opacity-100" : "opacity-0"
-            }`}
+            className={`flex-1 bg-black bg-opacity-40 transition-opacity duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0"
+              }`}
             onClick={() => setSidebarOpen(false)}
           />
         </div>
@@ -399,15 +266,15 @@ const ChatUI = () => {
           <div className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 border-b border-[#E6E6E6] bg-white">
             <div className="flex items-center gap-3 md:gap-4">
               <img
-                src="https://images.unsplash.com/photo-1545167622-3a6ac756afa4?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTZ8fGZhY2V8ZW58MHx8MHx8fDA%3D"
-                alt="Odama Studio"
+                src={currentChat?.avatar || "/default-avatar.png"}
+                alt={currentChat?.name || "Chat"}
                 className="w-10 h-10 md:w-16 md:h-16 rounded-full object-cover"
               />
               <div className="flex flex-col gap-1 justify-center">
                 <span className="font-semibold text-base md:text-lg text-[#222]">
-                  Odama Studio
+                  {currentChat?.name || "Select a chat"}
                 </span>
-                <span className="text-xs text-[#BDBDBD]">Typing...</span>
+                {/* Optionally show typing status or last seen */}
               </div>
             </div>
             <div className="flex items-center gap-4 md:gap-6">
@@ -416,41 +283,21 @@ const ChatUI = () => {
           </div>
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-2 md:px-8 py-4 md:py-6 flex flex-col gap-3 md:gap-4 min-h-0 w-full max-w-full">
-            <div className="flex justify-center mb-2">
-              <span className="bg-[#F7F9FB] text-[#BDBDBD] text-xs px-3 md:px-4 py-1 rounded-full border border-[#E6E6E6]">
-                Today, Jan 30
-              </span>
-            </div>
-            {messages.map((msg, idx) => (
+            {messages.length === 0 && (
+              <div className="flex justify-center text-[#BDBDBD]">No messages yet.</div>
+            )}
+            {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}
+                className={`flex ${msg.senderId === "demo-user-id" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85vw] md:max-w-[60%] px-3 md:px-5 py-2 md:py-3 rounded-2xl ${
-                    msg.isMe
-                      ? "bg-green-600 text-white rounded-br-none"
-                      : "bg-white text-[#222] rounded-bl-none"
-                  } shadow-sm text-sm md:text-base`}
+                  className={`max-w-[85vw] md:max-w-[60%] px-3 md:px-5 py-2 md:py-3 rounded-2xl ${msg.senderId === "demo-user-id"
+                    ? "bg-green-600 text-white rounded-br-none"
+                    : "bg-white text-[#222] rounded-bl-none"
+                    } shadow-sm text-sm md:text-base`}
                 >
-                  {msg.mention ? (
-                    <>
-                      <span className="text-[#2563EB] font-semibold">
-                        @Aman @FrontendPro @UIKing
-                      </span>
-                      <br />
-                      <span>Can y'all check this new Figma draft?</span>
-                      <br />
-                      <a
-                        href="https://www.figma.com/file/adcopy..."
-                        className="text-[#2563EB] underline"
-                      >
-                        https://www.figma.com/file/adcopy...
-                      </a>
-                    </>
-                  ) : (
-                    <span>{msg.text}</span>
-                  )}
+                  <span>{msg.content}</span>
                 </div>
               </div>
             ))}
@@ -462,8 +309,17 @@ const ChatUI = () => {
               type="text"
               placeholder="Type a message"
               className="flex-1 px-2 md:px-4 py-2 md:py-3 rounded-xl border border-[#E6E6E6] bg-[#F7F9FB] focus:outline-none text-sm md:text-base"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSend();
+              }}
+              disabled={!selectedChatId}
             />
-            <FaPaperPlane className="text-green-600 text-xl md:text-2xl cursor-pointer" />
+            <FaPaperPlane
+              className="text-green-600 text-xl md:text-2xl cursor-pointer"
+              onClick={handleSend}
+            />
           </div>
         </div>
       </div>
