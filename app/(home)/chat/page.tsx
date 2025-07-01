@@ -1,69 +1,58 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight } from "lucide-react"
-
-// Placeholder for expert data - replace with actual data fetching based on expert ID
-const expert = {
-  name: "John Smith",
-  specialty: "Expert Plumber",
-  rating: 4.9,
-  reviews: 120,
-  location: "London, UK",
-  image:
-    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww", // Replace with dynamic image source
-};
-
-// Placeholder for messages - replace with actual data fetching
-const initialMessages = [
-  {
-    id: 1,
-    text: "Hello! How can I help you today?",
-    sender: "expert", // or expert.id
-  },
-  {
-    id: 2,
-    text: "I need help fixing a leak.",
-    sender: "user", // or user.id
-  },
-  {
-    id: 3,
-    text: "Sure! Let's schedule an appointment.",
-    sender: "expert", // or expert.id
-  },
-];
-
-// Placeholder for available times - replace with actual data fetching
-const availableTimes = ["10:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"];
+import { useChatStore } from "@/lib/mainwebsite/chat-store";
+import { useAuthStore } from "@/lib/mainwebsite/auth-store";
+import { useSearchParams } from "next/navigation";
 
 export default function ExpertPage() {
+  const searchParams = useSearchParams();
+  const chatId = searchParams.get("chatId");
+
+  // Zustand store
+  const {
+    currentChat,
+    messages,
+    fetchChatById,
+    fetchMessages,
+    sendMessage,
+    isLoading,
+    error,
+  } = useChatStore();
+
+  // Auth store
+  const { user } = useAuthStore();
+  const senderId = user?.id;
+
+  // UI state
   const [activeTab, setActiveTab] = useState("chat");
-  const [date, setDate] = useState<Date | undefined>(new Date()); // Use Date | undefined for selected date
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState("");
   const [note, setNote] = useState("");
-  const [messages, setMessages] = useState(initialMessages); // State for messages
-  const [newMessageText, setNewMessageText] = useState(""); // State for new message input
+  const [newMessageText, setNewMessageText] = useState("");
 
-  // Placeholder function for sending a message - replace with actual API call
-  const handleSendMessage = () => {
-    if (newMessageText.trim() === "") return; // Prevent sending empty messages
+  // Placeholder for available times - replace with actual data fetching
+  const availableTimes = ["10:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"];
 
-    const newMessage = {
-      id: messages.length + 1, // Basic ID generation
-      text: newMessageText,
-      sender: "user", // Assuming user is sending
-    };
+  // Fetch chat and messages on mount or when chatId changes
+  useEffect(() => {
+    if (chatId) {
+      fetchChatById(chatId);
+      fetchMessages(chatId);
+    }
+  }, [chatId, fetchChatById, fetchMessages]);
 
-    setMessages([...messages, newMessage]);
-    setNewMessageText(""); // Clear input after sending
-    // TODO: Implement actual API call to send message to the expert
-    console.log("Sending message:", newMessageText);
+  // Send message handler
+  const handleSendMessage = async () => {
+    if (!chatId || !senderId || newMessageText.trim() === "") return;
+    await sendMessage(chatId, senderId, newMessageText);
+    setNewMessageText("");
   };
 
-  // Placeholder function for scheduling an appointment - replace with actual API call
+  // Schedule appointment handler (static for now)
   const handleScheduleAppointment = () => {
     if (!date || !selectedTime) {
       alert("Please select a date and time.");
@@ -73,51 +62,56 @@ export default function ExpertPage() {
     console.log(
       `Scheduling appointment for ${date.toDateString()} at ${selectedTime}. Notes: ${note}`
     );
-    // Optionally show a success message and clear the form
     alert("Appointment request sent!");
     setDate(new Date());
     setSelectedTime("");
     setNote("");
   };
 
+  // Get expert info from currentChat participants (show first non-user as expert)
+  const expert = currentChat?.participants?.find((p) => p.role === "expert") || currentChat?.participants?.[0];
+
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
-      {/* Expert Profile Header - make dynamic */}
-      <div className="flex items-center gap-4 mb-6">
-        <img
-          src={expert.image}
-          alt={expert.name}
-          className="w-20 h-20 rounded-full object-cover"
-        />
-        <div>
-          <h2 className="text-xl font-semibold">{expert.name}</h2>
-          <p className="text-sm text-muted-foreground">{expert.specialty}</p>
-          <p className="text-yellow-500 font-medium">
-            ★ {expert.rating} ({expert.reviews} reviews)
-          </p>
-          <p className="text-sm text-gray-500">{expert.location}</p>
+      {/* Expert Profile Header */}
+      {isLoading ? (
+        <div className="mb-6">Loading...</div>
+      ) : error ? (
+        <div className="mb-6 text-red-500">{error}</div>
+      ) : currentChat && expert ? (
+        <div className="flex items-center gap-4 mb-6">
+          <img
+            src={expert.avatar || "/default-avatar.png"}
+            alt={expert.name}
+            className="w-20 h-20 rounded-full object-cover"
+          />
+          <div>
+            <h2 className="text-xl font-semibold">{expert.name}</h2>
+            <p className="text-sm text-muted-foreground">{expert.role}</p>
+            {/* Optionally add rating, reviews, location if available */}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="mb-6">No chat selected.</div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-4 border-b mb-6">
         <button
           onClick={() => setActiveTab("chat")}
-          className={`pb-2 border-b-2 ${
-            activeTab === "chat"
-              ? "border-black font-semibold"
-              : "border-transparent"
-          }`}
+          className={`pb-2 border-b-2 ${activeTab === "chat"
+            ? "border-black font-semibold"
+            : "border-transparent"
+            }`}
         >
           Chat
         </button>
         <button
           onClick={() => setActiveTab("schedule")}
-          className={`pb-2 border-b-2 ${
-            activeTab === "schedule"
-              ? "border-black font-semibold"
-              : "border-transparent"
-          }`}
+          className={`pb-2 border-b-2 ${activeTab === "schedule"
+            ? "border-black font-semibold"
+            : "border-transparent"
+            }`}
         >
           Schedule
         </button>
@@ -126,19 +120,22 @@ export default function ExpertPage() {
       {/* Chat Tab Content */}
       {activeTab === "chat" && (
         <div className="bg-white border rounded-lg p-4 h-96 overflow-y-auto flex flex-col gap-3">
-          {/* Display Messages - make dynamic */}
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`self-${
-                message.sender === "user"
-                  ? "end bg-green-200"
-                  : "start bg-gray-200"
-              } px-3 py-2 rounded-xl max-w-xs`}
-            >
-              {message.text}
-            </div>
-          ))}
+          {/* Display Messages */}
+          {isLoading ? (
+            <div>Loading messages...</div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`self-${message.senderId === expert?.id
+                  ? "start bg-gray-200"
+                  : "end bg-green-200"
+                  } px-3 py-2 rounded-xl max-w-xs`}
+              >
+                {message.content}
+              </div>
+            ))
+          )}
 
           {/* Message Input */}
           <div className="mt-auto flex items-center gap-2">
@@ -150,8 +147,9 @@ export default function ExpertPage() {
               onKeyPress={(e) => {
                 if (e.key === "Enter") handleSendMessage();
               }}
+              disabled={isLoading || !chatId}
             />
-            <Button onClick={handleSendMessage}>Send</Button>
+            <Button onClick={handleSendMessage} disabled={isLoading || !chatId}>Send</Button>
           </div>
         </div>
       )}
@@ -161,7 +159,7 @@ export default function ExpertPage() {
         <div className="bg-white border rounded-lg p-4">
           {/* Schedule Form - make dynamic */}
           <h3 className="text-lg font-semibold mb-4">
-            Schedule an Appointment with {expert.name}
+            Schedule an Appointment{expert ? ` with ${expert.name}` : ""}
           </h3>
 
           <Calendar
@@ -177,14 +175,11 @@ export default function ExpertPage() {
             onChange={(e) => setSelectedTime(e.target.value)}
           >
             <option value="">Select a time slot</option>
-            {
-              availableTimes.map((t, i) => (
-                <option key={i} value={t}>
-                  {t}
-                </option>
-              ))
-              // Add a disabled default option if needed
-            }
+            {availableTimes.map((t, i) => (
+              <option key={i} value={t}>
+                {t}
+              </option>
+            ))}
           </select>
 
           <Textarea

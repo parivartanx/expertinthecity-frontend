@@ -27,6 +27,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   setUser: (user: User, accessToken: string, refreshToken: string) => void;
+  initializeAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -47,7 +48,24 @@ export const useAuthStore = create<AuthState>()(
             password,
           });
 
-          const { user, accessToken, refreshToken } = response.data.data;
+          console.log("Login response:", response.data);
+
+          // Handle different possible response structures
+          let user, accessToken, refreshToken;
+          
+          if (response.data.data) {
+            // If response has data wrapper
+            ({ user, accessToken, refreshToken } = response.data.data);
+          } else if (response.data.user) {
+            // If response is direct
+            ({ user, accessToken, refreshToken } = response.data);
+          } else {
+            throw new Error("Invalid response format from server");
+          }
+
+          if (!user || !accessToken) {
+            throw new Error("Missing user data or token in response");
+          }
 
           set({
             user,
@@ -58,11 +76,29 @@ export const useAuthStore = create<AuthState>()(
           });
 
           localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
+          if (refreshToken) {
+            localStorage.setItem("refreshToken", refreshToken);
+          }
         } catch (error: any) {
-          console.log(error.response.data);
+          console.error("Login error:", error);
+          console.error("Error response:", error.response?.data);
+          
+          let errorMessage = "Login failed";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Invalid email or password";
+          } else if (error.response?.status === 400) {
+            errorMessage = error.response?.data?.message || "Invalid request data";
+          } else if (error.message === "No refresh token available") {
+            errorMessage = "Authentication session expired. Please try logging in again.";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+
           set({
-            error: error.response?.data?.message || "Login failed",
+            error: errorMessage,
             isLoading: false,
           });
           throw error;
@@ -164,11 +200,49 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
         });
       },
+
+      initializeAuth: () => {
+        // Check if we have tokens in localStorage
+        const accessToken = localStorage.getItem("accessToken");
+        const refreshToken = localStorage.getItem("refreshToken");
+        
+        // Get the current state to check if we already have user data
+        const currentState = useAuthStore.getState();
+        
+        if (accessToken && refreshToken && currentState.user) {
+          // We have tokens and user data, ensure authentication state is correct
+          set({
+            accessToken,
+            refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else if (accessToken && refreshToken) {
+          // We have tokens but no user data, set basic auth state
+          set({
+            accessToken,
+            refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          // No tokens, ensure we're logged out
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      },
     }),
     {
       name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
     }
