@@ -44,7 +44,7 @@ export default function ProfilePage() {
   const [captchaInput, setCaptchaInput] = useState("");
 
   const { user } = useAuthStore();
-  const { profile, isLoading, error, fetchUserProfile, isProfileLoaded } = useUserStore();
+  const { profile, isLoading, error, fetchUserProfile, isLoaded } = useUserStore();
   const isExpert = user?.role === "EXPERT";
   const isUser = user?.role === "USER";
 
@@ -277,19 +277,19 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                       <h4 className="font-medium text-gray-800">Followers</h4>
-                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.followers || 0}</p>
+                      <p className="text-sm text-gray-600 mt-1">{/* TODO: Implement followers count if available */}0</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                       <h4 className="font-medium text-gray-800">Following</h4>
-                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.following || 0}</p>
+                      <p className="text-sm text-gray-600 mt-1">{followedExperts.length}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                       <h4 className="font-medium text-gray-800">Posts</h4>
-                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.posts || 0}</p>
+                      <p className="text-sm text-gray-600 mt-1">{profilePosts.length}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                       <h4 className="font-medium text-gray-800">Chats Initiated</h4>
-                      <p className="text-sm text-gray-600 mt-1">{profile?._count?.comments || 0}</p>
+                      <p className="text-sm text-gray-600 mt-1">{/* TODO: Implement comments count if available */}0</p>
                     </div>
                   </div>
                 </div>
@@ -311,7 +311,7 @@ export default function ProfilePage() {
         );
       case "Following":
         if (!isUser) return null;
-        const followingList = profile?.following || [];
+        const followingList: typeof followedExperts = followedExperts;
         return (
           <div className="space-y-6">
             <div className="bg-white border rounded-lg shadow-sm">
@@ -325,22 +325,22 @@ export default function ProfilePage() {
               </div>
               {followingList.length > 0 ? (
                 <div className="divide-y">
-                  {followingList.map((item) => (
+                  {followingList.map((item: typeof followedExperts[number]) => (
                     <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center space-x-4">
                         <img
-                          src={item.following.avatar || '/default-avatar.png'}
-                          alt={item.following.name}
+                          src={item.avatar || '/default-avatar.png'}
+                          alt={item.name}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <div>
                               <h4 className="text-sm font-semibold text-gray-800 truncate">
-                                {item.following.name}
+                                {item.name}
                               </h4>
                               <p className="text-xs text-gray-600 truncate">
-                                {item.following.role}
+                                {item.specialty}
                               </p>
                             </div>
                             <div className="flex space-x-2">
@@ -486,7 +486,7 @@ export default function ProfilePage() {
               <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Profile</h3>
               <p className="text-red-600 mb-4">{error}</p>
               <button
-                onClick={fetchUserProfile}
+                onClick={() => { fetchUserProfile(); }}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
               >
                 Try Again
@@ -512,13 +512,13 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row p-6 md:items-start md:justify-between gap-4 md:gap-8">
             <div className="flex flex-col md:flex-row gap-4 items-center">
               <img
-                src={profile?.avatar || "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"}
+                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
                 alt="Profile"
                 className="w-24 h-24 rounded-full border-4 border-white -mt-12 object-cover"
               />
               <div>
                 <div className="flex items-center justify-start gap-2 md:gap-4 flex-col  md:flex-row">
-                  <h1 className="text-2xl font-bold">{profile?.name || user?.name || "User"}</h1>
+                  <h1 className="text-2xl font-bold">{user?.name || "User"}</h1>
                   {/* Show email for USER */}
                   {isUser && profile?.email && (
                     <span className="text-gray-500 text-sm">{profile.email}</span>
@@ -534,27 +534,15 @@ export default function ProfilePage() {
                 </div>
 
                 <p className="text-green-600 font-semibold mt-2">
-                  {isExpert ? (profile?.expertDetails?.headline || "Expert") : "Member"}
+                  {isExpert ? "Expert" : "Member"}
                 </p>
                 <div className="text-sm text-gray-500 flex flex-wrap gap-2 items-center mt-1">
                   <span>
-                    {profile?.location && typeof profile.location === 'object' && !Array.isArray(profile.location) ? (
-                      <>
-                        {(profile.location as {address?: string})?.address}
-                        {(profile.location as {address?: string, country?: string})?.address && (profile.location as {country?: string})?.country ? ', ' : ''}
-                        {(profile.location as {country?: string})?.country}
-                        {(profile.location as {pincode?: string})?.pincode && ` (${(profile.location as {pincode?: string})?.pincode})`}
-                      </>
-                    ) : (
-                      <>
-                        Location not set
-                        <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add location</Link>
-                      </>
-                    )}
+                    Location not set
+                    <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add location</Link>
                   </span>
-                  <span>{profile?._count?.followers || 0} followers</span>
-                  <span>{profile?._count?.following || 0} following</span>
-                  <span>{profile?._count?.posts || 0} posts</span>
+                  <span>{followedExperts.length} following</span>
+                  <span>{profilePosts.length} posts</span>
                 </div>
                 {/* Show email and member since date for USER */}
                 {isUser && (
@@ -602,14 +590,14 @@ export default function ProfilePage() {
                 {isExpert ? (
                   <>
                     <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{profile?._count?.posts || 0}</p>
+                      <p className="font-semibold">{profilePosts.length}</p>
                       <p className="text-gray-600">Posts</p>
                     </div>
                     <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{profile?._count?.following || 0}</p>
+                      <p className="font-semibold">{followedExperts.length}</p>
                       <p className="text-gray-600 flex items-center gap-2">
                         Experts Followed
-                        {(!profile?._count?.following || profile._count.following === 0) && (
+                        {followedExperts.length === 0 && (
                           <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
                         )}
                       </p>
@@ -631,7 +619,7 @@ export default function ProfilePage() {
                 ) : (
                   <>
                     <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{profile?._count?.following || 0}</p>
+                      <p className="font-semibold">{followedExperts.length}</p>
                       <p className="text-gray-600">Following</p>
                     </div>
                     <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
@@ -648,10 +636,10 @@ export default function ProfilePage() {
                       </p>
                     </div>
                     <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{profile?._count?.comments || 0}</p>
+                      <p className="font-semibold">0</p>
                       <p className="text-gray-600 flex items-center gap-2">
                         Chats Initiated
-                        {(!profile?._count?.comments || profile._count.comments === 0) && (
+                        {true && (
                           <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
                         )}
                       </p>

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
 import { useCategoriesStore } from "@/lib/mainwebsite/categories-store";
-import { useAnalyticsStore } from "@/lib/mainwebsite/analytics-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -75,11 +74,6 @@ export default function SubcategoryExpertsPage() {
     clearError: clearCategoriesError,
   } = useCategoriesStore();
 
-  const {
-    addAnalytics,
-    isLoading: analyticsLoading,
-  } = useAnalyticsStore();
-
   // Fetch categories and subcategories on component mount
   useEffect(() => {
     fetchAllCategories();
@@ -97,29 +91,13 @@ export default function SubcategoryExpertsPage() {
 
       if (foundSubcategory) {
         fetchSubcategoryById(foundSubcategory.id);
-
-        // Track page view analytics
-        addAnalytics({
-          id: Date.now().toString(),
-          userId: "anonymous", // Will be updated with actual user ID when auth is implemented
-          type: "pageview",
-          category: "subcategory",
-          action: "view",
-          metadata: {
-            subcategory: foundSubcategory.id,
-            subcategoryName: foundSubcategory.name,
-            category: category as string,
-          },
-          timestamp: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-        });
       }
     }
 
     return () => {
       clearCategoriesError();
     };
-  }, [subcatKey, subcategories, fetchSubcategoryById, addAnalytics, clearCategoriesError, category]);
+  }, [subcatKey, subcategories, fetchSubcategoryById, clearCategoriesError, category]);
 
   // Fetch experts for the subcategory
   useEffect(() => {
@@ -166,26 +144,6 @@ export default function SubcategoryExpertsPage() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Handle expert click analytics
-  const handleExpertClick = (expertId: string, expertName: string) => {
-    addAnalytics({
-      id: Date.now().toString(),
-      userId: "anonymous",
-      type: "click",
-      category: "expert",
-      action: "view_profile",
-      metadata: {
-        expertId,
-        expertName,
-        subcategory: currentSubcategory?.id || subcatKey,
-        subcategoryName: currentSubcategory?.name || subcatName,
-        category: category as string,
-      },
-      timestamp: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    });
   };
 
   // Loading skeleton component
@@ -389,7 +347,6 @@ export default function SubcategoryExpertsPage() {
                   <Link href={`/profile/${expert.id}`}>
                     <Button
                       className="w-full"
-                      onClick={() => handleExpertClick(expert.id, expert.name)}
                     >
                       View Profile
                     </Button>

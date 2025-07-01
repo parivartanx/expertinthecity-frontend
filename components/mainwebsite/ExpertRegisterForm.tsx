@@ -170,10 +170,9 @@ const ExpertRegisterForm = () => {
         email: user.email || profile?.email || "",
         bio: profile?.bio || "",
         location:
-          (profile?.location && typeof profile.location === 'object' && profile.location !== null && (profile.location as { address?: string }).address) ||
           (profile?.address && typeof profile.address === 'object' && profile.address !== null && (profile.address as { address?: string }).address) ||
           "",
-        profilePhoto: profile?.avatar || null,
+        profilePhoto: null,
       }));
       if (profile?.interests && profile.interests.length > 0) {
         setSelectedInterests(profile.interests);
