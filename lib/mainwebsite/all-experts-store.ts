@@ -6,7 +6,7 @@ interface Expert {
   id: string;
   name: string;
   title?: string;
-  location: string;
+  location: string | { address?: string; country?: string };
   rating: number;
   reviews: number;
   categories?: string[];
@@ -112,19 +112,20 @@ export const useAllExpertsStore = create<AllExpertsState>()(
             limit: 12
           };
 
-          if (searchQuery) {
-            params.q = searchQuery;
-          }
-
-          if (location) {
-            params.location = location;
+          // Combine searchQuery and location for the search param
+          if (searchQuery && location) {
+            params.search = `${searchQuery} ${location}`;
+          } else if (searchQuery) {
+            params.search = searchQuery;
+          } else if (location) {
+            params.search = location;
           }
 
           if (selectedServices.length > 0) {
-            params.services = selectedServices.join(',');
+            params.expertise = selectedServices.join(',');
           }
 
-          if (selectedRatings.length > 0) {
+          if (selectedRatings && selectedRatings.length > 0) {
             params.minRating = Math.min(...selectedRatings);
           }
 
@@ -132,8 +133,31 @@ export const useAllExpertsStore = create<AllExpertsState>()(
 
           if (response.data.status === "success") {
             const { experts, totalExperts, currentPage, totalPages } = response.data.data;
+            // Transform the backend expert data to match frontend interface
+            const transformedExperts = experts.map((expert: any) => ({
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            }));
             set({
-              experts,
+              experts: transformedExperts,
               totalExperts,
               currentPage,
               totalPages,
@@ -187,7 +211,9 @@ export const useAllExpertsStore = create<AllExpertsState>()(
               id: expert.id,
               name: expert.user?.name || expert.headline || "Expert",
               title: expert.headline,
-              location: expert.user?.location || "Remote",
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
               rating: expert.user?.ratings || 0,
               reviews: expert.user?.reviews || 0,
               categories: expert.expertise || [],
@@ -258,7 +284,9 @@ export const useAllExpertsStore = create<AllExpertsState>()(
               id: expert.id,
               name: expert.user?.name || expert.headline || "Expert",
               title: expert.headline,
-              location: expert.user?.location || "Remote",
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
               rating: expert.user?.ratings || 0,
               reviews: expert.user?.reviews || 0,
               categories: expert.expertise || [],
@@ -373,7 +401,9 @@ export const useAllExpertsStore = create<AllExpertsState>()(
               id: expert.id,
               name: expert.user?.name || expert.headline || "Expert",
               title: expert.headline,
-              location: expert.user?.location || "Remote",
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
               rating: expert.user?.ratings || 0,
               reviews: expert.user?.reviews || 0,
               categories: expert.expertise || [],
@@ -463,7 +493,9 @@ export const useAllExpertsStore = create<AllExpertsState>()(
               id: expert.id,
               name: expert.user?.name || expert.headline || "Expert",
               title: expert.headline,
-              location: expert.user?.location || "Remote",
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
               rating: expert.user?.ratings || 0,
               reviews: expert.user?.reviews || 0,
               categories: expert.expertise || [],

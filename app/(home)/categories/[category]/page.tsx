@@ -289,7 +289,13 @@ export default function CategoryPage({
                         </div>
                         <div className="flex items-center text-gray-600 mb-2">
                           <FaMapMarkerAlt className="mr-1" />
-                          <span>{expert.location}</span>
+                          <span>
+                            {typeof expert.location === "string"
+                              ? expert.location
+                              : expert.location && (expert.location.address || expert.location.country)
+                                ? `${expert.location.address ? expert.location.address : ""}${expert.location.address && expert.location.country ? ", " : ""}${expert.location.country ? expert.location.country : ""}`
+                                : ""}
+                          </span>
                         </div>
                         {expert.description && (
                           <p className="text-gray-600 mb-3">{expert.description}</p>

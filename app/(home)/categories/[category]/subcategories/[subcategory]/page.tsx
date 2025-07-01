@@ -16,7 +16,7 @@ interface Expert {
   id: string;
   name: string;
   title?: string;
-  location: string;
+  location: string | { address?: string; country?: string };
   rating: number;
   reviews: number;
   categories?: string[];
@@ -318,7 +318,11 @@ export default function SubcategoryExpertsPage() {
                 <CardContent className="p-4">
                   <h2 className="text-lg font-semibold mb-1">{expert.name}</h2>
                   <p className="text-sm text-gray-600 mb-1">{expert.title}</p>
-                  <p className="text-xs text-gray-400 mb-2">{expert.location}</p>
+                  <p className="text-xs text-gray-400 mb-2">
+                    {typeof expert.location === 'string'
+                      ? expert.location
+                      : [expert.location?.address, expert.location?.country].filter(Boolean).join(', ')}
+                  </p>
 
                   <div className="flex items-center text-sm mb-2">
                     <span className="text-yellow-500 mr-1">⭐</span>

@@ -180,7 +180,9 @@ export default function ExpertsPage() {
                 {mentor.title}
               </p>
               <p className="text-xs text-gray-400 mb-2 text-center">
-                {mentor.location}
+                {typeof mentor.location === 'object' && mentor.location !== null
+                  ? [mentor.location.address, mentor.location.country].filter(Boolean).join(', ')
+                  : mentor.location}
               </p>
               {/* Rating */}
               <div className="flex items-center justify-center text-sm mb-2">
