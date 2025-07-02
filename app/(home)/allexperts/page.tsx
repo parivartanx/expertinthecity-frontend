@@ -10,7 +10,7 @@ interface Expert {
   id: string;
   name: string;
   title?: string;
-  location: string;
+  location: string | { address?: string; country?: string };
   rating: number;
   reviews: number;
   categories?: string[];
@@ -166,7 +166,9 @@ export default function AllExperts() {
                       {expert.name}
                     </h2>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      📍 {expert.location}
+                      📍 {typeof expert.location === 'string'
+                        ? expert.location
+                        : [expert.location?.address, expert.location?.country].filter(Boolean).join(', ')}
                     </p>
                     <div className="flex items-center gap-1 text-yellow-500 mt-1">
                       <FaStar className="text-sm" />
@@ -182,7 +184,9 @@ export default function AllExperts() {
                       {expert.name}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      📍 {expert.location}
+                      📍 {typeof expert.location === 'string'
+                        ? expert.location
+                        : [expert.location?.address, expert.location?.country].filter(Boolean).join(', ')}
                     </p>
                   </div>
                   <p className="text-xs sm:text-sm mt-1 text-muted-foreground">
