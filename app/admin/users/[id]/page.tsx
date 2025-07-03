@@ -10,77 +10,57 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, User, CheckCircle, Edit2, Save, X, Loader2, Eye, Tag, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
-import { useUsers } from "@/lib/contexts/users-context";
+import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  joinedAt: string;
-  lastActive: string;
-  verified: boolean;
-  profilePicture?: string;
-  bio?: string;
-  location?: string;
-  profileVisitors: number;
-  preferences: string[];
-  chatHistory: {
-    id: string;
-    expertId: string;
-    expertName: string;
-    lastMessage: string;
-    timestamp: string;
-    unreadCount: number;
-  }[];
-}
 
 export default function UserDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const { users, updateUser } = useUsers();
-  const [user, setUser] = useState<User | null>(null);
+  const {
+    selectedUser,
+    isLoading,
+    error,
+    fetchUserById,
+    updateUser,
+  } = useAdminUserStore();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [editedUser, setEditedUser] = useState<typeof selectedUser | null>(null);
 
   useEffect(() => {
-    const foundUser = users.find(u => u.id === params.id);
-    if (foundUser) {
-      setUser(foundUser);
-      setEditedUser(foundUser);
+    if (params.id) {
+      fetchUserById(params.id as string);
     }
-    setIsLoading(false);
-  }, [params.id, users]);
+    setIsEditing(false);
+  }, [params.id, fetchUserById]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (selectedUser) {
+      setEditedUser(selectedUser);
+    }
+  }, [selectedUser]);
+
+  const handleSave = async () => {
     if (editedUser) {
-      const updatedUser = {
-        ...editedUser,
-        chatHistory: editedUser.chatHistory.map(chat => ({
-          ...chat,
-          expertId: chat.expertId || `expert-${chat.id}`
-        }))
-      };
-      updateUser(updatedUser);
-      setUser(updatedUser);
-      setIsEditing(false);
-      toast.success("User details updated successfully");
+      try {
+        await updateUser(editedUser.id, editedUser);
+        toast.success("User details updated successfully");
+        setIsEditing(false);
+      } catch (e) {
+        toast.error("Failed to update user");
+      }
     }
   };
 
   const handleCancel = () => {
-    setEditedUser(user);
+    setEditedUser(selectedUser);
     setIsEditing(false);
   };
 
-  const handleChange = (field: keyof User, value: any) => {
+  const handleChange = (field: string, value: any) => {
     if (editedUser) {
       setEditedUser({
         ...editedUser,
-        [field]: value
+        [field]: value,
       });
     }
   };
@@ -96,7 +76,20 @@ export default function UserDetailsPage() {
     );
   }
 
-  if (!user || !editedUser) {
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-muted-foreground">{error}</p>
+          <Button onClick={() => router.back()} variant="outline">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedUser || !editedUser) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
@@ -142,7 +135,6 @@ export default function UserDetailsPage() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="chats">Chat History</TabsTrigger>
         </TabsList>
         <TabsContent value="profile" className="mt-4 space-y-4">
           <div className="flex items-center space-x-4">
@@ -160,7 +152,7 @@ export default function UserDetailsPage() {
                     placeholder="Enter user name"
                   />
                 ) : (
-                  <h3 className="text-lg font-semibold">{user.name}</h3>
+                  <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
                 )}
               </div>
               <div className="space-y-2">
@@ -174,7 +166,7 @@ export default function UserDetailsPage() {
                     type="email"
                   />
                 ) : (
-                  <p className="text-muted-foreground">{user.email}</p>
+                  <p className="text-muted-foreground">{selectedUser.email}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -187,116 +179,67 @@ export default function UserDetailsPage() {
                     placeholder="Enter role"
                   />
                 ) : (
-                  <p className="text-sm font-medium">{user.role}</p>
+                  <p className="text-sm font-medium">{selectedUser.role}</p>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {user.verified && (
+                {selectedUser.isAdmin && (
                   <CheckCircle className="h-4 w-4 text-blue-500 fill-blue-500" />
                 )}
               </div>
             </div>
           </div>
-          
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
               {isEditing ? (
                 <Input
-                  value={editedUser.status}
-                  onChange={(e) => handleChange('status', e.target.value)}
+                  value={editedUser.stats?.status || ''}
+                  onChange={(e) => handleChange('stats', { ...editedUser.stats, status: e.target.value })}
                 />
               ) : (
-                <p className="font-medium capitalize">{user.status}</p>
+                <p className="font-medium capitalize">{selectedUser.stats?.status || 'N/A'}</p>
               )}
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Location</p>
+              <p className="text-sm text-muted-foreground">Bio</p>
               {isEditing ? (
                 <Input
-                  value={editedUser.location || ''}
-                  onChange={(e) => handleChange('location', e.target.value)}
-                  placeholder="Enter location"
+                  value={editedUser.bio || ''}
+                  onChange={(e) => handleChange('bio', e.target.value)}
+                  placeholder="Enter bio"
                 />
               ) : (
-                <p className="font-medium">{user.location || 'Not specified'}</p>
+                <p className="text-muted-foreground">{selectedUser.bio || 'No bio provided'}</p>
               )}
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Profile Visitors</p>
-              <div className="flex items-center gap-1.5">
-                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                <p className="font-medium">{user.profileVisitors.toLocaleString()}</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Preferences</p>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {user.preferences.map((preference, index) => (
-                  <Badge key={index} variant="secondary">
-                    {preference}
-                  </Badge>
-                ))}
-              </div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Joined</p>
-              <p className="font-medium">{format(new Date(user.joinedAt), "PPP")}</p>
+              <p className="font-medium">{format(new Date(selectedUser.createdAt), "PPP")}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Last Active</p>
-              <p className="font-medium">{format(new Date(user.lastActive), "PPP")}</p>
+              <p className="text-sm text-muted-foreground">Last Updated</p>
+              <p className="font-medium">{format(new Date(selectedUser.updatedAt), "PPP")}</p>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Bio</p>
-            {isEditing ? (
-              <Input
-                value={editedUser.bio || ''}
-                onChange={(e) => handleChange('bio', e.target.value)}
-                placeholder="Enter bio"
-              />
-            ) : (
-              <p className="text-muted-foreground">{user.bio || 'No bio provided'}</p>
-            )}
           </div>
         </TabsContent>
         <TabsContent value="activity" className="mt-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="border rounded-md p-4">
               <p className="text-sm font-medium mb-2">Total Posts</p>
-              <p className="text-2xl font-bold">15</p>
+              <p className="text-2xl font-bold">{selectedUser.stats?.posts ?? 'N/A'}</p>
             </div>
             <div className="border rounded-md p-4">
               <p className="text-sm font-medium mb-2">Comments</p>
-              <p className="text-2xl font-bold">42</p>
+              <p className="text-2xl font-bold">{selectedUser.stats?.comments ?? 'N/A'}</p>
             </div>
             <div className="border rounded-md p-4">
               <p className="text-sm font-medium mb-2">Likes</p>
-              <p className="text-2xl font-bold">128</p>
+              <p className="text-2xl font-bold">{selectedUser.stats?.likes ?? 'N/A'}</p>
             </div>
             <div className="border rounded-md p-4">
               <p className="text-sm font-medium mb-2">Following</p>
-              <p className="text-2xl font-bold">24</p>
-            </div>
-          </div>
-
-          <div className="border rounded-md p-4 mt-4">
-            <p className="text-sm font-medium mb-3">Recent Activity</p>
-            <div className="space-y-3">
-              <div className="border-b pb-2">
-                <p className="text-sm">Posted a comment on "Winter Fashion Trends 2023"</p>
-                <p className="text-xs text-muted-foreground">Nov 5, 2023</p>
-              </div>
-              <div className="border-b pb-2">
-                <p className="text-sm">Liked "Introduction to Machine Learning"</p>
-                <p className="text-xs text-muted-foreground">Nov 3, 2023</p>
-              </div>
-              <div>
-                <p className="text-sm">Updated profile information</p>
-                <p className="text-xs text-muted-foreground">Oct 28, 2023</p>
-              </div>
+              <p className="text-2xl font-bold">{selectedUser.stats?.following ?? 'N/A'}</p>
             </div>
           </div>
         </TabsContent>
@@ -327,39 +270,9 @@ export default function UserDetailsPage() {
               </div>
             </div>
           </div>
-
           <div className="flex justify-between mt-4">
             <Button variant="outline">Reset Settings</Button>
             <Button>Save Settings</Button>
-          </div>
-        </TabsContent>
-        <TabsContent value="chats" className="mt-4 space-y-4">
-          <div className="space-y-4">
-            {user.chatHistory.length > 0 ? (
-              user.chatHistory.map((chat) => (
-                <div key={chat.id} className="border rounded-md p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                      <h4 className="font-medium">{chat.expertName}</h4>
-                      {chat.unreadCount > 0 && (
-                        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                          {chat.unreadCount} new
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {format(new Date(chat.timestamp), "PPP")}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">{chat.lastMessage}</p>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No chat history available
-              </div>
-            )}
           </div>
         </TabsContent>
       </Tabs>

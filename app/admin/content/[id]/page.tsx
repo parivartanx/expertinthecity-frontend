@@ -9,53 +9,50 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ArrowLeft, Edit2, X, Save, ThumbsUp, MessageSquare, Clock, FileText } from "lucide-react";
-import { mockPosts } from "@/lib/mock-data";
-
-interface Post {
-  id: string;
-  expertId: string;
-  expertName: string;
-  title: string;
-  content: string;
-  category: string;
-  status: string;
-  createdAt: string;
-  likes: number;
-  comments: number;
-}
+import { useAdminContentStore, AdminContentPost } from "@/lib/mainwebsite/admin-content-store";
 
 export default function ContentDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const [post, setPost] = useState<Post | null>(null);
+
+  // Get store state and actions
+  const {
+    selectedPost,
+    isLoading,
+    error,
+    fetchPostById,
+    updatePost,
+  } = useAdminContentStore();
+
   const [isEditing, setIsEditing] = useState(false);
-  const [editedPost, setEditedPost] = useState<Post | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [editedPost, setEditedPost] = useState<AdminContentPost | null>(null);
 
+  // Fetch post on mount or when id changes
   useEffect(() => {
-    const foundPost = mockPosts.find(p => p.id === params.id);
-    if (foundPost) {
-      setPost(foundPost);
-      setEditedPost(foundPost);
+    if (params.id) {
+      fetchPostById(params.id as string);
     }
-    setIsLoading(false);
-  }, [params.id]);
+  }, [params.id, fetchPostById]);
 
-  const handleSave = () => {
+  // Sync editedPost with selectedPost
+  useEffect(() => {
+    setEditedPost(selectedPost);
+  }, [selectedPost]);
+
+  const handleSave = async () => {
     if (editedPost) {
-      // In a real app, this would update the post in the database
-      setPost(editedPost);
+      await updatePost(editedPost.id, editedPost);
       setIsEditing(false);
       toast.success("Content updated successfully");
     }
   };
 
   const handleCancel = () => {
-    setEditedPost(post);
+    setEditedPost(selectedPost);
     setIsEditing(false);
   };
 
-  const handleChange = (field: keyof Post, value: any) => {
+  const handleChange = (field: keyof AdminContentPost, value: any) => {
     if (editedPost) {
       setEditedPost({
         ...editedPost,
@@ -84,7 +81,20 @@ export default function ContentDetailsPage() {
     );
   }
 
-  if (!post || !editedPost) {
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-red-500">{error}</p>
+          <Button onClick={() => router.back()} variant="outline">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedPost || !editedPost) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
@@ -144,13 +154,13 @@ export default function ContentDetailsPage() {
                   placeholder="Enter content title"
                 />
               ) : (
-                <h3 className="text-lg font-semibold">{post.title}</h3>
+                <h3 className="text-lg font-semibold">{selectedPost.title}</h3>
               )}
             </div>
 
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Author</p>
-              <p className="text-muted-foreground">{post.expertName}</p>
+              <p className="text-muted-foreground">{selectedPost.expertName}</p>
             </div>
 
             <div className="space-y-2">
@@ -163,7 +173,7 @@ export default function ContentDetailsPage() {
                   placeholder="Enter category"
                 />
               ) : (
-                <p className="text-sm font-medium">{post.category}</p>
+                <p className="text-sm font-medium">{selectedPost.category}</p>
               )}
             </div>
 
@@ -182,14 +192,14 @@ export default function ContentDetailsPage() {
               ) : (
                 <Badge
                   variant={
-                    post.status === "published"
+                    selectedPost.status === "published"
                       ? "default"
-                      : post.status === "pending"
-                      ? "secondary"
-                      : "destructive"
+                      : selectedPost.status === "pending"
+                        ? "secondary"
+                        : "destructive"
                   }
                 >
-                  {post.status}
+                  {selectedPost.status}
                 </Badge>
               )}
             </div>
@@ -205,7 +215,7 @@ export default function ContentDetailsPage() {
                 />
               ) : (
                 <div className="border rounded-md p-4 bg-muted/30">
-                  <p className="whitespace-pre-line">{post.content}</p>
+                  <p className="whitespace-pre-line">{selectedPost.content}</p>
                 </div>
               )}
             </div>
@@ -216,11 +226,11 @@ export default function ContentDetailsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="border rounded-md p-4">
               <p className="text-sm font-medium mb-2">Likes</p>
-              <p className="text-2xl font-bold">{post.likes}</p>
+              <p className="text-2xl font-bold">{selectedPost.likes}</p>
             </div>
             <div className="border rounded-md p-4">
               <p className="text-sm font-medium mb-2">Comments</p>
-              <p className="text-2xl font-bold">{post.comments}</p>
+              <p className="text-2xl font-bold">{selectedPost.comments}</p>
             </div>
           </div>
 
@@ -249,15 +259,15 @@ export default function ContentDetailsPage() {
             <div className="space-y-3">
               <div className="border-b pb-2">
                 <p className="text-sm">Content created</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(post.createdAt), "PPP")}</p>
+                <p className="text-xs text-muted-foreground">{format(new Date(selectedPost.createdAt), "PPP")}</p>
               </div>
               <div className="border-b pb-2">
-                <p className="text-sm">Status changed to {post.status}</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(post.createdAt), "PPP")}</p>
+                <p className="text-sm">Status changed to {selectedPost.status}</p>
+                <p className="text-xs text-muted-foreground">{format(new Date(selectedPost.createdAt), "PPP")}</p>
               </div>
               <div>
                 <p className="text-sm">Last edited</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(post.createdAt), "PPP")}</p>
+                <p className="text-xs text-muted-foreground">{format(new Date(selectedPost.createdAt), "PPP")}</p>
               </div>
             </div>
           </div>

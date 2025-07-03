@@ -63,6 +63,10 @@ interface AllExpertsState {
   setLocation: (location: string) => void;
   toggleService: (service: string) => void;
   toggleRating: (rating: number) => void;
+  
+  // New actions for expert details and messaging
+  getExpertById: (expertId: string) => Promise<Expert | null>;
+  sendMessageToExpert: (expertId: string, message: string) => Promise<boolean>;
 }
 
 export const useAllExpertsStore = create<AllExpertsState>()(
@@ -561,6 +565,100 @@ export const useAllExpertsStore = create<AllExpertsState>()(
       },
 
       resetFilters: () => set({ filters: {} }),
+
+      getExpertById: async (expertId: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await axiosInstance.get(`/experts/${expertId}`);
+
+          if (response.data.status === "success") {
+            const expert = response.data.data.expert;
+            // Transform the backend expert data to match frontend interface
+            const transformedExpert = {
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            };
+            set({ isLoading: false });
+            return transformedExpert;
+          } else {
+            throw new Error(response.data.message || "Failed to fetch expert");
+          }
+        } catch (error: any) {
+          console.error("Error fetching expert by ID:", error);
+          
+          let errorMessage = "Failed to fetch expert";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Expert not found";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false
+          });
+          return null;
+        }
+      },
+
+      sendMessageToExpert: async (expertId: string, message: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await axiosInstance.post(`/experts/${expertId}/messages`, { message });
+
+          if (response.data.status === "success") {
+            set({ isLoading: false });
+            return true;
+          } else {
+            throw new Error(response.data.message || "Failed to send message");
+          }
+        } catch (error: any) {
+          console.error("Error sending message to expert:", error);
+          
+          let errorMessage = "Failed to send message";
+          
+          if (error.response?.status === 401) {
+            errorMessage = "Unauthorized. Please login again.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Expert not found";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          set({
+            error: errorMessage,
+            isLoading: false
+          });
+          return false;
+        }
+      },
     }),
     {
       name: "all-experts-storage",

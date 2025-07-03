@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { mockPosts } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,67 +30,65 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowUpDown, MoreHorizontal, Eye, ThumbsUp, MessageSquare, Clock } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, ThumbsUp, MessageSquare, Clock } from "lucide-react";
 import { format } from "date-fns";
-
-interface Post {
-  id: string;
-  expertId: string;
-  expertName: string;
-  title: string;
-  content: string;
-  category: string;
-  status: string;
-  createdAt: string;
-  likes: number;
-  comments: number;
-}
+import { useState } from "react";
+import { useAdminContentStore } from "@/lib/mainwebsite/admin-content-store";
 
 export default function ContentPage() {
   const router = useRouter();
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | "delete" | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [search, setSearch] = useState<string>("");
 
-  const handleAction = (post: Post, action: "approve" | "reject" | "delete") => {
+  const {
+    posts,
+    isLoading,
+    error,
+    fetchPosts,
+    deletePost,
+    clearError,
+  } = useAdminContentStore();
+
+  // Fetch posts on mount and when filters/search change
+  useEffect(() => {
+    fetchPosts({
+      search: search || undefined,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, search]);
+
+  const handleAction = (post: any, action: "approve" | "reject" | "delete") => {
     setSelectedPost(post);
     setActionType(action);
     setActionDialogOpen(true);
   };
 
-  const handleViewPost = (post: Post) => {
+  const handleViewPost = (post: any) => {
     router.push(`/admin/content/${post.id}`);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!selectedPost || !actionType) return;
-
     let message = "";
-    switch (actionType) {
-      case "approve":
-        message = `Post "${selectedPost.title}" has been approved`;
-        break;
-      case "reject":
-        message = `Post "${selectedPost.title}" has been rejected`;
-        break;
-      case "delete":
-        message = `Post "${selectedPost.title}" has been deleted`;
-        break;
+    if (actionType === "delete") {
+      await deletePost(selectedPost.id);
+      message = `Post "${selectedPost.title}" has been deleted`;
+    } else if (actionType === "approve") {
+      // Implement approve logic here (e.g., updatePost with status)
+      message = `Post "${selectedPost.title}" has been approved`;
+    } else if (actionType === "reject") {
+      // Implement reject logic here (e.g., updatePost with status)
+      message = `Post "${selectedPost.title}" has been rejected`;
     }
-
     toast.success(message);
     setActionDialogOpen(false);
   };
 
-  // Filter posts based on selected status
-  const filteredPosts = mockPosts.filter(post => {
-    if (statusFilter === "all") return true;
-    return post.status === statusFilter;
-  });
-
   // Table columns definition
-  const columns: ColumnDef<Post>[] = [
+  const columns: ColumnDef<any>[] = [
     {
       accessorKey: "title",
       header: ({ column }) => (
@@ -126,8 +123,8 @@ export default function ContentPage() {
               status === "published"
                 ? "default"
                 : status === "pending"
-                ? "secondary"
-                : "destructive"
+                  ? "secondary"
+                  : "destructive"
             }
           >
             {status}
@@ -191,7 +188,7 @@ export default function ContentPage() {
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleAction(post, "delete")}
                 className="text-destructive focus:text-destructive"
               >
@@ -208,24 +205,41 @@ export default function ContentPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Content Moderation</h1>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All content</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="pending">Pending approval</SelectItem>
-            <SelectItem value="flagged">Flagged content</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2 items-center">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All content</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="pending">Pending approval</SelectItem>
+              <SelectItem value="flagged">Flagged content</SelectItem>
+            </SelectContent>
+          </Select>
+          <input
+            type="text"
+            placeholder="Search content..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input input-bordered w-[200px]"
+          />
+        </div>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={filteredPosts} 
-        searchColumn="title" 
-        searchPlaceholder="Search content..." 
+      {isLoading && (
+        <div className="text-muted-foreground mb-2">Loading...</div>
+      )}
+      {error && (
+        <div className="text-red-500 mb-2">
+          {error} <Button variant="link" onClick={clearError}>Clear</Button>
+        </div>
+      )}
+      <DataTable
+        columns={columns}
+        data={posts.filter(post => statusFilter === "all" ? true : post.status === statusFilter)}
+        searchColumn="title"
+        searchPlaceholder="Search content..."
       />
 
       {/* Action Confirmation Dialog */}
@@ -243,9 +257,10 @@ export default function ContentPage() {
             <Button variant="outline" onClick={() => setActionDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              variant={actionType === "delete" ? "destructive" : "default"} 
+            <Button
+              variant={actionType === "delete" ? "destructive" : "default"}
               onClick={confirmAction}
+              disabled={isLoading}
             >
               Confirm
             </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { ArrowUpDown, MoreHorizontal, User, CheckCircle, Users, ArrowUpRight, Eye, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useUsers } from "@/lib/contexts/users-context";
+import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
 
 interface User {
   id: string;
@@ -53,11 +53,22 @@ interface User {
 
 export default function UsersPage() {
   const router = useRouter();
-  const { users, updateUser } = useUsers();
+  const {
+    users,
+    fetchUsers,
+    updateUser,
+    deleteUser,
+    isLoading,
+    error,
+  } = useAdminUserStore();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | null>(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleAction = (user: User, action: "activate" | "deactivate" | "verify") => {
     setSelectedUser(user);
@@ -103,12 +114,29 @@ export default function UsersPage() {
     }
 
     if (updatedUser) {
-      updateUser(updatedUser);
+      updateUser(updatedUser.id, updatedUser);
       toast.success(message);
     }
 
     setActionDialogOpen(false);
   };
+
+  const mappedUsers: User[] = users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    status: (u as any).status || "active",
+    joinedAt: (u as any).createdAt || "",
+    lastActive: (u as any).updatedAt || "",
+    chatHistory: [],
+    verified: (u as any).verified ?? false,
+    profilePicture: u.avatar,
+    bio: u.bio,
+    location: (u as any).location || "",
+    profileVisitors: (u as any).profileVisitors || 0,
+    preferences: (u as any).preferences || [],
+  }));
 
   // Table columns definition
   const columns: ColumnDef<User>[] = [
@@ -129,7 +157,7 @@ export default function UsersPage() {
             <User className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <div 
+            <div
               className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary hover:underline transition-colors"
               onClick={() => handleViewUser(row.original)}
             >
@@ -165,8 +193,8 @@ export default function UsersPage() {
               status === "active"
                 ? "default"
                 : status === "pending"
-                ? "secondary"
-                : "outline"
+                  ? "secondary"
+                  : "outline"
             }
           >
             {status}
@@ -237,11 +265,11 @@ export default function UsersPage() {
         <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={users} 
-        searchColumn="name" 
-        searchPlaceholder="Search users..." 
+      <DataTable
+        columns={columns}
+        data={mappedUsers}
+        searchColumn="name"
+        searchPlaceholder="Search users..."
       />
 
       {/* View User Dialog */}
@@ -270,7 +298,7 @@ export default function UsersPage() {
                   <p className="text-sm font-medium mt-1">{selectedUser.role}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
