@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Award, CheckCircle, Edit2, Save, X, Loader2, Star, Eye } from "lucide-react";
 import { format } from "date-fns";
-import { useExperts } from "@/lib/contexts/experts-context";
+import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
 import { toast } from "sonner";
 
 interface Expert {
@@ -34,24 +34,69 @@ interface Expert {
 export default function ExpertDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const { experts, updateExpert } = useExperts();
+  const { fetchUserById, selectedUser, updateUser, isLoading, error } = useAdminUserStore();
   const [expert, setExpert] = useState<Expert | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedExpert, setEditedExpert] = useState<Expert | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const foundExpert = experts.find(e => e.id === params.id);
-    if (foundExpert) {
-      setExpert(foundExpert);
-      setEditedExpert(foundExpert);
+    if (params.id) {
+      fetchUserById(params.id as string);
     }
-    setIsLoading(false);
-  }, [params.id, experts]);
+  }, [params.id, fetchUserById]);
+
+  useEffect(() => {
+    if (selectedUser && selectedUser.role === "EXPERT") {
+      setExpert({
+        id: selectedUser.id,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        category: selectedUser.expertDetails?.category || "",
+        status: (selectedUser as any).status || "active",
+        profileCompletion: selectedUser.expertDetails?.profileCompletion || 0,
+        followers: selectedUser.stats?.followers || 0,
+        joinedAt: selectedUser.createdAt || "",
+        lastActive: selectedUser.updatedAt || "",
+        verified: (selectedUser as any).verified ?? false,
+        experience: selectedUser.expertDetails?.experience || "",
+        skills: selectedUser.expertDetails?.skills || [],
+        featured: selectedUser.expertDetails?.featured || false,
+        rating: selectedUser.stats?.rating || 0,
+        profileVisitors: selectedUser.stats?.profileVisitors || 0,
+      });
+      setEditedExpert({
+        id: selectedUser.id,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        category: selectedUser.expertDetails?.category || "",
+        status: (selectedUser as any).status || "active",
+        profileCompletion: selectedUser.expertDetails?.profileCompletion || 0,
+        followers: selectedUser.stats?.followers || 0,
+        joinedAt: selectedUser.createdAt || "",
+        lastActive: selectedUser.updatedAt || "",
+        verified: (selectedUser as any).verified ?? false,
+        experience: selectedUser.expertDetails?.experience || "",
+        skills: selectedUser.expertDetails?.skills || [],
+        featured: selectedUser.expertDetails?.featured || false,
+        rating: selectedUser.stats?.rating || 0,
+        profileVisitors: selectedUser.stats?.profileVisitors || 0,
+      });
+    }
+  }, [selectedUser]);
 
   const handleSave = () => {
     if (editedExpert) {
-      updateExpert(editedExpert);
+      updateUser(editedExpert.id, {
+        name: editedExpert.name,
+        email: editedExpert.email,
+        expertDetails: {
+          category: editedExpert.category,
+          experience: editedExpert.experience,
+          skills: editedExpert.skills,
+          featured: editedExpert.featured,
+          profileCompletion: editedExpert.profileCompletion,
+        },
+      });
       setExpert(editedExpert);
       setIsEditing(false);
       toast.success("Expert details updated successfully");
@@ -83,11 +128,11 @@ export default function ExpertDetailsPage() {
     );
   }
 
-  if (!expert || !editedExpert) {
+  if (error || !expert || !editedExpert) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
-          <p className="text-muted-foreground">Expert not found</p>
+          <p className="text-muted-foreground">{error || "Expert not found"}</p>
           <Button onClick={() => router.back()} variant="outline">
             Go Back
           </Button>

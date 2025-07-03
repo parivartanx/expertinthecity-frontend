@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const baseURL = "https://experts-in-the-city-backend.vercel.app/api";
-// const baseURL = "http://localhost:4000/api";
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://experts-in-the-city-backend.vercel.app/api";
+
 
 export const axiosInstance = axios.create({
   baseURL,
@@ -13,7 +13,11 @@ export const axiosInstance = axios.create({
 // Add request interceptor to add auth token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("accessToken");
+    // Determine if this is an admin API call
+    const isAdminApi = config.url && config.url.includes('/admin');
+    const token = isAdminApi
+      ? localStorage.getItem("adminAccessToken")
+      : localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

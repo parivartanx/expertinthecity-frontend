@@ -4,9 +4,8 @@ import { ThemeProvider } from "next-themes";
 import { Sidebar } from "@/components/admin/sidebar";
 import { Header } from "@/components/admin/header";
 import { Toaster } from "@/components/ui/sonner";
-import { getCurrentUser } from "@/lib/auth";
+import { useAdminAuthStore } from "@/lib/mainwebsite/auth-store";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function AdminLayout({
   children,
@@ -14,19 +13,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const user = getCurrentUser();
-
-  useEffect(() => {
-    // Check if user is authenticated by looking for the cookie
-    const checkAuth = () => {
-      const cookies = document.cookie.split(';');
-      const isAuth = cookies.some(cookie => cookie.trim().startsWith('isAuthenticated=true'));
-      setIsAuthenticated(isAuth);
-    };
-
-    checkAuth();
-  }, [pathname]);
+  const { isAuthenticated, user } = useAdminAuthStore();
 
   // If we're on the login page or not authenticated, don't show the admin layout
   if (pathname === '/admin/login' || !isAuthenticated) {

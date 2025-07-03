@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { ArrowUpDown, MoreHorizontal, Award, CheckCircle, Users, ArrowUpRight, Loader2, Star, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useExperts } from "@/lib/contexts/experts-context";
+import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
 
 interface Expert {
   id: string;
@@ -50,12 +50,43 @@ interface Expert {
 
 export default function ExpertsPage() {
   const router = useRouter();
-  const { experts, updateExpert } = useExperts();
+  const {
+    users,
+    fetchUsers,
+    updateUser,
+    isLoading,
+    error,
+  } = useAdminUserStore();
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | "feature" | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    fetchUsers({ role: "EXPERT" });
+  }, [fetchUsers]);
+
+  // Map API users to Expert interface
+  const mappedExperts: Expert[] = users
+    .filter((u) => u.role === "EXPERT")
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      category: u.expertDetails?.category || "",
+      status: (u as any).status || "active",
+      profileCompletion: u.expertDetails?.profileCompletion || 0,
+      followers: u.stats?.followers || 0,
+      joinedAt: u.createdAt || "",
+      lastActive: u.updatedAt || "",
+      verified: (u as any).verified ?? false,
+      experience: u.expertDetails?.experience || "",
+      skills: u.expertDetails?.skills || [],
+      featured: u.expertDetails?.featured || false,
+      rating: u.stats?.rating || 0,
+      profileVisitors: u.stats?.profileVisitors || 0,
+    }));
 
   const handleAction = (expert: Expert, action: "activate" | "deactivate" | "verify" | "feature") => {
     setSelectedExpert(expert);
@@ -73,7 +104,7 @@ export default function ExpertsPage() {
     if (!selectedExpert || !actionType) return;
 
     let message = "";
-    let updatedExpert: Expert | null = null;
+    let updatedExpert: Partial<Expert> | null = null;
 
     switch (actionType) {
       case "activate":
@@ -108,7 +139,8 @@ export default function ExpertsPage() {
     }
 
     if (updatedExpert) {
-      updateExpert(updatedExpert);
+      // Update via API
+      updateUser(selectedExpert.id, updatedExpert);
       toast.success(message);
     }
 
@@ -276,7 +308,7 @@ export default function ExpertsPage() {
 
       <DataTable 
         columns={columns} 
-        data={experts} 
+        data={mappedExperts} 
         searchColumn="name" 
         searchPlaceholder="Search experts..." 
       />
