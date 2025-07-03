@@ -5,6 +5,9 @@ import { FaStar } from "react-icons/fa";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
+import { useRouter } from "next/navigation";
+import { useChatStore } from "@/lib/mainwebsite/chat-store";
+import { toast } from "sonner";
 
 interface Expert {
   id: string;
@@ -110,8 +113,13 @@ export default function AllExperts() {
     setSearchQuery,
     location,
     selectedRatings,
-    selectedServices
+    selectedServices,
+    getExpertById,
+    sendMessageToExpert
   } = useAllExpertsStore();
+  const router = useRouter();
+  const { createChat, chats } = useChatStore();
+  const [messageLoading, setMessageLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetchExperts();
@@ -125,6 +133,65 @@ export default function AllExperts() {
 
     return () => clearTimeout(timeoutId);
   }, [location, selectedRatings, selectedServices, searchQuery]);
+
+  const handleViewProfile = async (expert: Expert) => {
+    try {
+      // Navigate to expert profile page
+      router.push(`/experts/${expert.id}`);
+    } catch (error) {
+      console.error("Error navigating to expert profile:", error);
+      toast.error("Failed to open expert profile");
+    }
+  };
+
+  const handleMessage = async (expert: Expert) => {
+    try {
+      setMessageLoading(expert.id);
+
+      // Try to find an existing chat with this expert
+      let chat = chats.find(
+        (c) =>
+          c.type === "expert" &&
+          c.participants.some((p) => p.id === expert.id)
+      );
+
+      if (!chat) {
+        // Create a new chat if not found
+        await createChat({
+          type: "expert",
+          participants: [{ id: expert.id, name: expert.name, avatar: expert.image, role: "expert", isOnline: false }],
+          name: expert.name,
+          avatar: expert.image,
+        });
+
+        // Refetch chats to get the new chatId
+        chat = chats.find(
+          (c) =>
+            c.type === "expert" &&
+            c.participants.some((p) => p.id === expert.id)
+        );
+      }
+
+      if (chat) {
+        // Send initial message to expert
+        const messageSent = await sendMessageToExpert(expert.id, "Hello! I'm interested in your services.");
+
+        if (messageSent) {
+          toast.success("Message sent successfully!");
+          router.push(`/chat?chatId=${chat.id}`);
+        } else {
+          toast.error("Failed to send message");
+        }
+      } else {
+        toast.error("Failed to create chat");
+      }
+    } catch (error) {
+      console.error("Error handling message:", error);
+      toast.error("Failed to send message");
+    } finally {
+      setMessageLoading(null);
+    }
+  };
 
   return (
     <div className="p-3 sm:p-4 md:p-8 bg-background">
@@ -211,14 +278,19 @@ export default function AllExperts() {
                     </span>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Button className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-sm">
+                    <Button
+                      className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-sm"
+                      onClick={() => handleViewProfile(expert)}
+                    >
                       View Profile
                     </Button>
                     <Button
                       variant="outline"
                       className="w-full sm:w-auto border-green-600 text-green-600 hover:bg-green-50 text-sm"
+                      onClick={() => handleMessage(expert)}
+                      disabled={messageLoading === expert.id}
                     >
-                      Message
+                      {messageLoading === expert.id ? "Sending..." : "Message"}
                     </Button>
                   </div>
                 </div>
