@@ -18,11 +18,11 @@ import {
   Bell,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { User } from "@/lib/auth";
+import type { AdminUser } from "@/lib/mainwebsite/admin-user-store";
 import { toast } from "sonner";
 
 interface SidebarProps {
-  user: User | null;
+  user: AdminUser | null;
 }
 
 export function Sidebar({ user }: SidebarProps) {

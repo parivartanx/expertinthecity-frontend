@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
-import { User } from "@/lib/auth";
+import type { AdminUser } from "@/lib/mainwebsite/admin-user-store";
 
 interface HeaderProps {
-  user: User | null;
+  user: AdminUser | null;
 };
 
 export function Header({ user }: HeaderProps) {

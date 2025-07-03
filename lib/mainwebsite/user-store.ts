@@ -111,7 +111,7 @@ interface ExpertDetails {
   education?: Education[];
 }
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "./axios";
+import type { AdminUser } from "./admin-user-store";
 
 interface User {
   id: string;
@@ -248,14 +249,6 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
-
-// Admin Auth Store
-interface AdminUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
 
 interface AdminAuthState {
   user: AdminUser | null;
