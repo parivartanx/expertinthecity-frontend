@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useState } from "react";
 import { cookies } from "next/headers";
+import { useAdminAuthStore } from "@/lib/mainwebsite/auth-store";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -26,9 +27,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,32 +36,18 @@ export default function LoginPage() {
     },
   });
 
+  // Admin Auth Store
+  const { login, isLoading, error: storeError, isAuthenticated } = useAdminAuthStore();
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setError("");
     try {
-      setIsLoading(true);
-      setError("");
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes, we'll use a simple check
-      // In a real app, this would be an API call to verify credentials
-      if (values.email === "admin@example.com" && values.password === "password123") {
-        // Set authentication cookie
-        document.cookie = "isAuthenticated=true; path=/; max-age=86400"; // 24 hours
-        document.cookie = `userEmail=${values.email}; path=/; max-age=86400`;
-        
-        toast.success("Login successful!");
-        router.push("/admin/dashboard");
-      } else {
-        setError("Invalid email or password");
-        toast.error("Invalid email or password");
-      }
-    } catch (error) {
-      setError("An error occurred during login");
-      toast.error("An error occurred during login");
-    } finally {
-      setIsLoading(false);
+      await login(values.email, values.password);
+      toast.success("Login successful!");
+      router.push("/admin/dashboard");
+    } catch (err: any) {
+      setError(storeError || err?.message || "Invalid email or password");
+      toast.error(storeError || err?.message || "Invalid email or password");
     }
   }
 

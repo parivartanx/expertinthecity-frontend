@@ -248,3 +248,118 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Admin Auth Store
+interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
+interface AdminAuthState {
+  user: AdminUser | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  clearError: () => void;
+  setUser: (user: AdminUser, accessToken: string, refreshToken: string) => void;
+}
+
+export const useAdminAuthStore = create<AdminAuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+
+      login: async (email: string, password: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          const response = await axiosInstance.post("/auth/admin-login", {
+            email,
+            password,
+          });
+
+          if (response.data.status === "success") {
+            const { user, accessToken, refreshToken } = response.data.data;
+            set({
+              user,
+              accessToken,
+              refreshToken,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            localStorage.setItem("adminAccessToken", accessToken);
+            if (refreshToken) {
+              localStorage.setItem("adminRefreshToken", refreshToken);
+            }
+            // Set isAuthenticated cookie for middleware/layout compatibility
+            document.cookie = "isAuthenticated=true; path=/; max-age=86400";
+          } else {
+            throw new Error(response.data.message || "Login failed");
+          }
+        } catch (error: any) {
+          let errorMessage = "Login failed";
+          if (error.response?.status === 401) {
+            errorMessage = "Invalid email or password";
+          } else if (error.response?.status === 400) {
+            errorMessage = error.response?.data?.message || "Invalid request data";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          throw error;
+        }
+      },
+
+      logout: () => {
+        localStorage.removeItem("adminAccessToken");
+        localStorage.removeItem("adminRefreshToken");
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          isAuthenticated: false,
+        });
+        // Clear isAuthenticated cookie
+        document.cookie = "isAuthenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      },
+
+      clearError: () => set({ error: null }),
+
+      setUser: (user: AdminUser, accessToken: string, refreshToken: string) => {
+        localStorage.setItem("adminAccessToken", accessToken);
+        localStorage.setItem("adminRefreshToken", refreshToken);
+        set({
+          user,
+          accessToken,
+          refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      },
+    }),
+    {
+      name: "admin-auth-storage",
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);
