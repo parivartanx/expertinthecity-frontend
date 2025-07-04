@@ -225,7 +225,7 @@ export default function ExpertsPage() {
                   </div>
                 )}
                 {/* View Profile Button */}
-                <Link href={"/profile"}>
+                <Link href={`/experts/${mentor.id}`}>
                   <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-2 rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all mt-2">
                     View Profile
                   </button>
