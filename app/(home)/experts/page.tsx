@@ -19,14 +19,6 @@ export default function ExpertsPage() {
     fetchExperts();
   }, [fetchExperts]);
 
-  if (isLoading) {
-    return <div className="text-center py-20">Loading experts...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-20 text-red-500">{error}</div>;
-  }
-
   return (
     <main className="bg-white text-gray-800">
       {/* Hero Section */}
@@ -152,86 +144,96 @@ export default function ExpertsPage() {
         <h2 className="text-3xl font-bold text-center mb-12">
           Meet Our <span className="text-green-600">Experts</span>
         </h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {experts.map((mentor) => (
-            <div
-              key={mentor.id}
-              className="relative bg-white/60 backdrop-blur-lg border border-green-100 rounded-3xl shadow-xl p-6 flex flex-col items-center transition-transform duration-200 hover:-translate-y-1 hover:shadow-2xl group overflow-hidden"
-            >
-              {/* Status Badge */}
-              {mentor.status && (
-                <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md z-10">
-                  {mentor.status}
-                </span>
-              )}
-              {/* Profile Image */}
-              <div className="mb-4 z-10 flex justify-center w-full">
-                <img
-                  src={mentor.image}
-                  alt={mentor.name}
-                  className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover mx-auto group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-              {/* Name & Title */}
-              <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">
-                {mentor.name}
-              </h2>
-              <p className="text-sm text-green-600 font-medium mb-1 text-center">
-                {mentor.title}
-              </p>
-              <p className="text-xs text-gray-400 mb-2 text-center">
-                {typeof mentor.location === 'object' && mentor.location !== null
-                  ? [mentor.location.address, mentor.location.country].filter(Boolean).join(', ')
-                  : mentor.location}
-              </p>
-              {/* Rating */}
-              <div className="flex items-center justify-center text-sm mb-2">
-                <span className="text-yellow-400 mr-1">★</span>
-                <span className="font-semibold text-gray-700">
-                  {mentor.rating}
-                </span>
-                <span className="text-gray-500 ml-1">
-                  ({mentor.reviews} reviews)
-                </span>
-              </div>
-              {/* Categories - Wire Design */}
-              {mentor.categories && mentor.categories.length > 0 && (
-                <div className="flex flex-col items-center mb-4 w-full">
-                  {/* Main Category */}
-                  <div className="font-semibold text-green-700 text-sm mb-1">
-                    {mentor.categories[0]}
-                  </div>
-                  {/* Wire and Subcategories */}
-                  {mentor.categories.length > 1 && (
-                    <div className="flex items-center w-full justify-center">
-                      {/* Wire left */}
-                      <div className="h-0.5 bg-green-200 flex-1" />
-                      {/* Subcategories */}
-                      <div className="flex gap-2 px-2">
-                        {mentor.categories.slice(1).map((cat, i) => (
-                          <span
-                            key={i}
-                            className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium border border-green-200"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                      {/* Wire right */}
-                      <div className="h-0.5 bg-green-200 flex-1" />
-                    </div>
-                  )}
+        {/* Loading and error handling only for experts section */}
+        {isLoading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading experts...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-500">{error}</div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {(experts.slice(0, 6)).map((mentor) => (
+              <div
+                key={mentor.id}
+                className="relative bg-white/60 backdrop-blur-lg border border-green-100 rounded-3xl shadow-xl p-6 flex flex-col items-center transition-transform duration-200 hover:-translate-y-1 hover:shadow-2xl group overflow-hidden"
+              >
+                {/* Status Badge */}
+                {mentor.status && (
+                  <span className="absolute top-4 left-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md z-10">
+                    {mentor.status}
+                  </span>
+                )}
+                {/* Profile Image */}
+                <div className="mb-4 z-10 flex justify-center w-full">
+                  <img
+                    src={mentor.image}
+                    alt={mentor.name}
+                    className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover mx-auto group-hover:scale-105 transition-transform duration-200"
+                  />
                 </div>
-              )}
-              {/* View Profile Button */}
-              <Link href={"/profile"}>
-                <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-2 rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all mt-2">
-                  View Profile
-                </button>
-              </Link>
-            </div>
-          ))}
-        </div>
+                {/* Name & Title */}
+                <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">
+                  {mentor.name}
+                </h2>
+                <p className="text-sm text-green-600 font-medium mb-1 text-center">
+                  {mentor.title}
+                </p>
+                <p className="text-xs text-gray-400 mb-2 text-center">
+                  {typeof mentor.location === 'object' && mentor.location !== null
+                    ? [mentor.location.address, mentor.location.country].filter(Boolean).join(', ')
+                    : mentor.location}
+                </p>
+                {/* Rating */}
+                <div className="flex items-center justify-center text-sm mb-2">
+                  <span className="text-yellow-400 mr-1">★</span>
+                  <span className="font-semibold text-gray-700">
+                    {mentor.rating}
+                  </span>
+                  <span className="text-gray-500 ml-1">
+                    ({mentor.reviews} reviews)
+                  </span>
+                </div>
+                {/* Categories - Wire Design */}
+                {mentor.categories && mentor.categories.length > 0 && (
+                  <div className="flex flex-col items-center mb-4 w-full">
+                    {/* Main Category */}
+                    <div className="font-semibold text-green-700 text-sm mb-1">
+                      {mentor.categories[0]}
+                    </div>
+                    {/* Wire and Subcategories */}
+                    {mentor.categories.length > 1 && (
+                      <div className="flex items-center w-full justify-center">
+                        {/* Wire left */}
+                        <div className="h-0.5 bg-green-200 flex-1" />
+                        {/* Subcategories */}
+                        <div className="flex gap-2 px-2">
+                          {mentor.categories.slice(1).map((cat, i) => (
+                            <span
+                              key={i}
+                              className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium border border-green-200"
+                            >
+                              {cat}
+                            </span>
+                          ))}
+                        </div>
+                        {/* Wire right */}
+                        <div className="h-0.5 bg-green-200 flex-1" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* View Profile Button */}
+                <Link href={"/profile"}>
+                  <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-2 rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all mt-2">
+                    View Profile
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="text-center mt-8">
           <Link href="/allexperts">
             <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
