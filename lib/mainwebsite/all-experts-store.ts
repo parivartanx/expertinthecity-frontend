@@ -74,6 +74,8 @@ interface AllExpertsState {
   searchExperts: (query: string, page?: number, limit?: number) => Promise<void>;
   filterExperts: (filters: Partial<AllExpertsState['filters']>, page?: number, limit?: number) => Promise<void>;
   clearExperts: () => void;
+  clearSearchState: () => void;
+  clearAllState: () => void;
   clearError: () => void;
   setFilters: (filters: Partial<AllExpertsState['filters']>) => void;
   resetFilters: () => void;
@@ -582,6 +584,28 @@ export const useAllExpertsStore = create<AllExpertsState>()(
         totalPages: 1,
         isLoading: false,
         error: null
+      }),
+
+      clearSearchState: () => set({
+        searchQuery: "",
+        location: "",
+        selectedServices: [],
+        selectedRatings: [],
+        filters: {}
+      }),
+
+      clearAllState: () => set({
+        experts: [],
+        totalExperts: 0,
+        currentPage: 1,
+        totalPages: 1,
+        isLoading: false,
+        error: null,
+        searchQuery: "",
+        location: "",
+        selectedServices: [],
+        selectedRatings: [],
+        filters: {}
       }),
 
       clearError: () => set({ error: null }),
