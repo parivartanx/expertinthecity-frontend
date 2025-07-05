@@ -115,7 +115,8 @@ export default function AllExperts() {
     selectedRatings,
     selectedServices,
     getExpertById,
-    sendMessageToExpert
+    sendMessageToExpert,
+    clearSearchState
   } = useAllExpertsStore();
   const router = useRouter();
   const { createChat, chats } = useChatStore();
@@ -123,7 +124,7 @@ export default function AllExperts() {
 
   useEffect(() => {
     fetchExperts();
-  }, []);
+  }, [fetchExperts]);
 
   useEffect(() => {
     // Debounce search and filter changes
