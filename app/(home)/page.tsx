@@ -38,7 +38,8 @@ export default function HomePage() {
   const {
     experts,
     fetchExperts,
-    isLoading: expertsLoading
+    isLoading: expertsLoading,
+    clearSearchState
   } = useAllExpertsStore();
 
   const {
@@ -60,7 +61,8 @@ export default function HomePage() {
       try {
         console.log("🔄 Starting data fetch...");
 
-        // Fetch experts
+        // Clear any search state and fetch experts
+        clearSearchState();
         await fetchExperts();
         console.log("✅ Experts fetched");
 

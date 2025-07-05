@@ -236,7 +236,7 @@ const Header = () => {
         </Link>
 
         {/* Search Bar - LinkedIn Style */}
-        <div className="hidden lg:flex items-center ml-8">
+        <div className="hidden md:flex items-center ml-8">
           <div
             className={`relative flex items-center ${(pathname === "/" || pathname === "/") && !isScrolled
               ? "bg-white/10 backdrop-blur-sm border-white/20"
@@ -437,15 +437,6 @@ const Header = () => {
 
           {/* Auth Buttons */}
           <div className="flex gap-2 items-center">
-            {/* Mobile Hamburger */}
-            <button
-              className={`lg:hidden p-2 hover:bg-white/10 rounded ${pathname === "/" && !isScrolled ? "text-white" : "text-green-600"
-                }`}
-              onClick={() => setMobileOpen(true)}
-              aria-label="Open menu"
-            >
-              <AiOutlineMenu className="text-2xl" />
-            </button>
             <div className="hidden lg:flex gap-2 ml-2">
               {isAuthenticated ? (
                 <>
@@ -538,13 +529,23 @@ const Header = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Hamburger Button - Always visible on mobile */}
+        <button
+          className={`md:hidden p-2 hover:bg-white/10 rounded ${pathname === "/" && !isScrolled ? "text-white" : "text-green-600"
+            }`}
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+        >
+          <AiOutlineMenu className="text-2xl" />
+        </button>
       </header>
 
       {/* Mobile Drawer Portal */}
       {mounted &&
         createPortal(
           <div
-            className={`fixed inset-0 z-[9999] lg:hidden transition-all duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+            className={`fixed inset-0 z-[9999] md:hidden transition-all duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
               }`}
           >
             {/* Overlay */}

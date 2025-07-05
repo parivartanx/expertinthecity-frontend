@@ -13,11 +13,14 @@ export default function ExpertsPage() {
     isLoading,
     error,
     fetchExperts,
+    clearSearchState,
   } = useAllExpertsStore();
 
   useEffect(() => {
+    // Clear any search state from other pages
+    clearSearchState();
     fetchExperts();
-  }, [fetchExperts]);
+  }, [fetchExperts, clearSearchState]);
 
   return (
     <main className="bg-white text-gray-800">
