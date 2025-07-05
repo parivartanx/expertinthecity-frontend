@@ -758,8 +758,6 @@ export default function ExpertProfile() {
                                 </CardContent>
                             </Card>
 
-
-
                             {/* Progress Level */}
                             {expert.progressShow && expert.progressLevel && (
                                 <Card>
