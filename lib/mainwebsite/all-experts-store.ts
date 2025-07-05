@@ -77,6 +77,7 @@ interface AllExpertsState {
   clearSearchState: () => void;
   clearAllState: () => void;
   clearError: () => void;
+  clearSearchState: () => void;
   setFilters: (filters: Partial<AllExpertsState['filters']>) => void;
   resetFilters: () => void;
   
@@ -610,6 +611,14 @@ export const useAllExpertsStore = create<AllExpertsState>()(
 
       clearError: () => set({ error: null }),
 
+      clearSearchState: () => set({
+        searchQuery: "",
+        location: "",
+        selectedServices: [],
+        selectedRatings: [],
+        filters: {}
+      }),
+
       setFilters: (filters: Partial<AllExpertsState['filters']>) => {
         set({ filters: { ...get().filters, ...filters } });
       },
@@ -623,29 +632,44 @@ export const useAllExpertsStore = create<AllExpertsState>()(
           const response = await axiosInstance.get(`/experts/${expertId}`);
 
           if (response.data.status === "success") {
-            const expert = response.data.data.expert;
+            const expert = response.data.data;
             // Transform the backend expert data to match frontend interface
             const transformedExpert = {
               id: expert.id,
-              name: expert.user?.name || expert.headline || "Expert",
+              name: expert.name || expert.headline || "Expert",
               title: expert.headline,
-              location: typeof expert.user?.location === 'object'
-                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
-                : expert.user?.location || 'Remote',
-              rating: expert.user?.ratings || 0,
-              reviews: expert.user?.reviews || 0,
+              location: expert.location || 'Remote',
+              rating: expert.ratings || 0,
+              reviews: expert.reviews || 0,
               categories: expert.expertise || [],
-              tags: expert.user?.tags || [],
-              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
-              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
-              bio: expert.user?.bio,
+              tags: expert.tags || [],
+              image: expert.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.bio,
               description: expert.summary,
               hourlyRate: expert.hourlyRate,
-              verified: expert.user?.role === "EXPERT",
+              verified: expert.verified || expert.role === "EXPERT",
               expertise: expert.expertise || [],
               experience: expert.experience,
               availability: expert.availability,
-              languages: expert.languages || []
+              languages: expert.languages || [],
+              // Additional fields for the detailed expert page
+              email: expert.email,
+              role: expert.role,
+              interests: expert.interests || [],
+              createdAt: expert.createdAt,
+              userId: expert.userId,
+              about: expert.about,
+              badges: expert.badges || [],
+              progressLevel: expert.progressLevel,
+              progressShow: expert.progressShow,
+              updatedAt: expert.updatedAt,
+              certifications: expert.certifications || [],
+              experiences: expert.experiences || [],
+              awards: expert.awards || [],
+              education: expert.education || [],
+              followersCount: expert.followersCount || 0,
+              followingCount: expert.followingCount || 0
             };
             set({ isLoading: false });
             return transformedExpert;
