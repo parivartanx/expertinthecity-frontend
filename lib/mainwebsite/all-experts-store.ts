@@ -2,6 +2,26 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "./axios";
 
+// Helper function to get category icon
+const getCategoryIcon = (category: string): string => {
+  const categoryIcons: { [key: string]: string } = {
+    "Career Coaching": "HiAcademicCap",
+    "Technology": "HiCode", 
+    "Business Strategy": "HiChartBar",
+    "Marketing": "HiPresentationChartLine",
+    "Finance": "HiCurrencyDollar",
+    "Health & Wellness": "HiHeart",
+    "Education": "HiAcademicCap",
+    "Design": "HiPencil",
+    "Sales": "HiTrendingUp",
+    "Leadership": "HiUserGroup",
+    "Consulting": "HiBriefcase",
+    "Coaching": "HiAcademicCap"
+  };
+  
+  return categoryIcons[category] || "HiAcademicCap";
+};
+
 interface Expert {
   id: string;
   name: string;
@@ -67,6 +87,12 @@ interface AllExpertsState {
   // New actions for expert details and messaging
   getExpertById: (expertId: string) => Promise<Expert | null>;
   sendMessageToExpert: (expertId: string, message: string) => Promise<boolean>;
+  
+  // Search suggestions for header
+  searchSuggestions: (query: string) => Promise<{
+    experts: Expert[];
+    categories: { id: string; name: string; icon: string }[];
+  }>;
 }
 
 export const useAllExpertsStore = create<AllExpertsState>()(
@@ -657,6 +683,82 @@ export const useAllExpertsStore = create<AllExpertsState>()(
             isLoading: false
           });
           return false;
+        }
+      },
+
+      searchSuggestions: async (query: string) => {
+        try {
+          if (!query.trim()) {
+            return {
+              experts: [],
+              categories: []
+            };
+          }
+
+          const response = await axiosInstance.get("/experts", {
+            params: {
+              search: query,
+              page: 1,
+              limit: 5 // Limit for suggestions
+            }
+          });
+
+          if (response.data.status === "success") {
+            const { experts } = response.data.data;
+            
+            // Transform the backend expert data to match frontend interface
+            const transformedExperts = experts.map((expert: any) => ({
+              id: expert.id,
+              name: expert.user?.name || expert.headline || "Expert",
+              title: expert.headline,
+              location: typeof expert.user?.location === 'object'
+                ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(', ')
+                : expert.user?.location || 'Remote',
+              rating: expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || 0,
+              categories: expert.expertise || [],
+              tags: expert.user?.tags || [],
+              image: expert.user?.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
+              bio: expert.user?.bio,
+              description: expert.summary,
+              hourlyRate: expert.hourlyRate,
+              verified: expert.user?.role === "EXPERT",
+              expertise: expert.expertise || [],
+              experience: expert.experience,
+              availability: expert.availability,
+              languages: expert.languages || []
+            }));
+
+            // Extract unique categories from experts
+            const categoryMap = new Map();
+            transformedExperts.forEach((expert: Expert) => {
+              expert.categories?.forEach((category: string) => {
+                if (!categoryMap.has(category)) {
+                  categoryMap.set(category, {
+                    id: category.toLowerCase().replace(/\s+/g, '-'),
+                    name: category,
+                    icon: getCategoryIcon(category)
+                  });
+                }
+              });
+            });
+
+            const categories = Array.from(categoryMap.values());
+
+            return {
+              experts: transformedExperts,
+              categories
+            };
+          } else {
+            throw new Error(response.data.message || "Failed to fetch search suggestions");
+          }
+        } catch (error: any) {
+          console.error("Error fetching search suggestions:", error);
+          return {
+            experts: [],
+            categories: []
+          };
         }
       },
     }),

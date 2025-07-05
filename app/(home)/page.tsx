@@ -10,8 +10,12 @@ import TestimonialSection from "@/components/mainwebsite/TestimonialSection";
 import TopRatedMentors from "@/components/mainwebsite/TopRatedMembers";
 import UnlockLearning from "@/components/mainwebsite/UnlockLearning";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HiChevronRight } from "react-icons/hi";
+
+// Import stores for dynamic data
+import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
+import { useCategoriesStore } from "@/lib/mainwebsite/categories-store";
 
 // Import React Icons for categories
 import {
@@ -30,101 +34,96 @@ import {
 } from "react-icons/fa";
 
 export default function HomePage() {
-  const experts = [
-    {
-      id: 1,
-      name: "Dr. Meera Kapoor",
-      specialty: "Psychologist",
-      image: "https://randomuser.me/api/portraits/women/44.jpg",
-      description:
-        "Helping individuals unlock their emotional intelligence and manage stress effectively.",
-    },
-    {
-      id: 2,
-      name: "Rajeev Sinha",
-      specialty: "Career Coach",
-      image: "https://randomuser.me/api/portraits/men/32.jpg",
-      description:
-        "Guiding students and professionals toward the right career choices and growth strategies.",
-    },
-    {
-      id: 3,
-      name: "Anjali Verma",
-      specialty: "Entrepreneurship Mentor",
-      image: "https://randomuser.me/api/portraits/women/68.jpg",
-      description:
-        "Supporting young founders with startup strategies, pitch advice, and growth hacking.",
-    },
-  ];
+  // Get data from stores
+  const {
+    experts,
+    fetchExperts,
+    isLoading: expertsLoading
+  } = useAllExpertsStore();
 
-  // Define grouped categories
-  const groupedCategories = [
-    {
-      name: "Professional & Business Support",
-      subcategories: [
-        "Financial Advice & Investment Planning",
-        "Tax Planning & Cross-Border Compliance",
-        "Legal Consultations & Contract Help",
-        "Business Mentorship & Start-Up Support",
-        "Real Estate Help & Relocation Support",
-        "IT Consultants & Tech Solutions",
-        "Crypto & Blockchain Experts",
-        "Career Counsellors & Transition Coaches",
-        "Personal Branding, Resume & LinkedIn Strategy",
-      ],
-    },
-    {
-      name: "Health, Wellness & Medical Guidance",
-      subcategories: [
-        "General Wellness Coaching (Nutrition, Sleep, Stress)",
-        "Mental Health & Emotional Resilience Coaching",
-        "Fitness Trainers & Online Health Programs",
-        "Yoga, Pilates & Holistic Movement Instructors",
-        "Medical Experts & Health Educators (non-diagnostic or second-opinion services)",
-        "Preventive Health & Lifestyle Medicine Consultants",
-      ],
-    },
-    {
-      name: "Career & Education Support",
-      subcategories: [
-        "Career Counselling for Students & Professionals",
-        "College Admissions & Study Abroad Advisors",
-        "Upskilling Mentors & Job Market Guidance",
-        "CV, Cover Letter, LinkedIn & Interview Prep Experts",
-      ],
-    },
-    {
-      name: "Life & Lifestyle Guidance",
-      subcategories: [
-        "Travel & Relocation Consultants",
-        "Parenting Coaches & Family Advisors",
-        "Relationship Coaches & Conflict Mediators",
-        "Life Coaching & Mindset Mentorship",
-      ],
-    },
-    {
-      name: "Creative, Art & Expression",
-      subcategories: [
-        "Art Mentors & Portfolio Reviewers",
-        "Design & Illustration Coaching",
-        "Photography & Filmmaking Mentors",
-        "Writing, Blogging & Creative Content Experts",
-        "Music Instructors, Producers & Vocal Coaches",
-        "Dance, Theatre & Performing Arts Coaches",
-      ],
-    },
-    {
-      name: "Sports, Performance & Movement",
-      subcategories: [
-        "Sports Coaches (Football, Tennis, Cricket, etc.)",
-        "Athlete Mindset & Performance Coaching",
-        "Dance Instructors & Competitive Prep",
-        "Body Mechanics, Flexibility & Strength Trainers",
-      ],
-    },
-  ];
+  const {
+    categories,
+    subcategories,
+    isLoaded: categoriesLoaded,
+    fetchAllCategories,
+    fetchAllSubcategories,
+    isLoading: categoriesLoading
+  } = useCategoriesStore();
 
-  const [activeTab, setActiveTab] = useState(groupedCategories[0].name);
+  // State for active tab
+  const [activeTab, setActiveTab] = useState<string>("");
+  const [groupedCategories, setGroupedCategories] = useState<any[]>([]);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log("🔄 Starting data fetch...");
+
+        // Fetch experts
+        await fetchExperts();
+        console.log("✅ Experts fetched");
+
+        // Always fetch categories and subcategories to ensure fresh data
+        console.log("📂 Fetching categories...");
+        await fetchAllCategories();
+        console.log("✅ Categories fetched:", categories.length);
+
+        console.log("📂 Fetching subcategories...");
+        await fetchAllSubcategories();
+        console.log("✅ Subcategories fetched:", subcategories.length);
+
+      } catch (error) {
+        console.error("❌ Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [fetchExperts, fetchAllCategories, fetchAllSubcategories]);
+
+  // Process categories and subcategories when data is loaded
+  useEffect(() => {
+    console.log("🔄 Processing categories and subcategories...");
+    console.log("Categories:", categories.length);
+    console.log("Subcategories:", subcategories.length);
+
+    if (categories.length > 0 && subcategories.length > 0) {
+      // Group subcategories by category
+      const grouped = categories.map(category => {
+        const categorySubcategories = subcategories.filter(
+          sub => sub.categoryId === category.id
+        );
+        console.log(`📁 Category "${category.name}" has ${categorySubcategories.length} subcategories`);
+
+        return {
+          id: category.id,
+          name: category.name,
+          subcategories: categorySubcategories.map(sub => sub.name)
+        };
+      }).filter(cat => cat.subcategories.length > 0); // Only show categories with subcategories
+
+      console.log("📊 Grouped categories:", grouped.length);
+      setGroupedCategories(grouped);
+
+      // Set first category as active tab if no active tab is set
+      if (grouped.length > 0 && !activeTab) {
+        setActiveTab(grouped[0].name);
+        console.log("🎯 Set active tab to:", grouped[0].name);
+      }
+    }
+  }, [categories, subcategories, activeTab]);
+
+  // Get first 3 experts for featured section
+  const featuredExperts = experts.slice(0, 3);
+
+  // Debug current state
+  console.log("🎯 Current state:", {
+    categoriesCount: categories.length,
+    subcategoriesCount: subcategories.length,
+    groupedCategoriesCount: groupedCategories.length,
+    activeTab,
+    categoriesLoading
+  });
 
   return (
     <main
@@ -148,39 +147,60 @@ export default function HomePage() {
         </p>
         <div className="w-full max-w-5xl mx-auto mb-12">
           {/* Category Tabs */}
-          <div className="flex flex-wrap gap-3 justify-center mb-8">
-            {groupedCategories.map((cat) => (
+          {categoriesLoading ? (
+            <div className="flex justify-center mb-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+              <p className="ml-3 text-gray-600">Loading categories...</p>
+            </div>
+          ) : groupedCategories.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">No categories available</p>
               <button
-                key={cat.name}
-                className={`px-6 py-2 rounded-full font-semibold text-base transition-all duration-200 focus:outline-none border border-green-700/30 shadow-sm
-                  ${
-                    activeTab === cat.name
-                      ? "bg-green-400 text-black"
-                      : "bg-gray-600 text-gray-200 hover:bg-gray-700"
-                  }
-                `}
-                onClick={() => setActiveTab(cat.name)}
+                onClick={() => {
+                  fetchAllCategories();
+                  fetchAllSubcategories();
+                }}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
-                {cat.name}
+                Refresh Categories
               </button>
-            ))}
-          </div>
-          {/* Subcategories Capsules Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 justify-items-center">
-            {groupedCategories
-              .find((cat) => cat.name === activeTab)
-              ?.subcategories.map((subcat) => (
-                <a
-                  key={subcat}
-                  href={`/allexperts?category=${encodeURIComponent(
-                    subcat.toLowerCase().replace(/\s+/g, "-")
-                  )}`}
-                  className="px-6 py-4 rounded-2xl   font-semibold text-center shadow-lg bg-green-400 text-black transition-all duration-200 text-base cursor-pointer w-full"
-                >
-                  {subcat}
-                </a>
-              ))}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-3 justify-center mb-8">
+                {groupedCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    className={`px-6 py-2 rounded-full font-semibold text-base transition-all duration-200 focus:outline-none border border-green-700/30 shadow-sm
+                      ${activeTab === cat.name
+                        ? "bg-green-400 text-black"
+                        : "bg-gray-600 text-gray-200 hover:bg-gray-700"
+                      }
+                    `}
+                    onClick={() => setActiveTab(cat.name)}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+              {/* Subcategories Capsules Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 justify-items-center">
+                {groupedCategories
+                  .find((cat) => cat.name === activeTab)
+                  ?.subcategories.map((subcat: string) => (
+                    <a
+                      key={subcat}
+                      href={`/allexperts?category=${encodeURIComponent(
+                        subcat.toLowerCase().replace(/\s+/g, "-")
+                      )}`}
+                      className="px-6 py-4 rounded-2xl font-semibold text-center shadow-lg bg-green-400 text-black transition-all duration-200 text-base cursor-pointer w-full hover:bg-green-500"
+                    >
+                      {subcat}
+                    </a>
+                  ))}
+              </div>
+            </>
+          )}
         </div>
         <div className="flex justify-center">
           <Link href={"/categories"}>
@@ -204,40 +224,48 @@ export default function HomePage() {
           Featured <span className="text-green-700">Experts</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {experts.map((expert) => (
-            <div
-              key={expert.id}
-              className="bg-white rounded-lg shadow p-6 flex flex-col items-center"
-            >
-              <img
-                src={expert.image}
-                alt={expert.name}
-                className="w-20 h-20 object-cover rounded-full mb-4"
-              />
-              <div className="font-bold text-lg mb-1">{expert.name}</div>
-              <div className="text-green-700 font-medium mb-2">
-                {expert.specialty}
-              </div>
-              <p className="text-sm text-neutral-600 mb-4 text-center">
-                {expert.description}
-              </p>
-              <Link href={`/profile`}>
-                <button className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 font-semibold">
-                  View Profile
-                </button>
+        {expertsLoading ? (
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {featuredExperts.map((expert) => (
+                <div
+                  key={expert.id}
+                  className="bg-white rounded-lg shadow p-6 flex flex-col items-center"
+                >
+                  <img
+                    src={expert.image}
+                    alt={expert.name}
+                    className="w-20 h-20 object-cover rounded-full mb-4"
+                  />
+                  <div className="font-bold text-lg mb-1">{expert.name}</div>
+                  <div className="text-green-700 font-medium mb-2">
+                    {expert.title}
+                  </div>
+                  <p className="text-sm text-neutral-600 mb-4 text-center">
+                    {expert.description || expert.bio || "Professional expert in their field."}
+                  </p>
+                  <Link href={`/experts/${expert.id}`}>
+                    <button className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 font-semibold">
+                      View Profile
+                    </button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+            <div className="w-full flex items-center justify-center mt-6">
+              <Link
+                href={"/experts"}
+                className="text-center p-2 bg-green-700 my-5 text-white rounded font-bold"
+              >
+                View More
               </Link>
             </div>
-          ))}
-        </div>
-        <div className="w-full flex items-center justify-center mt-6">
-          <Link
-            href={"/experts"}
-            className="text-center p-2 bg-green-700  my-5 text-white  rounded font-bold"
-          >
-            View More
-          </Link>
-        </div>
+          </>
+        )}
       </section>
       <UnlockLearning />
       {/* <BlogSection /> */}
