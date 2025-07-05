@@ -389,835 +389,431 @@ export default function ExpertProfile() {
                                         {expert.headline && (
                                             <p className="text-sm text-muted-foreground mb-3">{expert.headline}</p>
                                         )}
-                                        <div className="min-h-screen bg-background">
-                                            {/* Back Button */}
-                                            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-                                                <div className="max-w-7xl mx-auto px-4 py-4">
-                                                    <Button
-                                                        variant="ghost"
-                                                        onClick={() => router.back()}
-                                                        className="text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        ← Back to Experts
-                                                    </Button>
-                                                </div>
+
+                                        <div className="flex items-center justify-center gap-1 text-yellow-500 mb-3">
+                                            <FaStar />
+                                            <span className="font-medium text-foreground">
+                                                {expert.ratings} reviews
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-2 mb-6">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <FaMapMarkerAlt />
+                                                <span>{formatLocation(expert.location)}</span>
                                             </div>
-
-                                            {/* Main Content */}
-                                            <div className="max-w-7xl mx-auto px-4 py-6">
-                                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                                                    {/* Left Column - Profile Only (Sticky) */}
-                                                    <div className="lg:col-span-3">
-                                                        <div className="sticky top-20">
-                                                            {/* Profile Card */}
-                                                            <Card>
-                                                                <CardContent className="p-6 relative">
-                                                                    {/* Progress Level Icon - Top Left */}
-                                                                    {expert.progressLevel && (
-                                                                        <div className="absolute top-4 left-4">
-                                                                            <TooltipProvider>
-                                                                                <Tooltip>
-                                                                                    <TooltipTrigger>
-                                                                                        {getProgressLevelIcon(expert.progressLevel)}
-                                                                                    </TooltipTrigger>
-                                                                                    <TooltipContent>
-                                                                                        <p>{expert.progressLevel} Level</p>
-                                                                                    </TooltipContent>
-                                                                                </Tooltip>
-                                                                            </TooltipProvider>
-                                                                        </div>
-                                                                    )}
-                                                                    <div className="text-center">
-                                                                        <Avatar className="w-24 h-24 mx-auto mb-4">
-                                                                            <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
-                                                                            <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
-                                                                        </Avatar>
-                                                                        <h1 className="text-2xl font-bold text-foreground mb-2">
-                                                                            {expert.name}
-                                                                            {expert.verified && (
-                                                                                <FaCheckCircle className="inline ml-2 text-green-500" />
-                                                                            )}
-                                                                        </h1>
-                                                                        {expert.headline && (
-                                                                            <p className="text-sm text-muted-foreground mb-3">{expert.headline}</p>
-                                                                        )}
-
-                                                                        <div className="flex items-center justify-center gap-1 text-yellow-500 mb-3">
-                                                                            <FaStar />
-                                                                            <span className="font-medium text-foreground">
-                                                                                {expert.ratings} reviews
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="flex items-center justify-center gap-1 text-yellow-500 mb-3">
-                                                                            <FaStar />
-                                                                            <span className="font-medium text-foreground">
-                                                                                {expert.ratings} reviews
-                                                                            </span>
-                                                                        </div>
-
-                                                                        <div className="space-y-2 mb-6">
-                                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                <FaMapMarkerAlt />
-                                                                                <span>{formatLocation(expert.location)}</span>
-                                                                            </div>
-                                                                            {expert.hourlyRate && (
-                                                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                    <FaDollarSign />
-                                                                                    <span>${expert.hourlyRate}/hour</span>
-                                                                                </div>
-                                                                            )}
-                                                                            {expert.experience && (
-                                                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                    <FaClock />
-                                                                                    <span>{expert.experience} years experience</span>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="space-y-2 mb-6">
-                                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                <FaMapMarkerAlt />
-                                                                                <span>{formatLocation(expert.location)}</span>
-                                                                            </div>
-                                                                            {expert.hourlyRate && (
-                                                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                    <FaDollarSign />
-                                                                                    <span>${expert.hourlyRate}/hour</span>
-                                                                                </div>
-                                                                            )}
-                                                                            {expert.experience && (
-                                                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                                                    <FaClock />
-                                                                                    <span>{expert.experience} years experience</span>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-
-                                                                        <div className="space-y-3">
-                                                                            {!user ? (
-                                                                                // When not logged in - show login prompt
-                                                                                <div className="space-y-2">
-                                                                                    <Button
-                                                                                        onClick={() => setShowLoginPrompt(true)}
-                                                                                        className="w-full bg-green-600 hover:bg-green-700"
-                                                                                    >
-                                                                                        Message Request
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        onClick={() => setShowLoginPrompt(true)}
-                                                                                        variant="outline"
-                                                                                        className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                                                                                    >
-                                                                                        Follow
-                                                                                    </Button>
-                                                                                </div>
-                                                                            ) : isFollowing ? (
-                                                                                // When following - show Message and Unfollow buttons
-                                                                                <div className="space-y-2">
-                                                                                    <Button
-                                                                                        onClick={handleMessage}
-                                                                                        disabled={messageLoading}
-                                                                                        className="w-full bg-green-600 hover:bg-green-700"
-                                                                                    >
-                                                                                        {messageLoading ? "Sending..." : "Message"}
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        onClick={handleFollow}
-                                                                                        variant="outline"
-                                                                                        className="w-full border-red-600 text-red-600 hover:bg-red-50"
-                                                                                    >
-                                                                                        Unfollow
-                                                                                    </Button>
-                                                                                </div>
-                                                                            ) : (
-                                                                                // When not following - show Message Request and Follow buttons
-                                                                                <div className="space-y-2">
-                                                                                    <Button
-                                                                                        onClick={handleMessage}
-                                                                                        disabled={messageLoading}
-                                                                                        variant="outline"
-                                                                                        className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                                                                                    >
-                                                                                        {messageLoading ? "Sending..." : "Message Request"}
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        onClick={handleFollow}
-                                                                                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                                                                                    >
-                                                                                        Follow
-                                                                                    </Button>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </CardContent>
-                                                            </Card>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Middle Column - Tabbed Content */}
-                                                    <div className="lg:col-span-6">
-                                                        <Tabs defaultValue="posts" className="w-full">
-                                                            <TabsList className="grid w-full grid-cols-4 mb-6">
-                                                                <TabsTrigger value="posts" className="flex items-center gap-2">
-                                                                    <FaUser className="w-4 h-4" />
-                                                                    Posts
-                                                                </TabsTrigger>
-                                                                <TabsTrigger value="about" className="flex items-center gap-2">
-                                                                    <FaUser className="w-4 h-4" />
-                                                                    About
-                                                                </TabsTrigger>
-                                                                <TabsTrigger value="experiences" className="flex items-center gap-2">
-                                                                    <FaBriefcase className="w-4 h-4" />
-                                                                    Experiences
-                                                                </TabsTrigger>
-                                                                <TabsTrigger value="certificates" className="flex items-center gap-2">
-                                                                    <FaCertificate className="w-4 h-4" />
-                                                                    Certificates
-                                                                </TabsTrigger>
-                                                            </TabsList>
-
-                                                            {/* Posts Tab */}
-                                                            <TabsContent value="posts" className="space-y-6">
-                                                                {dummyPosts.slice(0, postsToShow).map((post) => (
-                                                                    <Card key={post.id} className="overflow-hidden">
-                                                                        <CardContent className="p-0">
-                                                                            {/* Post Header */}
-                                                                            <div className="p-4 border-b">
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <Avatar className="w-10 h-10">
-                                                                                        <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
-                                                                                        <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
-                                                                                    </Avatar>
-                                                                                    <div className="flex-1">
-                                                                                        <h3 className="font-semibold text-foreground">{expert.name}</h3>
-                                                                                        <p className="text-sm text-muted-foreground">{post.timestamp}</p>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            {/* Post Content */}
-                                                                            <div className="p-4">
-                                                                                <p className="text-foreground mb-4">{post.content}</p>
-                                                                                {post.image && (
-                                                                                    <img
-                                                                                        src={post.image}
-                                                                                        alt="Post"
-                                                                                        className="w-full h-48 object-cover rounded-lg mb-4"
-                                                                                    />
-                                                                                )}
-                                                                            </div>
-
-                                                                            {/* Post Actions */}
-                                                                            <div className="px-4 pb-4">
-                                                                                <div className="flex items-center justify-between">
-                                                                                    <div className="flex items-center gap-6">
-                                                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
-                                                                                            <FaHeart />
-                                                                                            <span className="text-sm">{post.likes}</span>
-                                                                                        </button>
-                                                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
-                                                                                            <FaComment />
-                                                                                            <span className="text-sm">{post.comments}</span>
-                                                                                        </button>
-                                                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors">
-                                                                                            <FaShare />
-                                                                                            <span className="text-sm">{post.shares}</span>
-                                                                                        </button>
-                                                                                    </div>
-                                                                                    <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
-                                                                                        <FaBookmark />
-                                                                                    </button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </CardContent>
-                                                                    </Card>
-                                                                ))}
-
-                                                                {/* Show More Button */}
-                                                                {postsToShow < dummyPosts.length && (
-                                                                    <div className="text-center pt-4">
-                                                                        <div className="space-y-3">
-                                                                            {!user ? (
-                                                                                // When not logged in - show login prompt
-                                                                                <div className="space-y-2">
-                                                                                    <Button
-                                                                                        onClick={() => setShowLoginPrompt(true)}
-                                                                                        className="w-full bg-green-600 hover:bg-green-700"
-                                                                                    >
-                                                                                        Message Request
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        onClick={() => setShowLoginPrompt(true)}
-                                                                                        variant="outline"
-                                                                                        className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                                                                                    >
-                                                                                        Follow
-                                                                                    </Button>
-                                                                                </div>
-                                                                            ) : isFollowing ? (
-                                                                                // When following - show Message and Unfollow buttons
-                                                                                <div className="space-y-2">
-                                                                                    <Button
-                                                                                        onClick={handleMessage}
-                                                                                        disabled={messageLoading}
-                                                                                        className="w-full bg-green-600 hover:bg-green-700"
-                                                                                    >
-                                                                                        {messageLoading ? "Sending..." : "Message"}
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        onClick={handleFollow}
-                                                                                        variant="outline"
-                                                                                        className="w-full border-red-600 text-red-600 hover:bg-red-50"
-                                                                                    >
-                                                                                        Unfollow
-                                                                                    </Button>
-                                                                                </div>
-                                                                            ) : (
-                                                                                // When not following - show Message Request and Follow buttons
-                                                                                <div className="space-y-2">
-                                                                                    <Button
-                                                                                        onClick={handleMessage}
-                                                                                        disabled={messageLoading}
-                                                                                        variant="outline"
-                                                                                        className="w-full border-green-600 text-green-600 hover:bg-green-50"
-                                                                                    >
-                                                                                        {messageLoading ? "Sending..." : "Message Request"}
-                                                                                    </Button>
-                                                                                    <Button
-                                                                                        onClick={handleFollow}
-                                                                                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                                                                                    >
-                                                                                        Follow
-                                                                                    </Button>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                </CardContent>
-                                                        </Card>
-                                                    </div>
+                                            {expert.hourlyRate && (
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <FaDollarSign />
+                                                    <span>${expert.hourlyRate}/hour</span>
                                                 </div>
-
-                                                {/* Middle Column - Tabbed Content */}
-                                                <div className="lg:col-span-6">
-                                                    <Tabs defaultValue="posts" className="w-full">
-                                                        <TabsList className="grid w-full grid-cols-4 mb-6">
-                                                            <TabsTrigger value="posts" className="flex items-center gap-2">
-                                                                <FaUser className="w-4 h-4" />
-                                                                Posts
-                                                            </TabsTrigger>
-                                                            <TabsTrigger value="about" className="flex items-center gap-2">
-                                                                <FaUser className="w-4 h-4" />
-                                                                About
-                                                            </TabsTrigger>
-                                                            <TabsTrigger value="experiences" className="flex items-center gap-2">
-                                                                <FaBriefcase className="w-4 h-4" />
-                                                                Experiences
-                                                            </TabsTrigger>
-                                                            <TabsTrigger value="certificates" className="flex items-center gap-2">
-                                                                <FaCertificate className="w-4 h-4" />
-                                                                Certificates
-                                                            </TabsTrigger>
-                                                        </TabsList>
-
-                                                        {/* Posts Tab */}
-                                                        <TabsContent value="posts" className="space-y-6">
-                                                            {dummyPosts.slice(0, postsToShow).map((post) => (
-                                                                <Card key={post.id} className="overflow-hidden">
-                                                                    <CardContent className="p-0">
-                                                                        {/* Post Header */}
-                                                                        <div className="p-4 border-b">
-                                                                            <div className="flex items-center gap-3">
-                                                                                <Avatar className="w-10 h-10">
-                                                                                    <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
-                                                                                    <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
-                                                                                </Avatar>
-                                                                                <div className="flex-1">
-                                                                                    <h3 className="font-semibold text-foreground">{expert.name}</h3>
-                                                                                    <p className="text-sm text-muted-foreground">{post.timestamp}</p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Post Content */}
-                                                                        <div className="p-4">
-                                                                            <p className="text-foreground mb-4">{post.content}</p>
-                                                                            {post.image && (
-                                                                                <img
-                                                                                    src={post.image}
-                                                                                    alt="Post"
-                                                                                    className="w-full h-48 object-cover rounded-lg mb-4"
-                                                                                />
-                                                                            )}
-                                                                        </div>
-
-                                                                        {/* Post Actions */}
-                                                                        <div className="px-4 pb-4">
-                                                                            <div className="flex items-center justify-between">
-                                                                                <div className="flex items-center gap-6">
-                                                                                    <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
-                                                                                        <FaHeart />
-                                                                                        <span className="text-sm">{post.likes}</span>
-                                                                                    </button>
-                                                                                    <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
-                                                                                        <FaComment />
-                                                                                        <span className="text-sm">{post.comments}</span>
-                                                                                    </button>
-                                                                                    <button className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors">
-                                                                                        <FaShare />
-                                                                                        <span className="text-sm">{post.shares}</span>
-                                                                                    </button>
-                                                                                </div>
-                                                                                <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
-                                                                                    <FaBookmark />
-                                                                                </button>
-                                                                            </div>
-                                                                        </div>
-                                                                    </CardContent>
-                                                                </Card>
-                                                            ))}
-
-                                                            {/* Show More Button */}
-                                                            {postsToShow < dummyPosts.length && (
-                                                                <div className="text-center pt-4">
-                                                                    <Button
-                                                                        onClick={handleShowMorePosts}
-                                                                        onClick={handleShowMorePosts}
-                                                                        variant="outline"
-                                                                        className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-                                                                        className="bg-green-600 hover:bg-green-700 text-white border-green-600"
-                                                                    >
-                                                                        Show More Posts
-                                                                        Show More Posts
-                                                                    </Button>
-                                                                </div>
-                                                            )}
-                                                        </TabsContent>
-
-                                                        {/* About Tab */}
-                                                        <TabsContent value="about">
-                                                            <Card>
-                                                                <CardHeader>
-                                                                    <CardTitle>About</CardTitle>
-                                                                </CardHeader>
-                                                                <CardContent>
-                                                                    <p className="text-muted-foreground mb-6">
-                                                                        {expert.about || expert.bio || expert.summary || "No description available."}
-                                                                    </p>
-                                )}
-                                                                </TabsContent>
-
-                                                                {/* About Tab */}
-                                                                <TabsContent value="about">
-                                                                    <Card>
-                                                                        <CardHeader>
-                                                                            <CardTitle>About</CardTitle>
-                                                                        </CardHeader>
-                                                                        <CardContent>
-                                                                            <p className="text-muted-foreground mb-6">
-                                                                                {expert.about || expert.bio || expert.summary || "No description available."}
-                                                                            </p>
-
-                                                                            {expert.expertise && expert.expertise.length > 0 && (
-                                                                                <div className="mb-6">
-                                                                                    <h3 className="font-semibold text-foreground mb-3">Expertise</h3>
-                                                                                    <div className="flex flex-wrap gap-2">
-                                                                                        {expert.expertise.map((skill, index) => (
-                                                                                            <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
-                                                                                                {skill}
-                                                                                            </Badge>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {expert.expertise && expert.expertise.length > 0 && (
-                                                                                <div className="mb-6">
-                                                                                    <h3 className="font-semibold text-foreground mb-3">Expertise</h3>
-                                                                                    <div className="flex flex-wrap gap-2">
-                                                                                        {expert.expertise.map((skill, index) => (
-                                                                                            <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
-                                                                                                {skill}
-                                                                                            </Badge>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {expert.languages && expert.languages.length > 0 && (
-                                                                                <div className="mb-6">
-                                                                                    <h3 className="font-semibold text-foreground mb-3">Languages</h3>
-                                                                                    <div className="flex flex-wrap gap-2">
-                                                                                        {expert.languages.map((language, index) => (
-                                                                                            <Badge key={index} variant="outline">
-                                                                                                {language}
-                                                                                            </Badge>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                            {expert.languages && expert.languages.length > 0 && (
-                                                                                <div className="mb-6">
-                                                                                    <h3 className="font-semibold text-foreground mb-3">Languages</h3>
-                                                                                    <div className="flex flex-wrap gap-2">
-                                                                                        {expert.languages.map((language, index) => (
-                                                                                            <Badge key={index} variant="outline">
-                                                                                                {language}
-                                                                                            </Badge>
-                                                                                        ))}
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-
-                                                                            {expert.availability && (
-                                                                                <div>
-                                                                                    <h3 className="font-semibold text-foreground mb-3">Availability</h3>
-                                                                                    <p className="text-muted-foreground">{expert.availability}</p>
-                                                                                </div>
-                                                                            )}
-                                                                        </CardContent>
-                                                                    </Card>
-                                                                </TabsContent>
-
-                                                                {/* Experiences Tab */}
-                                                                <TabsContent value="experiences">
-                                                                    {expert.experiences && expert.experiences.length > 0 ? (
-                                                                        <div className="space-y-4">
-                                                                            {expert.experiences.map((exp) => (
-                                                                                <Card key={exp.id}>
-                                                                                    <CardContent className="p-6">
-                                                                                        <div className="border-l-2 border-green-500 pl-4">
-                                                                                            <div className="flex justify-between items-start mb-3">
-                                                                                                <div>
-                                                                                                    <h4 className="font-semibold text-foreground text-lg">{typeof exp.title === 'string' ? exp.title : 'Title not specified'}</h4>
-                                                                                                    <p className="text-muted-foreground">{typeof exp.company === 'string' ? exp.company : 'Company not specified'}</p>
-                                                                                                </div>
-                                                                                                <div className="text-right text-sm text-muted-foreground">
-                                                                                                    <p>{exp.startDate ? new Date(exp.startDate).getFullYear() : 'N/A'}</p>
-                                                                                                    {exp.isCurrent ? (
-                                                                                                        <p>Present</p>
-                                                                                                    ) : exp.endDate ? (
-                                                                                                        <p>{new Date(exp.endDate).getFullYear()}</p>
-                                                                                                    ) : null}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                            <p className="text-muted-foreground mb-3">{typeof exp.description === 'string' ? exp.description : 'No description available'}</p>
-                                                                                            {exp.skills && Array.isArray(exp.skills) && exp.skills.length > 0 && (
-                                                                                                <div className="flex flex-wrap gap-1">
-                                                                                                    {exp.skills.map((skill, skillIndex) => (
-                                                                                                        <Badge key={skillIndex} variant="outline" className="text-xs">
-                                                                                                            {typeof skill === 'string' ? skill : 'Skill'}
-                                                                                                        </Badge>
-                                                                                                    ))}
-                                                                                                </div>
-                                                                                            )}
-                                                                                        </div>
-                                                                                    </CardContent>
-                                                                                </Card>
-                                                                            ))}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <Card>
-                                                                            <CardContent className="p-6 text-center">
-                                                                                <p className="text-muted-foreground">No experience information available.</p>
-                                                                            </CardContent>
-                                                                        </Card>
-                                                                    )}
-                                                                </TabsContent>
-
-                                                                {/* Certificates Tab */}
-                                                                <TabsContent value="certificates">
-                                                                    {expert.certifications && expert.certifications.length > 0 ? (
-                                                                        <div className="space-y-4">
-                                                                            {expert.certifications.map((cert, index) => (
-                                                                                <Card key={index}>
-                                                                                    <CardContent className="p-6">
-                                                                                        <div className="flex items-center gap-3">
-                                                                                            <FaCertificate className="text-green-500 w-6 h-6" />
-                                                                                            <div>
-                                                                                                <h4 className="font-semibold text-foreground">
-                                                                                                    {typeof cert === 'string' ? cert : cert.name || 'Certification'}
-                                                                                                </h4>
-                                                                                                <p className="text-sm text-muted-foreground">
-                                                                                                    {typeof cert === 'string' ? 'Professional Certification' : cert.issuingOrganization || 'Professional Certification'}
-                                                                                                </p>
-                                                                                                {typeof cert === 'object' && cert.issueDate && (
-                                                                                                    <p className="text-xs text-muted-foreground">
-                                                                                                        Issued: {new Date(cert.issueDate).toLocaleDateString()}
-                                                                                                    </p>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    </CardContent>
-                                                                                </Card>
-                                                                            ))}
-                                                                        </div>
-                                                                    ) : (
-                                                                        <Card>
-                                                                            <CardContent className="p-6 text-center">
-                                                                                <FaCertificate className="text-muted-foreground w-12 h-12 mx-auto mb-4" />
-                                                                                <p className="text-muted-foreground">No certificates available.</p>
-                                                                            </CardContent>
-                                                                        </Card>
-                                                                    )}
-                                                                </TabsContent>
-                                                            </Tabs>
-                                                        </div>
-                                                        {expert.availability && (
-                                                            <div>
-                                                                <h3 className="font-semibold text-foreground mb-3">Availability</h3>
-                                                                <p className="text-muted-foreground">{expert.availability}</p>
-                                                            </div>
-                                                        )}
-                                                    </CardContent>
-                                                </Card>
-                                            </TabsContent>
-
-                                            {/* Experiences Tab */}
-                                            <TabsContent value="experiences">
-                                                {expert.experiences && expert.experiences.length > 0 ? (
-                                                    <div className="space-y-4">
-                                                        {expert.experiences.map((exp) => (
-                                                            <Card key={exp.id}>
-                                                                <CardContent className="p-6">
-                                                                    <div className="border-l-2 border-green-500 pl-4">
-                                                                        <div className="flex justify-between items-start mb-3">
-                                                                            <div>
-                                                                                <h4 className="font-semibold text-foreground text-lg">{typeof exp.title === 'string' ? exp.title : 'Title not specified'}</h4>
-                                                                                <p className="text-muted-foreground">{typeof exp.company === 'string' ? exp.company : 'Company not specified'}</p>
-                                                                            </div>
-                                                                            <div className="text-right text-sm text-muted-foreground">
-                                                                                <p>{exp.startDate ? new Date(exp.startDate).getFullYear() : 'N/A'}</p>
-                                                                                {exp.isCurrent ? (
-                                                                                    <p>Present</p>
-                                                                                ) : exp.endDate ? (
-                                                                                    <p>{new Date(exp.endDate).getFullYear()}</p>
-                                                                                ) : null}
-                                                                            </div>
-                                                                        </div>
-                                                                        <p className="text-muted-foreground mb-3">{typeof exp.description === 'string' ? exp.description : 'No description available'}</p>
-                                                                        {exp.skills && Array.isArray(exp.skills) && exp.skills.length > 0 && (
-                                                                            <div className="flex flex-wrap gap-1">
-                                                                                {exp.skills.map((skill, skillIndex) => (
-                                                                                    <Badge key={skillIndex} variant="outline" className="text-xs">
-                                                                                        {typeof skill === 'string' ? skill : 'Skill'}
-                                                                                    </Badge>
-                                                                                ))}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </CardContent>
-                                                            </Card>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <Card>
-                                                        <CardContent className="p-6 text-center">
-                                                            <p className="text-muted-foreground">No experience information available.</p>
-                                                        </CardContent>
-                                                    </Card>
-                                                )}
-                                            </TabsContent>
-
-                                            {/* Certificates Tab */}
-                                            <TabsContent value="certificates">
-                                                {expert.certifications && expert.certifications.length > 0 ? (
-                                                    <div className="space-y-4">
-                                                        {expert.certifications.map((cert, index) => (
-                                                            <Card key={index}>
-                                                                <CardContent className="p-6">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <FaCertificate className="text-green-500 w-6 h-6" />
-                                                                        <div>
-                                                                            <h4 className="font-semibold text-foreground">
-                                                                                {typeof cert === 'string' ? cert : cert.name || 'Certification'}
-                                                                            </h4>
-                                                                            <p className="text-sm text-muted-foreground">
-                                                                                {typeof cert === 'string' ? 'Professional Certification' : cert.issuingOrganization || 'Professional Certification'}
-                                                                            </p>
-                                                                            {typeof cert === 'object' && cert.issueDate && (
-                                                                                <p className="text-xs text-muted-foreground">
-                                                                                    Issued: {new Date(cert.issueDate).toLocaleDateString()}
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </CardContent>
-                                                            </Card>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <Card>
-                                                        <CardContent className="p-6 text-center">
-                                                            <FaCertificate className="text-muted-foreground w-12 h-12 mx-auto mb-4" />
-                                                            <p className="text-muted-foreground">No certificates available.</p>
-                                                        </CardContent>
-                                                    </Card>
-                                                )}
-                                            </TabsContent>
-                                        </Tabs>
-                                    </div>
-
-                                    {/* Right Column - Services & Contact (Sticky) */}
-                                    <div className="lg:col-span-3">
-                                        <div className="sticky top-20 space-y-4">
-                                            {/* Services Card */}
-                                            <Card>
-                                                <CardHeader className="pb-3">
-                                                    <CardTitle className="text-lg">Services</CardTitle>
-                                                </CardHeader>
-                                                <CardContent className="pt-0">
-                                                    {expert.interests && expert.interests.length > 0 ? (
-                                                        <div className="space-y-1">
-                                                            {expert.interests.map((interest, index) => (
-                                                                <div key={index} className="flex items-center gap-1.5 py-1 px-2 bg-muted/20 rounded">
-                                                                    <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></div>
-                                                                    <span className="text-sm text-foreground">{interest}</span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-sm text-muted-foreground">No services listed.</p>
-                                                    )}
-                                                </CardContent>
-                                            </Card>
-                                            {/* Right Column - Services & Contact (Sticky) */}
-                                            <div className="lg:col-span-3">
-                                                <div className="sticky top-20 space-y-4">
-                                                    {/* Services Card */}
-                                                    <Card>
-                                                        <CardHeader className="pb-3">
-                                                            <CardTitle className="text-lg">Services</CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent className="pt-0">
-                                                            {expert.interests && expert.interests.length > 0 ? (
-                                                                <div className="space-y-1">
-                                                                    {expert.interests.map((interest, index) => (
-                                                                        <div key={index} className="flex items-center gap-1.5 py-1 px-2 bg-muted/20 rounded">
-                                                                            <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></div>
-                                                                            <span className="text-sm text-foreground">{interest}</span>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            ) : (
-                                                                <p className="text-sm text-muted-foreground">No services listed.</p>
-                                                            )}
-                                                        </CardContent>
-                                                    </Card>
-
-                                                    {/* Contact Information */}
-                                                    <Card>
-                                                        <CardHeader className="pb-3">
-                                                            <CardTitle className="text-lg">Contact</CardTitle>
-                                                        </CardHeader>
-                                                        <CardContent className="pt-0">
-                                                            <div className="space-y-2">
-                                                                <div className="flex items-center gap-2 text-sm">
-                                                                    <FaMapMarkerAlt className="text-muted-foreground w-4" />
-                                                                    <span className="text-foreground">{formatLocation(expert.location)}</span>
-                                                                </div>
-                                                                {expert.hourlyRate && (
-                                                                    <div className="flex items-center gap-2 text-sm">
-                                                                        <FaDollarSign className="text-muted-foreground w-4" />
-                                                                        <span className="text-foreground">${expert.hourlyRate}/hour</span>
-                                                                    </div>
-                                                                )}
-                                                                <div className="flex items-center gap-2 text-sm">
-                                                                    <FaStar className="text-yellow-500 w-4" />
-                                                                    <span className="text-foreground">{expert.ratings} reviews</span>
-                                                                </div>
-                                                                {expert.availability && (
-                                                                    <div className="flex items-center gap-2 text-sm">
-                                                                        <FaClock className="text-muted-foreground w-4" />
-                                                                        <span className="text-foreground">{expert.availability}</span>
-                                                                    </div>
-                                                                )}
-                                                                {/* Contact Information */}
-                                                                <Card>
-                                                                    <CardHeader className="pb-3">
-                                                                        <CardTitle className="text-lg">Contact</CardTitle>
-                                                                    </CardHeader>
-                                                                    <CardContent className="pt-0">
-                                                                        <div className="space-y-2">
-                                                                            <div className="flex items-center gap-2 text-sm">
-                                                                                <FaMapMarkerAlt className="text-muted-foreground w-4" />
-                                                                                <span className="text-foreground">{formatLocation(expert.location)}</span>
-                                                                            </div>
-                                                                            {expert.hourlyRate && (
-                                                                                <div className="flex items-center gap-2 text-sm">
-                                                                                    <FaDollarSign className="text-muted-foreground w-4" />
-                                                                                    <span className="text-foreground">${expert.hourlyRate}/hour</span>
-                                                                                </div>
-                                                                            )}
-                                                                            <div className="flex items-center gap-2 text-sm">
-                                                                                <FaStar className="text-yellow-500 w-4" />
-                                                                                <span className="text-foreground">{expert.ratings} reviews</span>
-                                                                            </div>
-                                                                            {expert.availability && (
-                                                                                <div className="flex items-center gap-2 text-sm">
-                                                                                    <FaClock className="text-muted-foreground w-4" />
-                                                                                    <span className="text-foreground">{expert.availability}</span>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </CardContent>
-                                                                </Card>
-
-
-
-                                                                {/* Progress Level */}
-                                                                {expert.progressShow && expert.progressLevel && (
-                                                                    <Card>
-                                                                        <CardHeader className="pb-3">
-                                                                            <CardTitle className="text-lg">Progress</CardTitle>
-                                                                        </CardHeader>
-                                                                        <CardContent className="pt-0">
-                                                                            <div className="space-y-2">
-                                                                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                                                                                    {expert.progressLevel}
-                                                                                </Badge>
-                                                                                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                                                    <span>{expert.followersCount} followers</span>
-                                                                                    <span>{expert.followingCount} following</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </CardContent>
-                                                                    </Card>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Login Prompt Dialog */}
-                                            {showLoginPrompt && (
-                                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                                                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                                                        <div className="text-center">
-                                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                                                Login Required
-                                                            </h3>
-                                                            <p className="text-gray-600 mb-6">
-                                                                You need to be logged in to follow experts or send messages.
-                                                            </p>
-                                                            <div className="flex gap-3">
-                                                                <Button
-                                                                    onClick={() => router.push('/login')}
-                                                                    className="flex-1 bg-green-600 hover:bg-green-700"
-                                                                >
-                                                                    Login
-                                                                </Button>
-                                                                <Button
-                                                                    onClick={() => setShowLoginPrompt(false)}
-                                                                    variant="outline"
-                                                                    className="flex-1"
-                                                                >
-                                                                    Cancel
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                            )}
+                                            {expert.experience && (
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <FaClock />
+                                                    <span>{expert.experience} years experience</span>
                                                 </div>
                                             )}
                                         </div>
-                                        );
+
+                                        <div className="space-y-3">
+                                            {!user ? (
+                                                // When not logged in - show login prompt
+                                                <div className="space-y-2">
+                                                    <Button
+                                                        onClick={() => setShowLoginPrompt(true)}
+                                                        className="w-full bg-green-600 hover:bg-green-700"
+                                                    >
+                                                        Message Request
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => setShowLoginPrompt(true)}
+                                                        variant="outline"
+                                                        className="w-full border-green-600 text-green-600 hover:bg-green-50"
+                                                    >
+                                                        Follow
+                                                    </Button>
+                                                </div>
+                                            ) : isFollowing ? (
+                                                // When following - show Message and Unfollow buttons
+                                                <div className="space-y-2">
+                                                    <Button
+                                                        onClick={handleMessage}
+                                                        disabled={messageLoading}
+                                                        className="w-full bg-green-600 hover:bg-green-700"
+                                                    >
+                                                        {messageLoading ? "Sending..." : "Message"}
+                                                    </Button>
+                                                    <Button
+                                                        onClick={handleFollow}
+                                                        variant="outline"
+                                                        className="w-full border-red-600 text-red-600 hover:bg-red-50"
+                                                    >
+                                                        Unfollow
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                // When not following - show Message Request and Follow buttons
+                                                <div className="space-y-2">
+                                                    <Button
+                                                        onClick={handleMessage}
+                                                        disabled={messageLoading}
+                                                        variant="outline"
+                                                        className="w-full border-green-600 text-green-600 hover:bg-green-50"
+                                                    >
+                                                        {messageLoading ? "Sending..." : "Message Request"}
+                                                    </Button>
+                                                    <Button
+                                                        onClick={handleFollow}
+                                                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                                    >
+                                                        Follow
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+
+                    {/* Middle Column - Tabbed Content */}
+                    <div className="lg:col-span-6">
+                        <Tabs defaultValue="posts" className="w-full">
+                            <TabsList className="grid w-full grid-cols-4 mb-6">
+                                <TabsTrigger value="posts" className="flex items-center gap-2">
+                                    <FaUser className="w-4 h-4" />
+                                    Posts
+                                </TabsTrigger>
+                                <TabsTrigger value="about" className="flex items-center gap-2">
+                                    <FaUser className="w-4 h-4" />
+                                    About
+                                </TabsTrigger>
+                                <TabsTrigger value="experiences" className="flex items-center gap-2">
+                                    <FaBriefcase className="w-4 h-4" />
+                                    Experiences
+                                </TabsTrigger>
+                                <TabsTrigger value="certificates" className="flex items-center gap-2">
+                                    <FaCertificate className="w-4 h-4" />
+                                    Certificates
+                                </TabsTrigger>
+                            </TabsList>
+
+                            {/* Posts Tab */}
+                            <TabsContent value="posts" className="space-y-6">
+                                {dummyPosts.slice(0, postsToShow).map((post) => (
+                                    <Card key={post.id} className="overflow-hidden">
+                                        <CardContent className="p-0">
+                                            {/* Post Header */}
+                                            <div className="p-4 border-b">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="w-10 h-10">
+                                                        <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
+                                                        <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-semibold text-foreground">{expert.name}</h3>
+                                                        <p className="text-sm text-muted-foreground">{post.timestamp}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Post Content */}
+                                            <div className="p-4">
+                                                <p className="text-foreground mb-4">{post.content}</p>
+                                                {post.image && (
+                                                    <img
+                                                        src={post.image}
+                                                        alt="Post"
+                                                        className="w-full h-48 object-cover rounded-lg mb-4"
+                                                    />
+                                                )}
+                                            </div>
+
+                                            {/* Post Actions */}
+                                            <div className="px-4 pb-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-6">
+                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
+                                                            <FaHeart />
+                                                            <span className="text-sm">{post.likes}</span>
+                                                        </button>
+                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
+                                                            <FaComment />
+                                                            <span className="text-sm">{post.comments}</span>
+                                                        </button>
+                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors">
+                                                            <FaShare />
+                                                            <span className="text-sm">{post.shares}</span>
+                                                        </button>
+                                                    </div>
+                                                    <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
+                                                        <FaBookmark />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+
+                                {/* Show More Button */}
+                                {postsToShow < dummyPosts.length && (
+                                    <div className="text-center pt-4">
+                                        <Button
+                                            onClick={handleShowMorePosts}
+                                            variant="outline"
+                                            className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                                        >
+                                            Show More Posts
+                                        </Button>
+                                    </div>
+                                )}
+                            </TabsContent>
+
+                            {/* About Tab */}
+                            <TabsContent value="about">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>About</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground mb-6">
+                                            {expert.about || expert.bio || expert.summary || "No description available."}
+                                        </p>
+
+                                        {expert.expertise && expert.expertise.length > 0 && (
+                                            <div className="mb-6">
+                                                <h3 className="font-semibold text-foreground mb-3">Expertise</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {expert.expertise.map((skill, index) => (
+                                                        <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                                                            {skill}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {expert.languages && expert.languages.length > 0 && (
+                                            <div className="mb-6">
+                                                <h3 className="font-semibold text-foreground mb-3">Languages</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {expert.languages.map((language, index) => (
+                                                        <Badge key={index} variant="outline">
+                                                            {language}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {expert.availability && (
+                                            <div>
+                                                <h3 className="font-semibold text-foreground mb-3">Availability</h3>
+                                                <p className="text-muted-foreground">{expert.availability}</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            {/* Experiences Tab */}
+                            <TabsContent value="experiences">
+                                {expert.experiences && expert.experiences.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {expert.experiences.map((exp) => (
+                                            <Card key={exp.id}>
+                                                <CardContent className="p-6">
+                                                    <div className="border-l-2 border-green-500 pl-4">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <div>
+                                                                <h4 className="font-semibold text-foreground text-lg">{typeof exp.title === 'string' ? exp.title : 'Title not specified'}</h4>
+                                                                <p className="text-muted-foreground">{typeof exp.company === 'string' ? exp.company : 'Company not specified'}</p>
+                                                            </div>
+                                                            <div className="text-right text-sm text-muted-foreground">
+                                                                <p>{exp.startDate ? new Date(exp.startDate).getFullYear() : 'N/A'}</p>
+                                                                {exp.isCurrent ? (
+                                                                    <p>Present</p>
+                                                                ) : exp.endDate ? (
+                                                                    <p>{new Date(exp.endDate).getFullYear()}</p>
+                                                                ) : null}
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-muted-foreground mb-3">{typeof exp.description === 'string' ? exp.description : 'No description available'}</p>
+                                                        {exp.skills && Array.isArray(exp.skills) && exp.skills.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {exp.skills.map((skill, skillIndex) => (
+                                                                    <Badge key={skillIndex} variant="outline" className="text-xs">
+                                                                        {typeof skill === 'string' ? skill : 'Skill'}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Card>
+                                        <CardContent className="p-6 text-center">
+                                            <p className="text-muted-foreground">No experience information available.</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </TabsContent>
+
+                            {/* Certificates Tab */}
+                            <TabsContent value="certificates">
+                                {expert.certifications && expert.certifications.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {expert.certifications.map((cert, index) => (
+                                            <Card key={index}>
+                                                <CardContent className="p-6">
+                                                    <div className="flex items-center gap-3">
+                                                        <FaCertificate className="text-green-500 w-6 h-6" />
+                                                        <div>
+                                                            <h4 className="font-semibold text-foreground">
+                                                                {typeof cert === 'string' ? cert : cert.name || 'Certification'}
+                                                            </h4>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {typeof cert === 'string' ? 'Professional Certification' : cert.issuingOrganization || 'Professional Certification'}
+                                                            </p>
+                                                            {typeof cert === 'object' && cert.issueDate && (
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Issued: {new Date(cert.issueDate).toLocaleDateString()}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <Card>
+                                        <CardContent className="p-6 text-center">
+                                            <FaCertificate className="text-muted-foreground w-12 h-12 mx-auto mb-4" />
+                                            <p className="text-muted-foreground">No certificates available.</p>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+
+                    {/* Right Column - Services & Contact (Sticky) */}
+                    <div className="lg:col-span-3">
+                        <div className="sticky top-20 space-y-4">
+                            {/* Services Card */}
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg">Services</CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    {expert.interests && expert.interests.length > 0 ? (
+                                        <div className="space-y-1">
+                                            {expert.interests.map((interest, index) => (
+                                                <div key={index} className="flex items-center gap-1.5 py-1 px-2 bg-muted/20 rounded">
+                                                    <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></div>
+                                                    <span className="text-sm text-foreground">{interest}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground">No services listed.</p>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Contact Information */}
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg">Contact</CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <FaMapMarkerAlt className="text-muted-foreground w-4" />
+                                            <span className="text-foreground">{formatLocation(expert.location)}</span>
+                                        </div>
+                                        {expert.hourlyRate && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <FaDollarSign className="text-muted-foreground w-4" />
+                                                <span className="text-foreground">${expert.hourlyRate}/hour</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <FaStar className="text-yellow-500 w-4" />
+                                            <span className="text-foreground">{expert.ratings} reviews</span>
+                                        </div>
+                                        {expert.availability && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <FaClock className="text-muted-foreground w-4" />
+                                                <span className="text-foreground">{expert.availability}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+
+
+                            {/* Progress Level */}
+                            {expert.progressShow && expert.progressLevel && (
+                                <Card>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-lg">Progress</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-2">
+                                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                                {expert.progressLevel}
+                                            </Badge>
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <span>{expert.followersCount} followers</span>
+                                                <span>{expert.followingCount} following</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Login Prompt Dialog */}
+            {showLoginPrompt && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <div className="text-center">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                Login Required
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                You need to be logged in to follow experts or send messages.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={() => router.push('/login')}
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
+                                >
+                                    Login
+                                </Button>
+                                <Button
+                                    onClick={() => setShowLoginPrompt(false)}
+                                    variant="outline"
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 } 
