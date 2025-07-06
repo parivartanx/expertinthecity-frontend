@@ -35,6 +35,105 @@ interface AdminContentState {
   clearError: () => void;
 }
 
+// Helper function to refresh admin token
+const refreshAdminToken = async () => {
+  try {
+    const adminRefreshToken = localStorage.getItem("adminRefreshToken");
+    if (!adminRefreshToken) {
+      throw new Error("No admin refresh token available");
+    }
+
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://experts-in-the-city-backend.vercel.app/api";
+    const response = await fetch(`${baseURL}/auth/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken: adminRefreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to refresh admin token");
+    }
+
+    const data = await response.json();
+    
+    if (data.status === "success") {
+      const { accessToken, refreshToken } = data;
+      localStorage.setItem("adminAccessToken", accessToken);
+      if (refreshToken) {
+        localStorage.setItem("adminRefreshToken", refreshToken);
+      }
+      return accessToken;
+    } else {
+      throw new Error("Invalid refresh token response");
+    }
+  } catch (error) {
+    // Clear admin tokens on refresh failure
+    localStorage.removeItem("adminAccessToken");
+    localStorage.removeItem("adminRefreshToken");
+    throw error;
+  }
+};
+
+// Helper function to make authenticated admin API calls
+const makeAdminApiCall = async (url: string, options: RequestInit = {}) => {
+  const adminToken = localStorage.getItem("adminAccessToken");
+  
+  if (!adminToken) {
+    throw new Error("No admin access token available");
+  }
+
+  const config = {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`,
+      ...options.headers,
+    },
+  };
+
+  try {
+    const response = await fetch(url, config);
+    
+    if (response.status === 401) {
+      // Try to refresh token
+      const newToken = await refreshAdminToken();
+      
+      // Retry with new token
+      const retryConfig = {
+        ...config,
+        headers: {
+          ...config.headers,
+          'Authorization': `Bearer ${newToken}`,
+        },
+      };
+      
+      const retryResponse = await fetch(url, retryConfig);
+      
+      if (!retryResponse.ok) {
+        throw new Error(`API call failed: ${retryResponse.status}`);
+      }
+      
+      return retryResponse;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`API call failed: ${response.status}`);
+    }
+    
+    return response;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("No admin access token available")) {
+      // Redirect to admin login
+      if (typeof window !== 'undefined') {
+        window.location.href = '/admin/login';
+      }
+    }
+    throw error;
+  }
+};
+
 export const useAdminContentStore = create<AdminContentState>()(
   persist(
     (set, get) => ({
@@ -47,9 +146,22 @@ export const useAdminContentStore = create<AdminContentState>()(
       fetchPosts: async (params = {}) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axiosInstance.get("/admin/posts", { params });
-          if (response.data && response.data.data) {
-            const { posts, pagination } = response.data.data;
+          
+          const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://experts-in-the-city-backend.vercel.app/api";
+          const queryParams = new URLSearchParams();
+          
+          Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+              queryParams.append(key, value.toString());
+            }
+          });
+          
+          const url = `${baseURL}/admin/posts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+          const response = await makeAdminApiCall(url);
+          const data = await response.json();
+          
+          if (data.status === "success" && data.data) {
+            const { posts, pagination } = data.data;
             set({
               posts: posts.map((post: any) => ({
                 id: post.id,
@@ -71,9 +183,7 @@ export const useAdminContentStore = create<AdminContentState>()(
           }
         } catch (error: any) {
           let errorMessage = "Failed to fetch posts";
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.message) {
+          if (error.message) {
             errorMessage = error.message;
           }
           set({ error: errorMessage, isLoading: false });
@@ -83,9 +193,14 @@ export const useAdminContentStore = create<AdminContentState>()(
       fetchPostById: async (id: string) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axiosInstance.get(`/admin/posts/${id}`);
-          if (response.data && response.data.data && response.data.data.post) {
-            const post = response.data.data.post;
+          
+          const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://experts-in-the-city-backend.vercel.app/api";
+          const url = `${baseURL}/admin/posts/${id}`;
+          const response = await makeAdminApiCall(url);
+          const data = await response.json();
+          
+          if (data.status === "success" && data.data && data.data.post) {
+            const post = data.data.post;
             set({
               selectedPost: {
                 id: post.id,
@@ -106,9 +221,7 @@ export const useAdminContentStore = create<AdminContentState>()(
           }
         } catch (error: any) {
           let errorMessage = "Failed to fetch post";
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.message) {
+          if (error.message) {
             errorMessage = error.message;
           }
           set({ error: errorMessage, isLoading: false });
@@ -118,9 +231,17 @@ export const useAdminContentStore = create<AdminContentState>()(
       updatePost: async (id: string, data: Partial<AdminContentPost>) => {
         try {
           set({ isLoading: true, error: null });
-          const response = await axiosInstance.patch(`/admin/posts/${id}`, data);
-          if (response.data && response.data.data && response.data.data.post) {
-            const updatedPost = response.data.data.post;
+          
+          const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://experts-in-the-city-backend.vercel.app/api";
+          const url = `${baseURL}/admin/posts/${id}`;
+          const response = await makeAdminApiCall(url, {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+          });
+          const responseData = await response.json();
+          
+          if (responseData.status === "success" && responseData.data && responseData.data.post) {
+            const updatedPost = responseData.data.post;
             set((state) => ({
               posts: state.posts.map((p) => p.id === id ? {
                 id: updatedPost.id,
@@ -153,9 +274,7 @@ export const useAdminContentStore = create<AdminContentState>()(
           }
         } catch (error: any) {
           let errorMessage = "Failed to update post";
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.message) {
+          if (error.message) {
             errorMessage = error.message;
           }
           set({ error: errorMessage, isLoading: false });
@@ -165,7 +284,13 @@ export const useAdminContentStore = create<AdminContentState>()(
       deletePost: async (id: string) => {
         try {
           set({ isLoading: true, error: null });
-          await axiosInstance.delete(`/admin/posts/${id}`);
+          
+          const baseURL = process.env.NEXT_PUBLIC_API_URL || "https://experts-in-the-city-backend.vercel.app/api";
+          const url = `${baseURL}/admin/posts/${id}`;
+          await makeAdminApiCall(url, {
+            method: 'DELETE',
+          });
+          
           set((state) => ({
             posts: state.posts.filter((p) => p.id !== id),
             selectedPost: state.selectedPost && state.selectedPost.id === id ? null : state.selectedPost,
@@ -173,9 +298,7 @@ export const useAdminContentStore = create<AdminContentState>()(
           }));
         } catch (error: any) {
           let errorMessage = "Failed to delete post";
-          if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.message) {
+          if (error.message) {
             errorMessage = error.message;
           }
           set({ error: errorMessage, isLoading: false });
