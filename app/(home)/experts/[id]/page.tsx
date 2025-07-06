@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
 import { useChatStore } from "@/lib/mainwebsite/chat-store";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
+import { useFollowStore } from "@/lib/mainwebsite/follow-store";
 import { toast } from "sonner";
 
 interface Experience {
@@ -134,10 +135,17 @@ export default function ExpertProfile() {
     const { getExpertById, sendMessageToExpert, isLoading, error } = useAllExpertsStore();
     const { createChat, chats } = useChatStore();
     const { user } = useAuthStore();
+    const { 
+        followExpert, 
+        unfollowExpert, 
+        checkFollowStatus, 
+        followStatuses, 
+        isLoading: followLoading, 
+        error: followError 
+    } = useFollowStore();
 
     const [expert, setExpert] = useState<Expert | null>(null);
     const [messageLoading, setMessageLoading] = useState(false);
-    const [isFollowing, setIsFollowing] = useState(false);
     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [postsToShow, setPostsToShow] = useState(3);
 
@@ -149,12 +157,17 @@ export default function ExpertProfile() {
                 if (expertData) {
                     console.log('Setting expert with avatar:', expertData.image);
                     setExpert(expertData as any);
+                    
+                    // Check follow status if user is logged in
+                    if (user) {
+                        await checkFollowStatus((expertData as any).userId);
+                    }
                 }
             }
         };
 
         fetchExpert();
-    }, [expertId, getExpertById]);
+    }, [expertId, getExpertById, user, checkFollowStatus]);
 
     const handleMessage = async () => {
         if (!user) {
@@ -212,17 +225,31 @@ export default function ExpertProfile() {
         }
     };
 
-    const handleFollow = () => {
+    const handleFollow = async () => {
         if (!user) {
             setShowLoginPrompt(true);
             return;
         }
 
-        setIsFollowing(!isFollowing);
-        if (isFollowing) {
-            toast.success("Unfollowed successfully");
-        } else {
-            toast.success("Followed successfully");
+        if (!expert) return;
+
+        try {
+            const isCurrentlyFollowing = followStatuses[expert.userId];
+            
+            if (isCurrentlyFollowing) {
+                await unfollowExpert(expert.userId);
+                toast.success("Unfollowed successfully");
+            } else {
+                await followExpert(expert.userId);
+                toast.success("Followed successfully");
+            }
+        } catch (error) {
+            console.error("Error handling follow:", error);
+            if (followError) {
+                toast.error(followError);
+            } else {
+                toast.error("Failed to update follow status");
+            }
         }
     };
 
@@ -434,7 +461,7 @@ export default function ExpertProfile() {
                                                         Follow
                                                     </Button>
                                                 </div>
-                                            ) : isFollowing ? (
+                                            ) : followStatuses[expert.userId] ? (
                                                 // When following - show Message and Unfollow buttons
                                                 <div className="space-y-2">
                                                     <Button
@@ -446,10 +473,11 @@ export default function ExpertProfile() {
                                                     </Button>
                                                     <Button
                                                         onClick={handleFollow}
+                                                        disabled={followLoading}
                                                         variant="outline"
                                                         className="w-full border-red-600 text-red-600 hover:bg-red-50"
                                                     >
-                                                        Unfollow
+                                                        {followLoading ? "Updating..." : "Unfollow"}
                                                     </Button>
                                                 </div>
                                             ) : (
@@ -465,9 +493,10 @@ export default function ExpertProfile() {
                                                     </Button>
                                                     <Button
                                                         onClick={handleFollow}
+                                                        disabled={followLoading}
                                                         className="w-full bg-green-600 hover:bg-green-700 text-white"
                                                     >
-                                                        Follow
+                                                        {followLoading ? "Updating..." : "Follow"}
                                                     </Button>
                                                 </div>
                                             )}

@@ -1,9 +1,23 @@
 "use client";
-import { useState, useEffect } from "react";
-import { MessageCircle, CheckCircle, X, Edit, UserPlus } from "lucide-react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal, FaEdit, FaImage, FaTimes, FaTrash, FaEllipsisH } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 import { useUserStore } from "@/lib/mainwebsite/user-store";
+import { usePostsStore } from "@/lib/mainwebsite/posts-store";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const INTEREST_LABELS: Record<string, string> = {
   TECHNOLOGY: "Technology",
@@ -34,75 +48,7 @@ const INTEREST_LABELS: Record<string, string> = {
   OTHER: "Other",
 };
 
-export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState("Posts");
-  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-  const [chatMessage, setChatMessage] = useState("");
-  const [isSendingChat, setIsSendingChat] = useState(false);
-  const [chatModalStep, setChatModalStep] = useState("initial"); // 'initial', 'input', 'captcha', 'sending'
-  const [captchaText, setCaptchaText] = useState("");
-  const [captchaInput, setCaptchaInput] = useState("");
 
-  const { user } = useAuthStore();
-  const { profile, isLoading, error, fetchUserProfile, isLoaded } = useUserStore();
-  const isExpert = user?.role === "EXPERT";
-  const isUser = user?.role === "USER";
-
-  // Fetch user profile on component mount
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    }
-  }, [user, fetchUserProfile]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log("Profile Page - User Role Debug:", {
-      user,
-      userRole: user?.role,
-      isExpert,
-      isUser,
-      profile,
-      availableTabs: getAvailableTabs()
-    });
-  }, [user, isExpert, isUser, profile]);
-
-  // Set default tab based on user role
-  useEffect(() => {
-    if (isUser) {
-      setActiveTab("About");
-    }
-  }, [isUser]);
-
-  // Placeholder for expert data - replace with actual data fetching
-  const expert = {
-    name: "Sarah Johnson",
-    specialty: "Piano Instructor & Music Theory Specialist",
-  };
-
-  // Restore post data
-  const profilePosts = [
-    {
-      id: "post-1",
-      author: "Sarah Johnson",
-      time: "almost 2 years ago",
-      text: "Excited to announce that I'm now offering online piano lessons for students worldwide! Whether you're a beginner or looking to advance your skills, I'd love to help you on your musical journey. Contact me for availability and rates.",
-      image:
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      likes: 24,
-      comments: 1,
-    },
-    {
-      id: "post-2",
-      author: "Sarah Johnson",
-      time: "almost 2 years ago",
-      text: "Just wrapped up our spring recital! So proud of all my students who performed today. Their hard work and dedication really shone in their performances. Here are some key highlights from the event.",
-      image:
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      likes: 15,
-      comments: 3,
-    },
-  ];
 
   // Mock data for followed experts
   const followedExperts = [
@@ -132,758 +78,1204 @@ export default function ProfilePage() {
       rating: 4.7,
       reviews: 156,
       location: "Austin, TX"
-    },
-    {
-      id: "expert-4",
-      name: "James Wilson",
-      specialty: "Digital Marketing & SEO",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      rating: 4.6,
-      reviews: 67,
-      location: "Chicago, IL"
-    },
-    {
-      id: "expert-5",
-      name: "Lisa Thompson",
-      specialty: "Graphic Design & Branding",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      rating: 4.9,
-      reviews: 203,
-      location: "Los Angeles, CA"
     }
-  ];
+];
 
-  const handleMessageClick = () => {
-    setIsChatModalOpen(true);
-    setChatModalStep("initial");
-  };
+export default function ProfilePage() {
+    const router = useRouter();
+    const { user } = useAuthStore();
+    const { profile, isLoading, error, fetchUserProfile } = useUserStore();
+    const { 
+        posts, 
+        listPosts, 
+        getFollowingPosts, 
+        createPost,
+        updatePost,
+        deletePost,
+        getUploadUrl,
+        isLoading: postsLoading, 
+        error: postsError 
+    } = usePostsStore();
+    const [postsToShow, setPostsToShow] = useState(3);
+    
+    // Create post state
+    const [showCreatePost, setShowCreatePost] = useState(false);
+    const [postTitle, setPostTitle] = useState("");
+    const [postContent, setPostContent] = useState("");
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isCreatingPost, setIsCreatingPost] = useState(false);
 
-  const handleCloseChatModal = () => {
-    setIsChatModalOpen(false);
-    setChatMessage(""); // Clear message on close
-    setIsSendingChat(false); // Reset sending state
-    setChatModalStep("initial"); // Reset modal step
-    setCaptchaText(""); // Clear captcha
-    setCaptchaInput(""); // Clear captcha input
-  };
+    // Edit post state
+    const [editingPostId, setEditingPostId] = useState<string | null>(null);
+    const [editPostTitle, setEditPostTitle] = useState("");
+    const [editPostContent, setEditPostContent] = useState("");
+    const [editSelectedImage, setEditSelectedImage] = useState<File | null>(null);
+    const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
+    const [isUpdatingPost, setIsUpdatingPost] = useState(false);
+    const [isDeletingPost, setIsDeletingPost] = useState(false);
+    
+    // Delete confirmation dialog state
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
-  const handleSendChat = () => {
-    // In a real app, you would perform CAPTCHA verification here first
-    // For now, we'll simulate sending if captcha matches (or skip if no captcha needed)
+    const isExpert = user?.role?.toUpperCase() === "EXPERT";
+    const isUser = user?.role?.toUpperCase() === "USER";
 
-    // Basic CAPTCHA check (case-insensitive for simplicity)
-    if (
-      chatModalStep === "captcha" &&
-      captchaInput.toLowerCase() !== captchaText.toLowerCase()
-    ) {
-      alert("Incorrect CAPTCHA. Please try again.");
-      generateNewCaptcha(); // Generate a new CAPTCHA on failure
-      setCaptchaInput(""); // Clear input
-      return;
-    }
+    // Fetch user profile on component mount
+    useEffect(() => {
+        if (user) {
+            console.log("Fetching user profile for user:", user);
+            fetchUserProfile();
+        }
+    }, [user, fetchUserProfile]);
 
-    setIsSendingChat(true);
-    // Here you would typically send the chat message and expert ID
-    console.log(`Sending chat message to ${expert.name}:`, chatMessage);
+    // Fetch posts based on user role
+    useEffect(() => {
+        if (user) {
+            if (isUser) {
+                // For regular users, get posts from following users
+                getFollowingPosts({ page: 1, limit: 10 });
+            } else if (isExpert) {
+                // For experts, get their own posts
+                listPosts({ userId: user.id, page: 1, limit: 10 });
+            }
+        }
+    }, [user, isUser, isExpert, getFollowingPosts, listPosts]);
 
-    // Simulate sending delay
-    setTimeout(() => {
-      setIsSendingChat(false);
-      // Handle success or failure after sending
-      alert("Chat request sent!"); // Placeholder success
-      handleCloseChatModal(); // Close on success
-    }, 2000);
-  };
+    // Debug logging
+    useEffect(() => {
+        console.log("Profile Page Debug:", {
+            user,
+            profile,
+            isLoading,
+            error,
+            isExpert,
+            isUser
+        });
+    }, [user, profile, isLoading, error, isExpert, isUser]);
 
-  const generateNewCaptcha = () => {
-    const characters =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    const charactersLength = characters.length;
-    for (let i = 0; i < 6; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    setCaptchaText(result);
-  };
+    const handleShowMorePosts = () => {
+        setPostsToShow(prev => Math.min(prev + 2, posts.length));
+    };
 
-  // Generate initial CAPTCHA when modal opens to captcha step
-  useEffect(() => {
-    if (chatModalStep === "captcha" && captchaText === "") {
-      generateNewCaptcha();
-    }
-  }, [chatModalStep]); // Depend only on chatModalStep
+    const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setImagePreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "About":
+    const handleRemoveImage = () => {
+        setSelectedImage(null);
+        setImagePreview(null);
+    };
+
+    const handleCreatePost = async () => {
+        if (!postTitle.trim() || !postContent.trim()) {
+            toast.error("Please fill in both title and content");
+            return;
+        }
+
+        try {
+            setIsCreatingPost(true);
+            let imageKey: string | undefined;
+
+            // Upload image if selected
+            if (selectedImage) {
+                const uploadData = await getUploadUrl(selectedImage.type, selectedImage.name);
+                
+                // Upload to S3
+                const uploadResponse = await fetch(uploadData.uploadUrl, {
+                    method: 'PUT',
+                    body: selectedImage,
+                    headers: {
+                        'Content-Type': selectedImage.type,
+                    },
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload image');
+                }
+
+                imageKey = uploadData.key;
+            }
+
+            // Create post
+            await createPost({
+                title: postTitle.trim(),
+                content: postContent.trim(),
+                imageKey,
+            });
+
+            // Reset form
+            setPostTitle("");
+            setPostContent("");
+            setSelectedImage(null);
+            setImagePreview(null);
+            setShowCreatePost(false);
+
+            toast.success("Post created successfully!");
+        } catch (error) {
+            console.error("Error creating post:", error);
+            toast.error("Failed to create post. Please try again.");
+        } finally {
+            setIsCreatingPost(false);
+        }
+    };
+
+    const handleCancelCreate = () => {
+        setPostTitle("");
+        setPostContent("");
+        setSelectedImage(null);
+        setImagePreview(null);
+        setShowCreatePost(false);
+    };
+
+    const handleEditPost = (post: any) => {
+        setEditingPostId(post.id);
+        setEditPostTitle(post.title);
+        setEditPostContent(post.content);
+        setEditSelectedImage(null);
+        setEditImagePreview(post.image || null);
+    };
+
+    const handleEditImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setEditSelectedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setEditImagePreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemoveEditImage = () => {
+        setEditSelectedImage(null);
+        setEditImagePreview(null);
+    };
+
+    const handleUpdatePost = async () => {
+        if (!editingPostId || !editPostTitle.trim() || !editPostContent.trim()) {
+            toast.error("Please fill in both title and content");
+            return;
+        }
+
+        try {
+            setIsUpdatingPost(true);
+            let imageKey: string | undefined;
+
+            // Upload new image if selected
+            if (editSelectedImage) {
+                const uploadData = await getUploadUrl(editSelectedImage.type, editSelectedImage.name);
+                
+                // Upload to S3
+                const uploadResponse = await fetch(uploadData.uploadUrl, {
+                    method: 'PUT',
+                    body: editSelectedImage,
+                    headers: {
+                        'Content-Type': editSelectedImage.type,
+                    },
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload image');
+                }
+
+                imageKey = uploadData.key;
+            }
+
+            // Update post
+            await updatePost(editingPostId, {
+                title: editPostTitle.trim(),
+                content: editPostContent.trim(),
+                ...(imageKey && { imageKey }),
+            });
+
+            // Reset form
+            setEditingPostId(null);
+            setEditPostTitle("");
+            setEditPostContent("");
+            setEditSelectedImage(null);
+            setEditImagePreview(null);
+
+            toast.success("Post updated successfully!");
+        } catch (error) {
+            console.error("Error updating post:", error);
+            toast.error("Failed to update post. Please try again.");
+        } finally {
+            setIsUpdatingPost(false);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingPostId(null);
+        setEditPostTitle("");
+        setEditPostContent("");
+        setEditSelectedImage(null);
+        setEditImagePreview(null);
+    };
+
+    const handleDeletePost = async (postId: string) => {
+        setPostToDelete(postId);
+        setShowDeleteDialog(true);
+    };
+
+    const confirmDeletePost = async () => {
+        if (!postToDelete) return;
+
+        try {
+            setIsDeletingPost(true);
+            await deletePost(postToDelete);
+            toast.success("Post deleted successfully!");
+            setShowDeleteDialog(false);
+            setPostToDelete(null);
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            toast.error("Failed to delete post. Please try again.");
+        } finally {
+            setIsDeletingPost(false);
+        }
+    };
+
+    const cancelDeletePost = () => {
+        setShowDeleteDialog(false);
+        setPostToDelete(null);
+    };
+
+    const getProgressLevelIcon = (level: string) => {
+        switch (level.toLowerCase()) {
+            case 'beginner':
+                return <FaMedal className="w-6 h-6 text-green-500" />;
+            case 'intermediate':
+                return <FaMedal className="w-6 h-6 text-yellow-500" />;
+            case 'advanced':
+                return <FaMedal className="w-6 h-6 text-red-500" />;
+            case 'expert':
+                return <FaMedal className="w-6 h-6 text-purple-500" />;
+            default:
+                return <FaMedal className="w-6 h-6 text-gray-500" />;
+        }
+    };
+
+    const formatLocation = (location: any) => {
+        if (!location) return "Location not set";
+        if (typeof location === 'string') return location;
+        if (typeof location === 'object' && location.city) {
+            return `${location.city}${location.state ? `, ${location.state}` : ''}${location.country ? `, ${location.country}` : ''}`;
+        }
+        return "Location not set";
+    };
+
+    const getAvatarUrl = (avatar: any) => {
+        if (avatar && typeof avatar === 'string' && avatar.trim() !== '') {
+            return avatar;
+        }
+        // Fallback to a default avatar
+        return `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`;
+    };
+
+    if (isLoading) {
         return (
+            <div className="p-8 bg-background min-h-screen">
+                <div className="max-w-7xl mx-auto">
+                    <div className="animate-pulse">
+                        <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-1">
+                                <div className="h-96 bg-gray-200 rounded-lg mb-4"></div>
+                            </div>
+                            <div className="lg:col-span-1">
           <div className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold mb-2">About</h2>
-              <p className="text-sm text-gray-700 flex items-center gap-2">
-                {profile?.bio ? (
-                  profile.bio
-                ) : (
-                  <>
-                    No bio set.
-                    <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add bio</Link>
-                  </>
-                )}
-              </p>
-            </div>
-            {isExpert && (
-              <div className="space-y-6">
-                <div className="border rounded-lg shadow-md">
-                  <div className="p-4">
-                    <h3 className="font-semibold">Sarah Johnson</h3>
-                    <p className="text-xs text-gray-500">almost 2 years ago</p>
-                    <p className="mt-2 text-sm">
-                      Excited to announce that I'm now offering online piano
-                      lessons for students worldwide! Whether you're a beginner or
-                      looking to advance your skills, I'd love to help you on your
-                      musical journey. Contact me for availability and rates.
-                    </p>
-                  </div>
-                  <img
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                    className="w-full h-48 object-cover rounded-b-lg mt-2"
-                    alt="Piano post"
-                  />
-                </div>
-
-                <div className="border rounded-lg shadow-md">
-                  <div className="p-4">
-                    <h3 className="font-semibold">Sarah Johnson</h3>
-                    <p className="text-xs text-gray-500">almost 2 years ago</p>
-                    <p className="mt-2 text-sm">
-                      Just wrapped up our spring recital! So proud of all my
-                      students who performed today. Their hard work and dedication
-                      really shone in their performances. Here are some key
-                      highlights from the event.
-                    </p>
-                  </div>
-                  <img
-                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                    className="w-full h-48 object-cover rounded-b-lg mt-2"
-                    alt="Recital post"
-                  />
-                </div>
-              </div>
-            )}
-            {isUser && (
-              <div className="space-y-6">
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-3">Community Stats</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                      <h4 className="font-medium text-gray-800">Followers</h4>
-                      <p className="text-sm text-gray-600 mt-1">{/* TODO: Implement followers count if available */}0</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                      <h4 className="font-medium text-gray-800">Following</h4>
-                      <p className="text-sm text-gray-600 mt-1">{followedExperts.length}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                      <h4 className="font-medium text-gray-800">Posts</h4>
-                      <p className="text-sm text-gray-600 mt-1">{profilePosts.length}</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-lg shadow-sm">
-                      <h4 className="font-medium text-gray-800">Chats Initiated</h4>
-                      <p className="text-sm text-gray-600 mt-1">{/* TODO: Implement comments count if available */}0</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {profile?.interests && profile.interests.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {profile.interests.map((interest) => (
-                  <span
-                    key={interest}
-                    className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full"
-                  >
-                    {INTEREST_LABELS[interest] || interest}
-                  </span>
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
                 ))}
               </div>
-            )}
-          </div>
-        );
-      case "Following":
-        if (!isUser) return null;
-        const followingList: typeof followedExperts = followedExperts;
-        return (
-          <div className="space-y-6">
-            <div className="bg-white border rounded-lg shadow-sm">
-              <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-800">Experts You Follow</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {followingList.length > 0
-                    ? `You're following ${followingList.length} expert${followingList.length > 1 ? 's' : ''}`
-                    : "You're not following any experts yet."}
-                </p>
-              </div>
-              {followingList.length > 0 ? (
-                <div className="divide-y">
-                  {followingList.map((item: typeof followedExperts[number]) => (
-                    <div key={item.id} className="p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-4">
-                        <img
-                          src={item.avatar || '/default-avatar.png'}
-                          alt={item.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-sm font-semibold text-gray-800 truncate">
-                                {item.name}
-                              </h4>
-                              <p className="text-xs text-gray-600 truncate">
-                                {item.specialty}
-                              </p>
                             </div>
-                            <div className="flex space-x-2">
-                              <button className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-full transition-colors">
-                                Message
-                              </button>
-                              <button className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full transition-colors">
-                                View Profile
-                              </button>
-                            </div>
-                          </div>
+                            <div className="lg:col-span-1">
+                                <div className="h-96 bg-gray-200 rounded-lg"></div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8">
-                  <UserPlus className="w-20 h-20 mb-4 text-green-300" />
-                  <p className="text-gray-500 mb-2 text-center">You're not following any experts yet.</p>
-                  <Link href="/allexperts" className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold mt-2">Find Experts to Follow</Link>
-                </div>
-              )}
             </div>
           </div>
         );
-      case "Services":
-        if (!isExpert) return null;
-        return (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold mb-2">Services Offered</h2>
-            <ul className="list-disc list-inside text-sm text-gray-700">
-              <li>Private Piano Lessons (Beginner to Advanced)</li>
-              <li>Music Theory Instruction</li>
-              <li>Composition Coaching</li>
-              <li>Performance Preparation</li>
-              <li>College Audition Preparation</li>
-            </ul>
-          </div>
-        );
-      case "Portfolio":
-        if (!isExpert) return null;
-        return (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold mb-2 text-primary">
-              Work Portfolio
-            </h2>
-
-            <div className="space-y-4">
-              {/* Portfolio Item 1 */}
-              <div className="bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition">
-                <h3 className="text-md font-bold text-gray-800">
-                  🔧 Full Stack E-Commerce Platform
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Developed a full-featured MERN stack e-commerce site with
-                  admin dashboard, cart, wishlist, and checkout flow.
-                </p>
-                <div className="mt-2 text-sm text-green-600 font-semibold">
-                  💰 Earned: ₹25,000
-                </div>
-              </div>
-
-              {/* Portfolio Item 2 */}
-              <div className="bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition">
-                <h3 className="text-md font-bold text-gray-800">
-                  📊 Admin Dashboard for Analytics
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Built a responsive analytics dashboard with charts, dynamic
-                  data from APIs, and user management.
-                </p>
-                <div className="mt-2 text-sm text-green-600 font-semibold">
-                  💰 Earned: ₹18,000
-                </div>
-              </div>
-
-              {/* Portfolio Item 3 */}
-              <div className="bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition">
-                <h3 className="text-md font-bold text-gray-800">
-                  🎨 Portfolio Website for Designer
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Created a sleek, animated portfolio for a client using
-                  Next.js, Tailwind CSS, and Framer Motion.
-                </p>
-                <div className="mt-2 text-sm text-green-600 font-semibold">
-                  💰 Earned: ₹10,000
-                </div>
-              </div>
-            </div>
-
-            {/* Earnings Summary */}
-            <div className="border-t pt-4">
-              <h3 className="text-md font-bold text-gray-800">
-                📈 Total Earnings
-              </h3>
-              <p className="text-xl font-bold text-green-700">₹53,000+</p>
-            </div>
-          </div>
-        );
-      case "Reviews":
-        if (!isExpert) return null;
-        return (
-          <div className="space-y-6">
-            <h2 className="text-lg font-semibold mb-2">Client Reviews</h2>
-            {/* Add review items here */}
-            <p className="text-sm text-gray-700">Reviews content goes here.</p>
-          </div>
-        );
-      default:
-        return null;
     }
-  };
 
-  // Get available tabs based on user role
-  const getAvailableTabs = () => {
-    if (isUser) {
-      return ["About", "Following"];
+    if (error) {
+        return (
+            <div className="p-8 bg-background min-h-screen">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+                        <p className="text-muted-foreground">{error}</p>
+                        <Button
+                            onClick={() => fetchUserProfile()}
+                            className="mt-4 bg-green-600 hover:bg-green-700"
+                        >
+                            Try Again
+                        </Button>
+                    </div>
+                </div>
+          </div>
+        );
     }
-    return ["Posts", "Services", "Portfolio", "Reviews"];
-  };
 
-  const availableTabs = getAvailableTabs();
+    if (!profile) {
+        return (
+            <div className="p-8 bg-background min-h-screen">
+                <div className="max-w-7xl mx-auto">
+                    <div className="text-center">
+                        <h1 className="text-2xl font-bold text-muted-foreground mb-4">Profile Not Found</h1>
+                        <Button
+                            onClick={() => router.push('/login')}
+                            className="bg-green-600 hover:bg-green-700"
+                        >
+                            Login
+                        </Button>
+              </div>
+                </div>
+          </div>
+        );
+    }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Loading State */}
-      {(isLoading || !profile) && (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading profile...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center max-w-md mx-auto">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Profile</h3>
-              <p className="text-red-600 mb-4">{error}</p>
-              <button
-                onClick={() => { fetchUserProfile(); }}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Profile Content */}
-      {!isLoading && !error && profile && (
-        <div className=" mx-auto bg-white overflow-hidden rounded-2xl shadow">
-          {/* Cover Image */}
-          <div
-            className="h-60 bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url(https://cdn.pixabay.com/photo/2016/03/09/15/29/books-1246674_1280.jpg)",
-            }}
-          ></div>
-
-          {/* Profile Header */}
-          <div className="flex flex-col md:flex-row p-6 md:items-start md:justify-between gap-4 md:gap-8">
-            <div className="flex flex-col md:flex-row gap-4 items-center">
-              <img
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww"
-                alt="Profile"
-                className="w-24 h-24 rounded-full border-4 border-white -mt-12 object-cover"
-              />
-              <div>
-                <div className="flex items-center justify-start gap-2 md:gap-4 flex-col  md:flex-row">
-                  <h1 className="text-2xl font-bold">{user?.name || "User"}</h1>
-                  {/* Show email for USER */}
-                  {isUser && profile?.email && (
-                    <span className="text-gray-500 text-sm">{profile.email}</span>
-                  )}
-                  {/* Edit Button */}
-                  <Link
-                    href="/profile/update"
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                  >
-                    <Edit size={16} />
-                    Update Profile
-                  </Link>
-                </div>
-
-                <p className="text-green-600 font-semibold mt-2">
-                  {isExpert ? "Expert" : "Member"}
-                </p>
-                <div className="text-sm text-gray-500 flex flex-wrap gap-2 items-center mt-1">
-                  <span>
-                    Location not set
-                    <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add location</Link>
-                  </span>
-                  <span>{followedExperts.length} following</span>
-                  <span>{profilePosts.length} posts</span>
-                </div>
-                {/* Show email and member since date for USER */}
-                {isUser && (
-                  <div className="mt-2 text-sm text-gray-700 flex flex-col gap-1">
-                    <span>Email: <span className="font-medium">{profile.email}</span></span>
-                    <span>Member since: <span className="font-medium">{profile.createdAt ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</span></span>
-                  </div>
-                )}
-                {/* Show tags as badges */}
-                {profile?.tags && profile.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {profile.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="bg-gray-200 text-xs px-2 py-1 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {/* Show interests as pretty badges for USER */}
-                {isUser && profile?.interests && profile.interests.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {profile.interests.map((interest) => (
-                      <span
-                        key={interest}
-                        className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full"
-                      >
-                        {INTEREST_LABELS[interest] || interest}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content: Two Columns */}
-          <div className="grid md:grid-cols-3 gap-6 p-6 pt-0">
-            {/* Left Column: Stats and Action Buttons (removed About section) */}
-            <div className="md:col-span-1 space-y-4">
-              {/* Info Blocks */}
-              <div className="text-sm space-y-4 mt-4 md:mt-0">
-                {isExpert ? (
-                  <>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{profilePosts.length}</p>
-                      <p className="text-gray-600">Posts</p>
-                    </div>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{followedExperts.length}</p>
-                      <p className="text-gray-600 flex items-center gap-2">
-                        Experts Followed
-                        {followedExperts.length === 0 && (
-                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
-                        )}
-                      </p>
-                    </div>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">
-                        {profile?.createdAt
-                          ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                          : "Not set"}
-                      </p>
-                      <p className="text-gray-600 flex items-center gap-2">
-                        Member Since
-                        {!profile?.createdAt && (
-                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
-                        )}
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">{followedExperts.length}</p>
-                      <p className="text-gray-600">Following</p>
-                    </div>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">
-                        {profile?.createdAt
-                          ? new Date(profile.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                          : "Not set"}
-                      </p>
-                      <p className="text-gray-600 flex items-center gap-2">
-                        Member Since
-                        {!profile?.createdAt && (
-                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
-                        )}
-                      </p>
-                    </div>
-                    <div className="bg-gray-100 px-4 py-2 rounded-lg shadow flex justify-between items-center gap-2">
-                      <p className="font-semibold">0</p>
-                      <p className="text-gray-600 flex items-center gap-2">
-                        Chats Initiated
-                        {true && (
-                          <Link href="/profile/update" className="text-green-600 underline text-xs ml-2">Add</Link>
-                        )}
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-              {/* Action Buttons */}
-              {isExpert && (
-                <div className="flex flex-col gap-2 mt-4">
-                  <button
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
-                    onClick={handleMessageClick}
-                  >
-                    Message
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: Tabs and Content */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Tabs */}
-              <div className="border-b py-2">
-                <div className="flex gap-8 text-gray-600 text-sm">
-                  {availableTabs.map((tab) => (
-                    <span
-                      key={tab}
-                      className={`cursor-pointer hover:text-black font-medium ${
-                        activeTab === tab
-                          ? "text-black border-b-2 border-green-600"
-                          : ""
-                      }`}
-                      onClick={() => setActiveTab(tab)}
+        <div className="min-h-screen bg-background">
+            {/* Back Button */}
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        className="text-muted-foreground hover:text-foreground"
                     >
-                      {tab}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                        ← Back
+                    </Button>
+        </div>
+            </div>
 
-              {/* Tab Content */}
-              <div className="space-y-6">
-                {activeTab === "Posts" && isExpert && (
-                  <div className="space-y-6">
-                    {/* Posts section */}
-                    {profilePosts.map((post) => (
-                      <Link
-                        key={post.id}
-                        href={`/profile/posts/${post.id}`}
-                        className="block hover:shadow-lg transition-shadow"
-                      >
-                        <div className="border rounded-lg shadow-md">
-                          <div className="p-4">
-                            <h3 className="font-semibold">{post.author}</h3>
-                            <p className="text-xs text-gray-500">{post.time}</p>
-                            <p className="mt-2 text-sm text-gray-700">
-                              {post.text}
-                            </p>
-                          </div>
-                          <img
-                            src={post.image}
-                            className="w-full h-72 object-cover rounded-b-lg mt-2"
-                            alt="Post image"
-                          />
-                          {/* Optional: Add Like, Comment, Share buttons here */}
-                          <div className="p-4 flex items-center gap-4 text-gray-500 text-sm">
-                            <span>{post.likes} likes</span>
-                            <span>{post.comments} comments</span>
-                          </div>
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 py-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left Column - Profile Only (Sticky) */}
+                    <div className="lg:col-span-3">
+                        <div className="sticky top-20">
+                            {/* Profile Card */}
+                            <Card>
+                                <CardContent className="p-6 relative">
+                                    {/* Progress Level Icon - Top Left */}
+                                    {isExpert && profile.progressLevel && (
+                                        <div className="absolute top-4 left-4">
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger>
+                                                        {getProgressLevelIcon(profile.progressLevel)}
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p>{profile.progressLevel} Level</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+        </div>
+      )}
+                                    <div className="text-center">
+                                        <Avatar className="w-24 h-24 mx-auto mb-4">
+                                            <AvatarImage src={getAvatarUrl(profile.avatar)} alt={profile.name || user?.name || 'User'} />
+                                            <AvatarFallback>{(profile.name || user?.name || 'U').charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <h1 className="text-2xl font-bold text-foreground mb-2">
+                                            {profile.name || user?.name || 'User'}
+                                            {isExpert && (
+                                                <FaCheckCircle className="inline ml-2 text-green-500" />
+                                            )}
+                                        </h1>
+                                        <p className="text-sm text-muted-foreground mb-3">
+                                            {isExpert ? 'Expert' : 'Member'}
+                                        </p>
+
+                                        <div className="space-y-2 mb-6">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <FaMapMarkerAlt />
+                                                <span>{formatLocation(profile.location)}</span>
+                                            </div>
+                                            {isExpert && profile.hourlyRate && (
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <FaDollarSign />
+                                                    <span>${profile.hourlyRate}/hour</span>
+                                                </div>
+                                            )}
+                                            {isExpert && profile.experience && (
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <FaClock />
+                                                    <span>{profile.experience} years experience</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <Link href="/profile/update">
+                                                <Button className="w-full bg-green-600 hover:bg-green-700">
+                                                    <FaEdit className="mr-2" />
+                                                    Update Profile
+                                                </Button>
+                                            </Link>
+            </div>
+          </div>
+                                </CardContent>
+                            </Card>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {activeTab === "Services" && renderContent()}
-                {activeTab === "Portfolio" && renderContent()}
-                {activeTab === "Reviews" && renderContent()}
-                {activeTab === "About" && renderContent()}
-                {activeTab === "Following" && renderContent()}
-              </div>
+                    </div>
+
+                    {/* Middle Column - Tabbed Content */}
+                    <div className="lg:col-span-6">
+                        <Tabs defaultValue="about" className="w-full">
+                            <TabsList className="grid w-full grid-cols-4 mb-6">
+                                <TabsTrigger value="posts" className="flex items-center gap-2">
+                                    <FaUser className="w-4 h-4" />
+                                    Posts
+                                </TabsTrigger>
+                                <TabsTrigger value="about" className="flex items-center gap-2">
+                                    <FaUser className="w-4 h-4" />
+                                    About
+                                </TabsTrigger>
+                                {isUser && (
+                                    <TabsTrigger value="following" className="flex items-center gap-2">
+                                        <FaUser className="w-4 h-4" />
+                                        Following
+                                    </TabsTrigger>
+                                )}
+                                {isExpert && (
+                                    <>
+                                        <TabsTrigger value="experiences" className="flex items-center gap-2">
+                                            <FaBriefcase className="w-4 h-4" />
+                                            Experiences
+                                        </TabsTrigger>
+                                        <TabsTrigger value="certificates" className="flex items-center gap-2">
+                                            <FaCertificate className="w-4 h-4" />
+                                            Certificates
+                                        </TabsTrigger>
+                                    </>
+                                )}
+                            </TabsList>
+
+                            {/* Posts Tab - For both Users and Experts */}
+                            <TabsContent value="posts" className="space-y-6">
+                                {/* Create Post Section - Only for Experts */}
+                                {isExpert && (
+                                    <Card>
+                                        <CardContent className="p-6">
+                                            {!showCreatePost ? (
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="w-10 h-10">
+                                                        <AvatarImage src={getAvatarUrl(profile.avatar)} alt={profile.name || user?.name || 'User'} />
+                                                        <AvatarFallback>{(profile.name || user?.name || 'U').charAt(0)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div 
+                                                        className="flex-1 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                                                        onClick={() => setShowCreatePost(true)}
+                                                    >
+                                                        <p className="text-muted-foreground">Share your expertise and insights...</p>
+                                                    </div>
+                                                    <Button 
+                                                        onClick={() => setShowCreatePost(true)}
+                                                        className="bg-green-600 hover:bg-green-700"
+                                                    >
+                                                        <FaEdit className="mr-2" />
+                                                        Create Post
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <h3 className="text-lg font-semibold">Create New Post</h3>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={handleCancelCreate}
+                                                            className="text-muted-foreground hover:text-foreground"
+                                                        >
+                                                            <FaTimes />
+                                                        </Button>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-3">
+                                                        <Input
+                                                            placeholder="Post title..."
+                                                            value={postTitle}
+                                                            onChange={(e) => setPostTitle(e.target.value)}
+                                                            className="text-lg font-medium"
+                                                        />
+                                                        
+                                                        <Textarea
+                                                            placeholder="Share your expertise, insights, or experiences..."
+                                                            value={postContent}
+                                                            onChange={(e) => setPostContent(e.target.value)}
+                                                            className="min-h-[120px] resize-none"
+                                                        />
+                                                        
+                                                        {/* Image Upload Section */}
+                                                        <div className="space-y-2">
+                                                            {!imagePreview ? (
+                                                                <div className="flex items-center gap-2">
+                                                                    <label className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                                                        <FaImage className="text-muted-foreground" />
+                                                                        <span className="text-sm text-muted-foreground">Add Image</span>
+                                                                        <input
+                                                                            type="file"
+                                                                            accept="image/*"
+                                                                            onChange={handleImageSelect}
+                                                                            className="hidden"
+                                                                        />
+                                                                    </label>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="relative">
+                                                                    <img
+                                                                        src={imagePreview}
+                                                                        alt="Preview"
+                                                                        className="w-full max-h-64 object-cover rounded-lg"
+                                                                    />
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={handleRemoveImage}
+                                                                        className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-600"
+                                                                    >
+                                                                        <FaTimes />
+                                                                    </Button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                onClick={handleCancelCreate}
+                                                                disabled={isCreatingPost}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                            <Button
+                                                                onClick={handleCreatePost}
+                                                                disabled={isCreatingPost || !postTitle.trim() || !postContent.trim()}
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                            >
+                                                                {isCreatingPost ? "Creating..." : "Create Post"}
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                )}
+                                {postsLoading ? (
+                                    <div className="space-y-4">
+                                        {[1, 2, 3].map((i) => (
+                                            <Card key={i} className="overflow-hidden">
+                                                <CardContent className="p-0">
+                                                    <div className="animate-pulse">
+                                                        <div className="p-4 border-b">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                                                                <div className="flex-1">
+                                                                    <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+                                                                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="p-4">
+                                                            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                                                            <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                                                            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : posts && posts.length > 0 ? (
+                                    <>
+                                        {posts.slice(0, postsToShow).map((post) => (
+                                            <Card key={post.id} className="overflow-hidden">
+                                                <CardContent className="p-0">
+                                                    {/* Post Header */}
+                                                    <div className="p-4 border-b">
+                                                        <div className="flex items-center gap-3">
+                                                            <Avatar className="w-10 h-10">
+                                                                <AvatarImage src={getAvatarUrl(post.author.avatar)} alt={post.author.name} />
+                                                                <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="flex-1">
+                                                                <h3 className="font-semibold text-foreground">{post.author.name}</h3>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {new Date(post.createdAt).toLocaleDateString()}
+                                                                </p>
+                                                            </div>
+                                                            {/* Post Actions Menu - Only for own posts */}
+                                                            {user && post.authorId === user.id && (
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild>
+                                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                                            <FaEllipsisH className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end">
+                                                                        <DropdownMenuItem 
+                                                                            onClick={() => handleEditPost(post)}
+                                                                            disabled={editingPostId === post.id}
+                                                                        >
+                                                                            <FaEdit className="mr-2 h-4 w-4" />
+                                                                            Edit Post
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem 
+                                                                            onClick={() => handleDeletePost(post.id)}
+                                                                            disabled={isDeletingPost}
+                                                                            className="text-red-600 focus:text-red-600"
+                                                                        >
+                                                                            <FaTrash className="mr-2 h-4 w-4" />
+                                                                            Delete Post
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Post Content */}
+                                                    {editingPostId === post.id ? (
+                                                        <div className="p-4 space-y-4">
+                                                            <div className="space-y-3">
+                                                                <Input
+                                                                    placeholder="Post title..."
+                                                                    value={editPostTitle}
+                                                                    onChange={(e) => setEditPostTitle(e.target.value)}
+                                                                    className="text-lg font-medium"
+                                                                />
+                                                                
+                                                                <Textarea
+                                                                    placeholder="Share your expertise, insights, or experiences..."
+                                                                    value={editPostContent}
+                                                                    onChange={(e) => setEditPostContent(e.target.value)}
+                                                                    className="min-h-[120px] resize-none"
+                                                                />
+                                                                
+                                                                {/* Image Upload Section */}
+                                                                <div className="space-y-2">
+                                                                    {!editImagePreview ? (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <label className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                                                                <FaImage className="text-muted-foreground" />
+                                                                                <span className="text-sm text-muted-foreground">Add Image</span>
+                                                                                <input
+                                                                                    type="file"
+                                                                                    accept="image/*"
+                                                                                    onChange={handleEditImageSelect}
+                                                                                    className="hidden"
+                                                                                />
+                                                                            </label>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="relative">
+                                                                            <img
+                                                                                src={editImagePreview}
+                                                                                alt="Preview"
+                                                                                className="w-full max-h-64 object-cover rounded-lg"
+                                                                            />
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                onClick={handleRemoveEditImage}
+                                                                                className="absolute top-2 right-2 bg-white/80 hover:bg-white text-red-600"
+                                                                            >
+                                                                                <FaTimes />
+                                                                            </Button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        onClick={handleCancelEdit}
+                                                                        disabled={isUpdatingPost}
+                                                                    >
+                                                                        Cancel
+                                                                    </Button>
+                                                                    <Button
+                                                                        onClick={handleUpdatePost}
+                                                                        disabled={isUpdatingPost || !editPostTitle.trim() || !editPostContent.trim()}
+                                                                        className="bg-green-600 hover:bg-green-700"
+                                                                    >
+                                                                        {isUpdatingPost ? "Updating..." : "Update Post"}
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="p-4">
+                                                            <h4 className="font-semibold text-foreground mb-2">{post.title}</h4>
+                                                            <p className="text-foreground mb-4">{post.content}</p>
+                                                            {post.image && (
+                                                                <img
+                                                                    src={post.image}
+                                                                    alt="Post"
+                                                                    className="w-full h-48 object-cover rounded-lg mb-4"
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Post Actions */}
+                                                    <div className="px-4 pb-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-6">
+                                                                <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
+                                                                    <FaHeart />
+                                                                    <span className="text-sm">{post.analytics?.likes || 0}</span>
+                                                                </button>
+                                                                <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
+                                                                    <FaComment />
+                                                                    <span className="text-sm">{post.analytics?.comments || 0}</span>
+                                                                </button>
+                                                            </div>
+                                                            <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
+                                                                <FaBookmark />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+
+                                        {/* Show More Button */}
+                                        {postsToShow < posts.length && (
+                                            <div className="text-center pt-4">
+                                                <Button
+                                                    onClick={handleShowMorePosts}
+                                                    variant="outline"
+                                                    className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                                                >
+                                                    Show More Posts
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <Card>
+                                        <CardContent className="p-8 text-center">
+                                            <div className="mb-4">
+                                                <FaUser className="text-muted-foreground w-12 h-12 mx-auto" />
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-foreground mb-2">
+                                                {isExpert ? "No Posts Yet" : "No Posts in Your Feed"}
+                                            </h3>
+                                            <p className="text-muted-foreground mb-4">
+                                                {isExpert 
+                                                    ? "Share your expertise and insights with the community by creating your first post."
+                                                    : "Follow some experts to see their posts in your feed, or explore the community to discover great content."
+                                                }
+                                            </p>
+                                            <Button className="bg-green-600 hover:bg-green-700">
+                                                {isExpert ? (
+                                                    <>
+                                                        <FaEdit className="mr-2" />
+                                                        Create Your First Post
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaUser className="mr-2" />
+                                                        Find Experts to Follow
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </TabsContent>
+
+                            {/* About Tab */}
+                            <TabsContent value="about">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>About</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {/* Bio Section */}
+                                        <div className="mb-6">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="font-semibold text-foreground">Bio</h3>
+                                                {!profile.bio && (
+                                                    <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+                                                        <FaEdit className="w-3 h-3 mr-1" />
+                                                        Add Bio
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            <p className="text-muted-foreground">
+                                                {profile.bio || "Tell others about yourself. Add a bio to help people get to know you better."}
+                                            </p>
+                                        </div>
+
+                                        {/* Interests Section */}
+                                        <div className="mb-6">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="font-semibold text-foreground">Interests</h3>
+                                                {(!profile.interests || profile.interests.length === 0) && (
+                                                    <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+                                                        <FaEdit className="w-3 h-3 mr-1" />
+                                                        Add Interests
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            {profile.interests && profile.interests.length > 0 ? (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {profile.interests.map((interest, index) => (
+                                                        <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                                                            {INTEREST_LABELS[interest] || interest}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-muted-foreground">Add your interests to help us recommend relevant content and experts.</p>
+                                            )}
+                                        </div>
+
+
+
+                                        {/* Location Section */}
+                                        <div className="mb-6">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <h3 className="font-semibold text-foreground">Location</h3>
+                                                {!profile.location && (
+                                                    <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+                                                        <FaEdit className="w-3 h-3 mr-1" />
+                                                        Add Location
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            <p className="text-muted-foreground">
+                                                {formatLocation(profile.location) || "Add your location to connect with people nearby."}
+                                            </p>
+                                        </div>
+
+                                        {/* Member Since */}
+                                        {profile.createdAt && (
+                                            <div>
+                                                <h3 className="font-semibold text-foreground mb-3">Member Since</h3>
+                                                <p className="text-muted-foreground">
+                                                    {new Date(profile.createdAt).toLocaleDateString(undefined, { 
+                                                        year: 'numeric', 
+                                                        month: 'long', 
+                                                        day: 'numeric' 
+                                                    })}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Profile Completion Notice */}
+                                        {isUser && (
+                                            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="flex-shrink-0">
+                                                        <FaUser className="text-blue-600 w-5 h-5 mt-0.5" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-semibold text-blue-900 mb-1">Complete Your Profile</h4>
+                                                        <p className="text-blue-700 text-sm mb-3">
+                                                            Adding more information to your profile helps you connect better with the community and discover relevant content.
+                                                        </p>
+                                                        <div className="flex gap-2">
+                                                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                                                <FaEdit className="w-3 h-3 mr-1" />
+                                                                Update Profile
+                                                            </Button>
+                                                            <Button size="sm" variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                                                                Learn More
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            {/* Following Tab - Only for Users */}
+                            {isUser && (
+                                <TabsContent value="following">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Experts You Follow</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {profile.following && profile.following.length > 0 ? (
+                                                <div className="space-y-4">
+                                                    {profile.following.map((follow) => (
+                                                        <div key={follow.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                                                            <Link href={`/experts/${follow.following.id}`}>
+                                                                <Avatar className="w-12 h-12 hover:opacity-80 transition-opacity cursor-pointer">
+                                                                    <AvatarImage src={follow.following.avatar} alt={follow.following.name} />
+                                                                    <AvatarFallback>{follow.following.name.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                            </Link>
+                                                            <div className="flex-1">
+                                                                <Link href={`/experts/${follow.following.id}`}>
+                                                                    <h4 className="font-semibold text-foreground hover:text-green-600 transition-colors cursor-pointer">
+                                                                        {follow.following.name}
+                                                                    </h4>
+                                                                </Link>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    {follow.following.role === 'EXPERT' ? 'Expert' : 'Member'}
+                                                                </p>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <FaClock className="text-muted-foreground w-3 h-3" />
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        Following since {new Date(follow.createdAt).toLocaleDateString()}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <Button variant="outline" size="sm">
+                                                                Message
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-8">
+                                                    <div className="mb-4">
+                                                        <FaUser className="text-muted-foreground w-12 h-12 mx-auto" />
+                                                    </div>
+                                                    <h3 className="text-lg font-semibold text-foreground mb-2">Not Following Anyone Yet</h3>
+                                                    <p className="text-muted-foreground mb-4">
+                                                        Start following experts to stay updated with their latest insights, posts, and expertise.
+                                                    </p>
+                                                    <Link href="/allexperts">
+                                                        <Button className="bg-green-600 hover:bg-green-700">
+                                                            <FaUser className="mr-2" />
+                                                            Find Experts to Follow
+                                                        </Button>
+                                                    </Link>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            )}
+
+                            {/* Experiences Tab - Only for Experts */}
+                            {isExpert && (
+                                <TabsContent value="experiences">
+                                    <Card>
+                                        <CardContent className="p-6 text-center">
+                                            <p className="text-muted-foreground">No experience information available.</p>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            )}
+
+                            {/* Certificates Tab - Only for Experts */}
+                            {isExpert && (
+                                <TabsContent value="certificates">
+                                    <Card>
+                                        <CardContent className="p-6 text-center">
+                                            <FaCertificate className="text-muted-foreground w-12 h-12 mx-auto mb-4" />
+                                            <p className="text-muted-foreground">No certificates available.</p>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            )}
+                        </Tabs>
+                    </div>
+
+                    {/* Right Column - User Info & Stats (Sticky) */}
+                    <div className="lg:col-span-3">
+                        <div className="sticky top-20 space-y-4">
+                            {/* Services Card - Only for Experts */}
+                            {isExpert && (
+                                <Card>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-lg">Services</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        {profile.interests && profile.interests.length > 0 ? (
+                                            <div className="space-y-1">
+                                                {profile.interests.map((interest, index) => (
+                                                    <div key={index} className="flex items-center gap-1.5 py-1 px-2 bg-muted/20 rounded">
+                                                        <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></div>
+                                                        <span className="text-sm text-foreground">{INTEREST_LABELS[interest] || interest}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">No services listed.</p>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Contact Information */}
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg">Contact</CardTitle>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <FaMapMarkerAlt className="text-muted-foreground w-4" />
+                                            <span className="text-foreground">{formatLocation(profile.location)}</span>
+                                        </div>
+                                        {isExpert && profile.hourlyRate && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <FaDollarSign className="text-muted-foreground w-4" />
+                                                <span className="text-foreground">${profile.hourlyRate}/hour</span>
+                                            </div>
+                                        )}
+                                        {isExpert && profile.ratings && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <FaStar className="text-yellow-500 w-4" />
+                                                <span className="text-foreground">{profile.ratings} reviews</span>
+                                            </div>
+                                        )}
+                                        {profile.email && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <FaUser className="text-muted-foreground w-4" />
+                                                <span className="text-foreground">{profile.email}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Progress Level - Only for Experts */}
+                            {isExpert && profile.progressShow && profile.progressLevel && (
+                                <Card>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-lg">Progress</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-2">
+                                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                                                {profile.progressLevel}
+                                            </Badge>
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <span>{profile.followersCount || 0} followers</span>
+                                                <span>{profile.followingCount || 0} following</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Community Stats - For Users */}
+                            {isUser && (
+                                <Card>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-lg">Community Stats</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Following</span>
+                                                <span className="font-medium">{profile.followingCount || 0}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Followers</span>
+                                                <span className="font-medium">{profile.followersCount || 0}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Posts</span>
+                                                <span className="font-medium">{profile.postsCount || 0}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Comments</span>
+                                                <span className="font-medium">{profile.commentsCount || 0}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Likes Given</span>
+                                                <span className="font-medium">{profile.likesCount || 0}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-muted-foreground">Member Since</span>
+                                                <span className="font-medium">
+                                                    {profile.createdAt ? 
+                                                        new Date(profile.createdAt).getFullYear() : 
+                                                        'N/A'
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Quick Actions - For Users */}
+                            {isUser && (
+                                <Card>
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-lg">Quick Actions</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <div className="space-y-2">
+                                            <Button variant="outline" size="sm" className="w-full justify-start">
+                                                <FaEdit className="w-3 h-3 mr-2" />
+                                                Create Post
+                                            </Button>
+                                            <Button variant="outline" size="sm" className="w-full justify-start">
+                                                <FaUser className="w-3 h-3 mr-2" />
+                                                Find Experts
+                                            </Button>
+                                            <Button variant="outline" size="sm" className="w-full justify-start">
+                                                <FaComment className="w-3 h-3 mr-2" />
+                                                Start Chat
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <FaTrash className="text-red-600" />
+                            Delete Post
+                        </DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this post? This action cannot be undone and the post will be permanently removed.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={cancelDeletePost}
+                            disabled={isDeletingPost}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmDeletePost}
+                            disabled={isDeletingPost}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {isDeletingPost ? "Deleting..." : "Delete Post"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
-      )}
-
-      {/* Chat Request Modal */}
-      {isChatModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm relative">
-            <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-              onClick={handleCloseChatModal}
-            >
-              <X size={20} />
-            </button>
-
-            {chatModalStep === "initial" && (
-              <div className="flex flex-col items-center text-center space-y-4 py-8">
-                <MessageCircle size={48} className="text-green-600" />
-                <h3 className="text-xl font-semibold">Start a Conversation</h3>
-                <p className="text-gray-600 text-sm">
-                  Send a chat request to {expert.name} to discuss your needs.
-                </p>
-                <button
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-semibold mt-4"
-                  onClick={() => setChatModalStep("input")}
-                >
-                  Send Chat Request
-                </button>
-              </div>
-            )}
-
-            {chatModalStep === "input" && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Send Chat Request</h3>
-                <p className="text-gray-600 text-sm">
-                  Send a message to {expert.name} to start a conversation.
-                </p>
-                <div className="flex items-center space-x-3 mt-4">
-                  {/* Placeholder for expert profile image in modal */}
-                  <div className="w-10 h-10 rounded-full bg-gray-300"></div>
-                  <div>
-                    <p className="font-semibold">{expert.name}</p>
-                    <p className="text-sm text-gray-600">{expert.specialty}</p>
-                  </div>
-                </div>
-                <textarea
-                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 text-sm"
-                  rows={4}
-                  placeholder="Describe what you'd like to discuss..."
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                ></textarea>
-                <p className="text-xs text-gray-500">
-                  Your message will be sent as a request. The expert will be
-                  able to accept or decline.
-                </p>
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm font-medium"
-                    onClick={handleCloseChatModal}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium"
-                    onClick={() => setChatModalStep("captcha")}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {chatModalStep === "captcha" && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Verify you're human</h3>
-                <p className="text-gray-600 text-sm">
-                  Please complete the CAPTCHA verification before sending your
-                  request.
-                </p>
-                <div className="flex items-center justify-center bg-gray-200 h-16 rounded-md text-2xl font-bold tracking-widest mt-4">
-                  {/* CAPTCHA Image/Text Placeholder */}
-                  <span>{captchaText}</span>
-                  <button
-                    className="ml-4 text-gray-600 hover:text-gray-800"
-                    onClick={generateNewCaptcha}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-refresh-cw"
-                    >
-                      <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.75L3 8"></path>
-                      <path d="M3 3v5h5"></path>
-                      <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.75L21 16"></path>
-                      <path d="M21 21v-5h-5"></path>
-                    </svg>
-                  </button>
-                </div>
-                <div>
-                  <label
-                    htmlFor="captchaInput"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Enter the text above
-                  </label>
-                  <input
-                    type="text"
-                    id="captchaInput"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 text-sm"
-                    placeholder="Enter CAPTCHA text"
-                    value={captchaInput}
-                    onChange={(e) => setCaptchaInput(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm font-medium"
-                    onClick={handleCloseChatModal}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium"
-                    onClick={handleSendChat}
-                  >
-                    Verify
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {chatModalStep === "sending" && (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-12 w-12 mb-4"></div>
-                <p className="text-gray-700">Sending request...</p>
-                {/* Basic CSS for loader, usually in a global CSS file */}
-                <style jsx>{`
-                  .loader {
-                    animation: spinner 1.5s linear infinite;
-                  }
-                  @keyframes spinner {
-                    0% {
-                      transform: rotate(0deg);
-                    }
-                    100% {
-                      transform: rotate(360deg);
-                    }
-                  }
-                `}</style>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 }

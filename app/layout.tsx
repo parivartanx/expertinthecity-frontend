@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ExpertsProvider } from "@/lib/contexts/experts-context";
 import { UsersProvider } from "@/lib/contexts/users-context";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
         <ExpertsProvider>
           <UsersProvider>
             {children}
+            <Toaster position="top-right" />
           </UsersProvider>
         </ExpertsProvider>
       </body>

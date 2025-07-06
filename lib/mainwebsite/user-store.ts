@@ -88,12 +88,63 @@ interface Education {
   updatedAt: string;
 }
 
-interface ExpertDetails {
+// Updated UserProfile interface to match backend response
+interface UserProfile {
+  // Basic user fields
   id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  phone?: string;
+  location?: string | { city?: string; state?: string; country?: string; postalCode?: string };
+  bio?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  isVerified: boolean;
+  isActive: boolean;
+  role: "user" | "expert" | "admin";
+  createdAt: string;
+  updatedAt: string;
+  
+  // User preferences and social links
+  preferences?: {
+    notifications: boolean;
+    emailUpdates: boolean;
+    language: string;
+    timezone: string;
+  };
+  socialLinks?: {
+    linkedin?: string;
+    twitter?: string;
+    website?: string;
+  };
+
+  // Posts, followers, following
+  posts?: Post[];
+  followers?: Follower[];
+  following?: Following[];
+  
+  // Counts
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  commentsCount?: number;
+  likesCount?: number;
+  
+  // Backend _count object
+  _count?: {
+    posts: number;
+    followers: number;
+    following: number;
+    comments: number;
+    likes: number;
+  };
+
+  // Expert-specific fields (only for experts)
   headline?: string;
   summary?: string;
   expertise?: string[];
-  experience?: string;
+  experience?: number;
   hourlyRate?: number;
   about?: string;
   availability?: string;
@@ -103,8 +154,12 @@ interface ExpertDetails {
   progressLevel?: string;
   progressShow?: boolean;
   ratings?: number;
-  createdAt: string;
-  updatedAt: string;
+  
+  // User interests and tags
+  interests?: string[];
+  tags?: string[];
+  
+  // Expert details arrays
   certifications?: Certification[];
   experiences?: Experience[];
   awards?: Award[];
@@ -137,40 +192,6 @@ export interface User {
     twitter?: string;
     website?: string;
   };
-}
-
-interface UserProfile {
-  id: string;
-  userId: string;
-  name?: string;
-  email?: string;
-  bio?: string;
-  interests?: string[];
-  tags?: string[];
-  headline?: string;
-  summary?: string;
-  experience?: number;
-  education?: string[];
-  certifications?: string[];
-  skills?: string[];
-  languages?: string[];
-  hourlyRate?: number;
-  availability?: string;
-  portfolio?: string[];
-  testimonials?: Array<{
-    id: string;
-    text: string;
-    author: string;
-    rating: number;
-    date: string;
-  }>;
-  address?: {
-    pincode?: string;
-    address?: string;
-    country?: string;
-  };
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface UserState {
@@ -234,7 +255,7 @@ export const useUserStore = create<UserState>()(
           const response = await axiosInstance.get("/users/profile");
           
           if (response.data.success) {
-            const user = response.data.data;
+            const user = response.data.data.user;
             set({
               user,
               isAuthenticated: true,
@@ -504,26 +525,40 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      // Profile Actions
+      // Profile Actions - Updated to match backend structure
       fetchUserProfile: async (userId?: string) => {
         try {
           set({ isLoading: true, error: null });
           
-          const targetUserId = userId || get().user?.id;
-          if (!targetUserId) {
-            throw new Error("No user ID provided");
-          }
+          // Use the profile endpoint that returns the flattened user object
+          const response = await axiosInstance.get("/users/profile");
           
-          const response = await axiosInstance.get(`/users/${targetUserId}/profile`);
+          console.log("Raw API response:", response.data);
           
-          if (response.data.success) {
-            const profile = response.data.data;
+          // Check for both success and status fields to handle different response formats
+          if (response.data.success || response.data.status === "success") {
+            const userData = response.data.data.user; // Backend returns { user: transformedUser }
+            console.log("Backend response userData:", userData);
+            
+            // The backend now returns counts directly on the user object, no need to transform
+            const profile = {
+              ...userData,
+              // Ensure counts are numbers, fallback to 0 if undefined
+              followersCount: userData.followersCount || 0,
+              followingCount: userData.followingCount || 0,
+              postsCount: userData.postsCount || 0,
+              commentsCount: userData.commentsCount || 0,
+              likesCount: userData.likesCount || 0,
+            };
+            
+            console.log("Transformed profile:", profile);
+            
             set({
               profile,
               isLoading: false,
             });
           } else {
-            throw new Error(response.data.error || "Failed to fetch profile");
+            throw new Error(response.data.error || response.data.message || "Failed to fetch profile");
           }
         } catch (error: any) {
           console.error("Error fetching profile:", error);
@@ -536,6 +571,8 @@ export const useUserStore = create<UserState>()(
             errorMessage = "Profile not found";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
@@ -549,16 +586,16 @@ export const useUserStore = create<UserState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const response = await axiosInstance.put("/users/profile", profileData);
+          const response = await axiosInstance.patch("/users/profile", profileData);
           
-          if (response.data.success) {
-            const updatedProfile = response.data.data;
+          if (response.data.success || response.data.status === "success") {
+            const updatedProfile = response.data.data.user;
             set({
               profile: updatedProfile,
               isLoading: false,
             });
           } else {
-            throw new Error(response.data.error || "Failed to update profile");
+            throw new Error(response.data.error || response.data.message || "Failed to update profile");
           }
         } catch (error: any) {
           console.error("Error updating profile:", error);
@@ -568,9 +605,11 @@ export const useUserStore = create<UserState>()(
           if (error.response?.status === 401) {
             errorMessage = "Unauthorized. Please login again.";
           } else if (error.response?.status === 400) {
-            errorMessage = error.response.data.error || "Invalid profile data";
+            errorMessage = error.response.data.error || error.response.data.message || "Invalid profile data";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
@@ -586,14 +625,14 @@ export const useUserStore = create<UserState>()(
           
           const response = await axiosInstance.post("/users/profile", profileData);
           
-          if (response.data.success) {
-            const newProfile = response.data.data;
+          if (response.data.success || response.data.status === "success") {
+            const newProfile = response.data.data.user;
             set({
               profile: newProfile,
               isLoading: false,
             });
           } else {
-            throw new Error(response.data.error || "Failed to create profile");
+            throw new Error(response.data.error || response.data.message || "Failed to create profile");
           }
         } catch (error: any) {
           console.error("Error creating profile:", error);
@@ -603,9 +642,11 @@ export const useUserStore = create<UserState>()(
           if (error.response?.status === 401) {
             errorMessage = "Unauthorized. Please login again.";
           } else if (error.response?.status === 400) {
-            errorMessage = error.response.data.error || "Invalid profile data";
+            errorMessage = error.response.data.error || error.response.data.message || "Invalid profile data";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
@@ -621,13 +662,13 @@ export const useUserStore = create<UserState>()(
           
           const response = await axiosInstance.delete("/users/profile");
           
-          if (response.data.success) {
+          if (response.data.success || response.data.status === "success") {
             set({
               profile: null,
               isLoading: false,
             });
           } else {
-            throw new Error(response.data.error || "Failed to delete profile");
+            throw new Error(response.data.error || response.data.message || "Failed to delete profile");
           }
         } catch (error: any) {
           console.error("Error deleting profile:", error);
@@ -638,6 +679,8 @@ export const useUserStore = create<UserState>()(
             errorMessage = "Unauthorized. Please login again.";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
@@ -657,7 +700,7 @@ export const useUserStore = create<UserState>()(
             password,
           });
           
-          if (response.data.success) {
+          if (response.data.success || response.data.status === "success") {
             const { user, token } = response.data.data;
             
             // Set the token in axios headers
@@ -667,26 +710,30 @@ export const useUserStore = create<UserState>()(
               user,
               isAuthenticated: true,
               isLoading: false,
+              isLoaded: true,
             });
           } else {
-            throw new Error(response.data.error || "Login failed");
+            throw new Error(response.data.error || response.data.message || "Login failed");
           }
         } catch (error: any) {
-          console.error("Error logging in:", error);
+          console.error("Login error:", error);
           
           let errorMessage = "Login failed";
           
           if (error.response?.status === 401) {
             errorMessage = "Invalid email or password";
           } else if (error.response?.status === 400) {
-            errorMessage = error.response.data.error || "Invalid login data";
+            errorMessage = error.response.data.error || error.response.data.message || "Invalid login data";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
             error: errorMessage,
             isLoading: false,
+            isLoaded: true,
           });
         }
       },
@@ -697,7 +744,7 @@ export const useUserStore = create<UserState>()(
           
           const response = await axiosInstance.post("/auth/register", userData);
           
-          if (response.data.success) {
+          if (response.data.success || response.data.status === "success") {
             const { user, token } = response.data.data;
             
             // Set the token in axios headers
@@ -707,26 +754,30 @@ export const useUserStore = create<UserState>()(
               user,
               isAuthenticated: true,
               isLoading: false,
+              isLoaded: true,
             });
           } else {
-            throw new Error(response.data.error || "Registration failed");
+            throw new Error(response.data.error || response.data.message || "Registration failed");
           }
         } catch (error: any) {
-          console.error("Error registering:", error);
+          console.error("Registration error:", error);
           
           let errorMessage = "Registration failed";
           
           if (error.response?.status === 400) {
-            errorMessage = error.response.data.error || "Invalid registration data";
+            errorMessage = error.response.data.error || error.response.data.message || "Invalid registration data";
           } else if (error.response?.status === 409) {
             errorMessage = "Email already exists";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
             error: errorMessage,
             isLoading: false,
+            isLoaded: true,
           });
         }
       },
@@ -736,27 +787,19 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: true, error: null });
           
           await axiosInstance.post("/auth/logout");
-          
+        } catch (error: any) {
+          console.error("Logout error:", error);
+        } finally {
           // Clear the token from axios headers
           delete axiosInstance.defaults.headers.common['Authorization'];
           
           set({
             user: null,
             profile: null,
+            allUsers: [],
             isAuthenticated: false,
             isLoading: false,
-          });
-        } catch (error: any) {
-          console.error("Error logging out:", error);
-          
-          // Even if logout fails, clear local state
-          delete axiosInstance.defaults.headers.common['Authorization'];
-          
-          set({
-            user: null,
-            profile: null,
-            isAuthenticated: false,
-            isLoading: false,
+            isLoaded: true,
           });
         }
       },
@@ -767,13 +810,13 @@ export const useUserStore = create<UserState>()(
           
           const response = await axiosInstance.post("/auth/forgot-password", { email });
           
-          if (response.data.success) {
+          if (response.data.success || response.data.status === "success") {
             set({ isLoading: false });
           } else {
-            throw new Error(response.data.error || "Failed to send reset email");
+            throw new Error(response.data.error || response.data.message || "Failed to send reset email");
           }
         } catch (error: any) {
-          console.error("Error sending forgot password email:", error);
+          console.error("Forgot password error:", error);
           
           let errorMessage = "Failed to send reset email";
           
@@ -781,6 +824,8 @@ export const useUserStore = create<UserState>()(
             errorMessage = "Email not found";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
@@ -799,22 +844,22 @@ export const useUserStore = create<UserState>()(
             newPassword,
           });
           
-          if (response.data.success) {
+          if (response.data.success || response.data.status === "success") {
             set({ isLoading: false });
           } else {
-            throw new Error(response.data.error || "Failed to reset password");
+            throw new Error(response.data.error || response.data.message || "Failed to reset password");
           }
         } catch (error: any) {
-          console.error("Error resetting password:", error);
+          console.error("Reset password error:", error);
           
           let errorMessage = "Failed to reset password";
           
           if (error.response?.status === 400) {
-            errorMessage = error.response.data.error || "Invalid reset data";
-          } else if (error.response?.status === 401) {
-            errorMessage = "Invalid or expired reset token";
+            errorMessage = error.response.data.error || error.response.data.message || "Invalid reset data";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
           
           set({
@@ -831,23 +876,17 @@ export const useUserStore = create<UserState>()(
           const response = await axiosInstance.post("/auth/verify-email", { token });
           
           if (response.data.success) {
-            const updatedUser = response.data.data;
-            set({
-              user: updatedUser,
-              isLoading: false,
-            });
+            set({ isLoading: false });
           } else {
             throw new Error(response.data.error || "Failed to verify email");
           }
         } catch (error: any) {
-          console.error("Error verifying email:", error);
+          console.error("Email verification error:", error);
           
           let errorMessage = "Failed to verify email";
           
           if (error.response?.status === 400) {
-            errorMessage = error.response.data.error || "Invalid verification data";
-          } else if (error.response?.status === 401) {
-            errorMessage = "Invalid or expired verification token";
+            errorMessage = error.response.data.error || "Invalid verification token";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
           }
@@ -861,22 +900,11 @@ export const useUserStore = create<UserState>()(
 
       // Utility Actions
       clearUser: () => {
-        set({
-          user: null,
-          profile: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-          isLoaded: false,
-        });
+        set({ user: null });
       },
 
       clearProfile: () => {
-        set({
-          profile: null,
-          isLoading: false,
-          error: null,
-        });
+        set({ profile: null });
       },
 
       clearAllUsers: () => {
@@ -888,7 +916,7 @@ export const useUserStore = create<UserState>()(
       },
 
       setUser: (user: User | null) => {
-        set({ user, isAuthenticated: !!user });
+        set({ user });
       },
 
       setProfile: (profile: UserProfile | null) => {
@@ -896,10 +924,9 @@ export const useUserStore = create<UserState>()(
       },
     }),
     {
-      name: "user-storage",
+      name: "user-store",
       partialize: (state) => ({
         user: state.user,
-        profile: state.profile,
         isAuthenticated: state.isAuthenticated,
         isLoaded: state.isLoaded,
       }),
