@@ -338,16 +338,16 @@ export default function ExpertProfile() {
 
     return (
         <div className="min-h-screen bg-background">
-                {/* Back Button */}
+            {/* Back Button */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
                 <div className="max-w-7xl mx-auto px-4 py-4">
-                <Button
-                    variant="ghost"
-                    onClick={() => router.back()}
+                    <Button
+                        variant="ghost"
+                        onClick={() => router.back()}
                         className="text-muted-foreground hover:text-foreground"
-                >
-                    ← Back to Experts
-                </Button>
+                    >
+                        ← Back to Experts
+                    </Button>
                 </div>
             </div>
 
@@ -358,7 +358,7 @@ export default function ExpertProfile() {
                     <div className="lg:col-span-3">
                         <div className="sticky top-20">
                             {/* Profile Card */}
-                        <Card>
+                            <Card>
                                 <CardContent className="p-6 relative">
                                     {/* Progress Level Icon - Top Left */}
                                     {expert.progressLevel && (
@@ -375,48 +375,48 @@ export default function ExpertProfile() {
                                             </TooltipProvider>
                                         </div>
                                     )}
-                                <div className="text-center">
+                                    <div className="text-center">
                                         <Avatar className="w-24 h-24 mx-auto mb-4">
                                             <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
                                             <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                    <h1 className="text-2xl font-bold text-foreground mb-2">
-                                        {expert.name}
-                                        {expert.verified && (
-                                            <FaCheckCircle className="inline ml-2 text-green-500" />
-                                        )}
-                                    </h1>
+                                        <h1 className="text-2xl font-bold text-foreground mb-2">
+                                            {expert.name}
+                                            {expert.verified && (
+                                                <FaCheckCircle className="inline ml-2 text-green-500" />
+                                            )}
+                                        </h1>
                                         {expert.headline && (
                                             <p className="text-sm text-muted-foreground mb-3">{expert.headline}</p>
-                                    )}
+                                        )}
 
-                                    <div className="flex items-center justify-center gap-1 text-yellow-500 mb-3">
-                                        <FaStar />
-                                        <span className="font-medium text-foreground">
+                                        <div className="flex items-center justify-center gap-1 text-yellow-500 mb-3">
+                                            <FaStar />
+                                            <span className="font-medium text-foreground">
                                                 {expert.ratings} reviews
-                                        </span>
-                                    </div>
-
-                                    <div className="space-y-2 mb-6">
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <FaMapMarkerAlt />
-                                                <span>{formatLocation(expert.location)}</span>
+                                            </span>
                                         </div>
-                                        {expert.hourlyRate && (
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <FaDollarSign />
-                                                <span>${expert.hourlyRate}/hour</span>
-                                            </div>
-                                        )}
-                                        {expert.experience && (
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <FaClock />
-                                                <span>{expert.experience} years experience</span>
-                                            </div>
-                                        )}
-                                    </div>
 
-                                                                            <div className="space-y-3">
+                                        <div className="space-y-2 mb-6">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <FaMapMarkerAlt />
+                                                <span>{formatLocation(expert.location)}</span>
+                                            </div>
+                                            {expert.hourlyRate && (
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <FaDollarSign />
+                                                    <span>${expert.hourlyRate}/hour</span>
+                                                </div>
+                                            )}
+                                            {expert.experience && (
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <FaClock />
+                                                    <span>{expert.experience} years experience</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-3">
                                             {!user ? (
                                                 // When not logged in - show login prompt
                                                 <div className="space-y-2">
@@ -472,9 +472,9 @@ export default function ExpertProfile() {
                                                 </div>
                                             )}
                                         </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
 
@@ -556,7 +556,7 @@ export default function ExpertProfile() {
                                         </CardContent>
                                     </Card>
                                 ))}
-                                
+
                                 {/* Show More Button */}
                                 {postsToShow < dummyPosts.length && (
                                     <div className="text-center pt-4">
@@ -573,49 +573,49 @@ export default function ExpertProfile() {
 
                             {/* About Tab */}
                             <TabsContent value="about">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>About</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground mb-6">
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>About</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-muted-foreground mb-6">
                                             {expert.about || expert.bio || expert.summary || "No description available."}
-                                </p>
+                                        </p>
 
-                                {expert.expertise && expert.expertise.length > 0 && (
-                                    <div className="mb-6">
-                                        <h3 className="font-semibold text-foreground mb-3">Expertise</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {expert.expertise.map((skill, index) => (
-                                                <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
-                                                    {skill}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                        {expert.expertise && expert.expertise.length > 0 && (
+                                            <div className="mb-6">
+                                                <h3 className="font-semibold text-foreground mb-3">Expertise</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {expert.expertise.map((skill, index) => (
+                                                        <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                                                            {skill}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
-                                {expert.languages && expert.languages.length > 0 && (
-                                    <div className="mb-6">
-                                        <h3 className="font-semibold text-foreground mb-3">Languages</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {expert.languages.map((language, index) => (
-                                                <Badge key={index} variant="outline">
-                                                    {language}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                        {expert.languages && expert.languages.length > 0 && (
+                                            <div className="mb-6">
+                                                <h3 className="font-semibold text-foreground mb-3">Languages</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {expert.languages.map((language, index) => (
+                                                        <Badge key={index} variant="outline">
+                                                            {language}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
-                                {expert.availability && (
-                                    <div>
-                                        <h3 className="font-semibold text-foreground mb-3">Availability</h3>
-                                        <p className="text-muted-foreground">{expert.availability}</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
+                                        {expert.availability && (
+                                            <div>
+                                                <h3 className="font-semibold text-foreground mb-3">Availability</h3>
+                                                <p className="text-muted-foreground">{expert.availability}</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
                             </TabsContent>
 
                             {/* Experiences Tab */}
@@ -701,16 +701,16 @@ export default function ExpertProfile() {
                                 )}
                             </TabsContent>
                         </Tabs>
-                </div>
+                    </div>
 
                     {/* Right Column - Services & Contact (Sticky) */}
                     <div className="lg:col-span-3">
                         <div className="sticky top-20 space-y-4">
                             {/* Services Card */}
-                    <Card>
+                            <Card>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-lg">Services</CardTitle>
-                        </CardHeader>
+                                </CardHeader>
                                 <CardContent className="pt-0">
                                     {expert.interests && expert.interests.length > 0 ? (
                                         <div className="space-y-1">
@@ -718,27 +718,27 @@ export default function ExpertProfile() {
                                                 <div key={index} className="flex items-center gap-1.5 py-1 px-2 bg-muted/20 rounded">
                                                     <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></div>
                                                     <span className="text-sm text-foreground">{interest}</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            ) : (
+                                    ) : (
                                         <p className="text-sm text-muted-foreground">No services listed.</p>
-                            )}
-                        </CardContent>
-                    </Card>
+                                    )}
+                                </CardContent>
+                            </Card>
 
                             {/* Contact Information */}
-                    <Card>
+                            <Card>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-lg">Contact</CardTitle>
-                        </CardHeader>
+                                </CardHeader>
                                 <CardContent className="pt-0">
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2 text-sm">
                                             <FaMapMarkerAlt className="text-muted-foreground w-4" />
                                             <span className="text-foreground">{formatLocation(expert.location)}</span>
-                                </div>
-                                {expert.hourlyRate && (
+                                        </div>
+                                        {expert.hourlyRate && (
                                             <div className="flex items-center gap-2 text-sm">
                                                 <FaDollarSign className="text-muted-foreground w-4" />
                                                 <span className="text-foreground">${expert.hourlyRate}/hour</span>
@@ -774,10 +774,10 @@ export default function ExpertProfile() {
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                 <span>{expert.followersCount} followers</span>
                                                 <span>{expert.followingCount} following</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             )}
                         </div>
                     </div>
