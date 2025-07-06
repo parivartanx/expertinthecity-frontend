@@ -16,6 +16,7 @@ import {
   X,
   LogOut,
   Bell,
+  FolderOpen,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { AdminUser } from "@/lib/mainwebsite/admin-user-store";
@@ -49,14 +50,14 @@ export function Sidebar({ user }: SidebarProps) {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Clear authentication cookies
       document.cookie = "isAuthenticated=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       document.cookie = "userEmail=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-      
+
       toast.success("Logged out successfully");
       router.push("/admin/login");
     } catch (error) {
@@ -87,6 +88,11 @@ export function Sidebar({ user }: SidebarProps) {
       title: "Experts",
       href: "/admin/experts",
       icon: <Award className="h-5 w-5" />,
+    },
+    {
+      title: "Categories",
+      href: "/admin/categories",
+      icon: <FolderOpen className="h-5 w-5" />,
     },
     {
       title: "Content",

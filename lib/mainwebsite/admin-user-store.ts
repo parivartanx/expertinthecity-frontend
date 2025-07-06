@@ -14,6 +14,11 @@ export interface AdminUser {
   stats?: any;
   createdAt: string;
   updatedAt: string;
+  status?: string;
+  verified?: boolean;
+  location?: string;
+  profileVisitors?: number;
+  preferences?: string[];
 }
 
 export interface AdminUserPagination {

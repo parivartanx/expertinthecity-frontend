@@ -38,6 +38,17 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   searchColumn?: string;
   searchPlaceholder?: string;
+  // Server-side pagination props
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  onSearch?: (query: string) => void;
+  isLoading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -45,6 +56,11 @@ export function DataTable<TData, TValue>({
   data,
   searchColumn,
   searchPlaceholder = "Search...",
+  pagination,
+  onPageChange,
+  onPageSizeChange,
+  onSearch,
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -59,7 +75,7 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: pagination ? undefined : getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     state: {
@@ -68,6 +84,8 @@ export function DataTable<TData, TValue>({
       columnVisibility,
       rowSelection,
     },
+    manualPagination: !!pagination,
+    pageCount: pagination?.pages || 0,
   });
 
   return (
@@ -78,9 +96,14 @@ export function DataTable<TData, TValue>({
           <Input
             placeholder={searchPlaceholder}
             value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchColumn)?.setFilterValue(event.target.value)
-            }
+            onChange={(event) => {
+              const value = event.target.value;
+              if (onSearch) {
+                onSearch(value);
+              } else {
+                table.getColumn(searchColumn)?.setFilterValue(value);
+              }
+            }}
             className="max-w-sm"
           />
         </div>
@@ -97,9 +120,9 @@ export function DataTable<TData, TValue>({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -134,16 +157,24 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <p className="text-sm text-muted-foreground">
-            Showing {table.getRowModel().rows.length} of {data.length} items
+            {pagination ? (
+              `Showing ${((pagination.page - 1) * pagination.limit) + 1} to ${Math.min(pagination.page * pagination.limit, pagination.total)} of ${pagination.total} items`
+            ) : (
+              `Showing ${table.getRowModel().rows.length} of ${data.length} items`
+            )}
           </p>
           <Select
-            value={`${table.getState().pagination.pageSize}`}
+            value={pagination ? `${pagination.limit}` : `${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
-              table.setPageSize(Number(value));
+              if (pagination && onPageSizeChange) {
+                onPageSizeChange(Number(value));
+              } else {
+                table.setPageSize(Number(value));
+              }
             }}
           >
             <SelectTrigger className="h-8 w-[80px]">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
+              <SelectValue placeholder={pagination ? pagination.limit : table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
               {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -160,16 +191,28 @@ export function DataTable<TData, TValue>({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => {
+              if (pagination && onPageChange) {
+                onPageChange(pagination.page - 1);
+              } else {
+                table.previousPage();
+              }
+            }}
+            disabled={pagination ? pagination.page <= 1 : !table.getCanPreviousPage()}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => {
+              if (pagination && onPageChange) {
+                onPageChange(pagination.page + 1);
+              } else {
+                table.nextPage();
+              }
+            }}
+            disabled={pagination ? pagination.page >= pagination.pages : !table.getCanNextPage()}
           >
             Next
           </Button>
