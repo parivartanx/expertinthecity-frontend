@@ -170,7 +170,9 @@ const ExpertRegisterForm = () => {
         email: user.email || profile?.email || "",
         bio: profile?.bio || "",
         location:
-          (profile?.address && typeof profile.address === 'object' && profile.address !== null && (profile.address as { address?: string }).address) ||
+          (typeof profile?.location === 'string' ? profile.location : 
+           (profile?.location && typeof profile.location === 'object' && profile.location !== null && 
+            (profile.location as { city?: string; state?: string; country?: string; postalCode?: string }).city)) ||
           "",
         profilePhoto: null,
       }));
