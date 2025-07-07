@@ -15,6 +15,7 @@ import { useChatStore } from "@/lib/mainwebsite/chat-store";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 import { useFollowStore } from "@/lib/mainwebsite/follow-store";
 import { toast } from "sonner";
+import { usePostsStore } from "@/lib/mainwebsite/posts-store";
 
 interface Experience {
     id: string;
@@ -79,54 +80,6 @@ interface Expert {
     followingCount: number;
 }
 
-// Dummy posts data
-const dummyPosts = [
-    {
-        id: 1,
-        content: "Just completed a beautiful custom wardrobe project in Jaipur! The client was thrilled with the modular design and quality finish. #Woodwork #CustomFurniture #Jaipur",
-        image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&h=300&fit=crop",
-        likes: 24,
-        comments: 8,
-        shares: 3,
-        timestamp: "2 hours ago"
-    },
-    {
-        id: 2,
-        content: "Working on a challenging kitchen cabinet restoration project. The old cabinets had water damage, but with proper techniques, they're looking brand new! #Restoration #KitchenCabinets",
-        image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&h=300&fit=crop",
-        likes: 18,
-        comments: 5,
-        shares: 2,
-        timestamp: "1 day ago"
-    },
-    {
-        id: 3,
-        content: "Tip of the day: Always use high-quality drawer channels for smooth operation. It makes a huge difference in customer satisfaction! #DIY #CarpentryTips",
-        likes: 31,
-        comments: 12,
-        shares: 7,
-        timestamp: "3 days ago"
-    },
-    {
-        id: 4,
-        content: "Finished installing a complete modular bedroom set. The space-saving design and modern aesthetics really transformed the room! #ModularFurniture #BedroomDesign",
-        image: "https://images.unsplash.com/photo-1505693314120-0d443867891c?w=500&h=300&fit=crop",
-        likes: 42,
-        comments: 15,
-        shares: 9,
-        timestamp: "1 week ago"
-    },
-    {
-        id: 5,
-        content: "Polishing techniques make all the difference! Here's a before and after of a dining table restoration. The grain really pops now! #WoodPolishing #Restoration",
-        image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&h=300&fit=crop",
-        likes: 56,
-        comments: 23,
-        shares: 14,
-        timestamp: "2 weeks ago"
-    }
-];
-
 export default function ExpertProfile() {
     const params = useParams();
     const router = useRouter();
@@ -135,14 +88,15 @@ export default function ExpertProfile() {
     const { getExpertById, sendMessageToExpert, isLoading, error } = useAllExpertsStore();
     const { createChat, chats } = useChatStore();
     const { user } = useAuthStore();
-    const { 
-        followExpert, 
-        unfollowExpert, 
-        checkFollowStatus, 
-        followStatuses, 
-        isLoading: followLoading, 
-        error: followError 
+    const {
+        followExpert,
+        unfollowExpert,
+        checkFollowStatus,
+        followStatuses,
+        isLoading: followLoading,
+        error: followError
     } = useFollowStore();
+    const { posts, listPosts, isLoading: postsLoading, error: postsError } = usePostsStore();
 
     const [expert, setExpert] = useState<Expert | null>(null);
     const [messageLoading, setMessageLoading] = useState(false);
@@ -157,7 +111,7 @@ export default function ExpertProfile() {
                 if (expertData) {
                     console.log('Setting expert with avatar:', expertData.image);
                     setExpert(expertData as any);
-                    
+
                     // Check follow status if user is logged in
                     if (user) {
                         await checkFollowStatus((expertData as any).userId);
@@ -168,6 +122,13 @@ export default function ExpertProfile() {
 
         fetchExpert();
     }, [expertId, getExpertById, user, checkFollowStatus]);
+
+    // Fetch posts for this expert when expert.userId is available
+    useEffect(() => {
+        if (expert?.userId) {
+            listPosts({ userId: expert.userId });
+        }
+    }, [expert?.userId, listPosts]);
 
     const handleMessage = async () => {
         if (!user) {
@@ -235,7 +196,7 @@ export default function ExpertProfile() {
 
         try {
             const isCurrentlyFollowing = followStatuses[expert.userId];
-            
+
             if (isCurrentlyFollowing) {
                 await unfollowExpert(expert.userId);
                 toast.success("Unfollowed successfully");
@@ -531,63 +492,67 @@ export default function ExpertProfile() {
 
                             {/* Posts Tab */}
                             <TabsContent value="posts" className="space-y-6">
-                                {dummyPosts.slice(0, postsToShow).map((post) => (
-                                    <Card key={post.id} className="overflow-hidden">
-                                        <CardContent className="p-0">
-                                            {/* Post Header */}
-                                            <div className="p-4 border-b">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar className="w-10 h-10">
-                                                        <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
-                                                        <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="flex-1">
-                                                        <h3 className="font-semibold text-foreground">{expert.name}</h3>
-                                                        <p className="text-sm text-muted-foreground">{post.timestamp}</p>
+                                {postsLoading ? (
+                                    <div className="text-center text-muted-foreground">Loading posts...</div>
+                                ) : postsError ? (
+                                    <div className="text-center text-red-500">{postsError}</div>
+                                ) : posts.length === 0 ? (
+                                    <div className="text-center text-muted-foreground">No posts available.</div>
+                                ) : (
+                                    posts.slice(0, postsToShow).map((post) => (
+                                        <Card key={post.id} className="overflow-hidden">
+                                            <CardContent className="p-0">
+                                                {/* Post Header */}
+                                                <div className="p-4 border-b">
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar className="w-10 h-10">
+                                                            <AvatarImage src={post.author.avatar || getAvatarUrl(post.author.avatar)} alt={post.author.name} />
+                                                            <AvatarFallback>{post.author.name.charAt(0)}</AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex-1">
+                                                            <h3 className="font-semibold text-foreground">{post.author.name}</h3>
+                                                            <p className="text-sm text-muted-foreground">{new Date(post.createdAt).toLocaleString()}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            {/* Post Content */}
-                                            <div className="p-4">
-                                                <p className="text-foreground mb-4">{post.content}</p>
-                                                {post.image && (
-                                                    <img
-                                                        src={post.image}
-                                                        alt="Post"
-                                                        className="w-full h-48 object-cover rounded-lg mb-4"
-                                                    />
-                                                )}
-                                            </div>
+                                                {/* Post Content */}
+                                                <div className="p-4">
+                                                    <p className="text-foreground mb-4">{post.content}</p>
+                                                    {post.image && (
+                                                        <img
+                                                            src={post.image}
+                                                            alt="Post"
+                                                            className="w-full h-48 object-cover rounded-lg mb-4"
+                                                        />
+                                                    )}
+                                                </div>
 
-                                            {/* Post Actions */}
-                                            <div className="px-4 pb-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-6">
-                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
-                                                            <FaHeart />
-                                                            <span className="text-sm">{post.likes}</span>
-                                                        </button>
-                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
-                                                            <FaComment />
-                                                            <span className="text-sm">{post.comments}</span>
-                                                        </button>
-                                                        <button className="flex items-center gap-2 text-muted-foreground hover:text-green-500 transition-colors">
-                                                            <FaShare />
-                                                            <span className="text-sm">{post.shares}</span>
+                                                {/* Post Actions */}
+                                                <div className="px-4 pb-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-6">
+                                                            <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
+                                                                <FaHeart />
+                                                                <span className="text-sm">{post.analytics?.likes ?? 0}</span>
+                                                            </button>
+                                                            <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
+                                                                <FaComment />
+                                                                <span className="text-sm">{post.analytics?.comments ?? 0}</span>
+                                                            </button>
+                                                            {/* Optionally add share/bookmark */}
+                                                        </div>
+                                                        <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
+                                                            <FaBookmark />
                                                         </button>
                                                     </div>
-                                                    <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
-                                                        <FaBookmark />
-                                                    </button>
                                                 </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                )}
                                 {/* Show More Button */}
-                                {postsToShow < dummyPosts.length && (
+                                {postsToShow < posts.length && (
                                     <div className="text-center pt-4">
                                         <Button
                                             onClick={handleShowMorePosts}
