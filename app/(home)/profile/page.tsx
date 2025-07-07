@@ -48,39 +48,6 @@ const INTEREST_LABELS: Record<string, string> = {
     OTHER: "Other",
 };
 
-
-
-// Mock data for followed experts
-const followedExperts = [
-    {
-        id: "expert-1",
-        name: "Dr. Sarah Johnson",
-        specialty: "Piano Instructor & Music Theory",
-        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-        rating: 4.9,
-        reviews: 124,
-        location: "New York, NY"
-    },
-    {
-        id: "expert-2",
-        name: "Michael Chen",
-        specialty: "Web Development & React",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-        rating: 4.8,
-        reviews: 89,
-        location: "San Francisco, CA"
-    },
-    {
-        id: "expert-3",
-        name: "Dr. Emily Rodriguez",
-        specialty: "Data Science & Machine Learning",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-        rating: 4.7,
-        reviews: 156,
-        location: "Austin, TX"
-    }
-];
-
 export default function ProfilePage() {
     const router = useRouter();
     const { user } = useAuthStore();
@@ -884,8 +851,17 @@ export default function ProfilePage() {
                                                 }
                                             </p>
                                             <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push('/allexperts')}>
-                                                <FaUser className="mr-2" />
-                                                Find Experts to Follow
+                                                {isExpert ? (
+                                                    <>
+                                                        <FaEdit className="mr-2" />
+                                                        Create Your First Post
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaUser className="mr-2" />
+                                                        Find Experts to Follow
+                                                    </>
+                                                )}
                                             </Button>
                                         </CardContent>
                                     </Card>
@@ -938,8 +914,6 @@ export default function ProfilePage() {
                                                 <p className="text-muted-foreground">Add your interests to help us recommend relevant content and experts.</p>
                                             )}
                                         </div>
-
-
 
                                         {/* Location Section */}
                                         <div className="mb-6">
