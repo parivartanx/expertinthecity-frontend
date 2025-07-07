@@ -17,6 +17,7 @@ import { useFollowStore } from "@/lib/mainwebsite/follow-store";
 import { toast } from "sonner";
 import { usePostsStore } from "@/lib/mainwebsite/posts-store";
 import { useLikeStore } from "@/lib/mainwebsite/like-store";
+import { useCommentStore } from "@/lib/mainwebsite/comment-store";
 
 interface Experience {
     id: string;
@@ -106,11 +107,28 @@ export default function ExpertProfile() {
         error: likeError,
         getPostLikes,
     } = useLikeStore();
+    const {
+        comments,
+        replies,
+        isLoading: commentLoading,
+        error: commentError,
+        success: commentSuccess,
+        getComments,
+        createComment,
+        getReplies,
+        createReply,
+        clearError: clearCommentError,
+        clearSuccess: clearCommentSuccess,
+    } = useCommentStore();
 
     const [expert, setExpert] = useState<Expert | null>(null);
     const [messageLoading, setMessageLoading] = useState(false);
     const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [postsToShow, setPostsToShow] = useState(3);
+    const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
+    const [replyInputs, setReplyInputs] = useState<{ [commentId: string]: string }>({});
+    const [showReplies, setShowReplies] = useState<{ [commentId: string]: boolean }>({});
+    const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchExpert = async () => {
@@ -144,21 +162,34 @@ export default function ExpertProfile() {
         return postLikes.some(like => like.postId === postId && like.userId === user?.id);
     };
 
-    // Fetch likes for posts when posts change
+    // Fetch likes and comments for posts when posts change
     useEffect(() => {
         if (posts && posts.length > 0) {
             posts.forEach(post => {
                 getPostLikes(post.id);
+                getComments(post.id);
             });
         }
-    }, [posts, getPostLikes]);
+    }, [posts, getPostLikes, getComments]);
 
-    // Show error toast for like/unlike
+    // Show error toast for like/unlike and comment
     useEffect(() => {
         if (likeError) {
             toast.error(likeError);
         }
     }, [likeError]);
+    useEffect(() => {
+        if (commentError) {
+            toast.error(commentError);
+            clearCommentError();
+        }
+    }, [commentError, clearCommentError]);
+    useEffect(() => {
+        if (commentSuccess) {
+            toast.success(commentSuccess);
+            clearCommentSuccess();
+        }
+    }, [commentSuccess, clearCommentSuccess]);
 
     const handleMessage = async () => {
         if (!user) {
@@ -564,8 +595,8 @@ export default function ExpertProfile() {
                                                         <div className="flex items-center gap-6">
                                                             <button
                                                                 className={`flex items-center gap-2 transition-colors ${isPostLikedByUser(post.id)
-                                                                        ? "text-red-500"
-                                                                        : "text-muted-foreground hover:text-red-500"
+                                                                    ? "text-red-500"
+                                                                    : "text-muted-foreground hover:text-red-500"
                                                                     }`}
                                                                 disabled={likeLoading}
                                                                 onClick={async () => {
@@ -585,9 +616,16 @@ export default function ExpertProfile() {
                                                                     {postLikes.filter(like => like.postId === post.id).length}
                                                                 </span>
                                                             </button>
-                                                            <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
+                                                            <button
+                                                                className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors"
+                                                                onClick={() => {
+                                                                    setOpenCommentPostId(prev => prev === post.id ? null : post.id);
+                                                                }}
+                                                            >
                                                                 <FaComment />
-                                                                <span className="text-sm">{post.analytics?.comments ?? 0}</span>
+                                                                <span className="text-sm">{
+                                                                    comments.filter(c => c.postId === post.id).length
+                                                                }</span>
                                                             </button>
                                                             {/* Optionally add share/bookmark */}
                                                         </div>
@@ -596,6 +634,137 @@ export default function ExpertProfile() {
                                                         </button>
                                                     </div>
                                                 </div>
+
+                                                {/* Comments Section - Only show if openCommentPostId === post.id */}
+                                                {openCommentPostId === post.id && (
+                                                    <div id={`comments-${post.id}`} className="px-4 pb-4">
+                                                        <Separator className="my-4" />
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <div className="font-semibold text-foreground">Comments</div>
+                                                            <Button size="sm" variant="ghost" onClick={() => setOpenCommentPostId(null)}>
+                                                                Close
+                                                            </Button>
+                                                        </div>
+                                                        {/* New Comment Form */}
+                                                        {user ? (
+                                                            <form
+                                                                onSubmit={async (e) => {
+                                                                    e.preventDefault();
+                                                                    if (!commentInputs[post.id]?.trim()) return;
+                                                                    await createComment(post.id, commentInputs[post.id]);
+                                                                    setCommentInputs((prev) => ({ ...prev, [post.id]: "" }));
+                                                                }}
+                                                                className="flex gap-2 mb-4"
+                                                            >
+                                                                <input
+                                                                    type="text"
+                                                                    className="flex-1 border rounded px-2 py-1"
+                                                                    placeholder="Add a comment..."
+                                                                    value={commentInputs[post.id] || ""}
+                                                                    onChange={e => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                                                    disabled={commentLoading}
+                                                                />
+                                                                <Button type="submit" disabled={commentLoading || !commentInputs[post.id]?.trim()} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                    Comment
+                                                                </Button>
+                                                            </form>
+                                                        ) : (
+                                                            <div className="mb-4">
+                                                                <Button onClick={() => setShowLoginPrompt(true)} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                    Login to comment
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                        {/* Comments List */}
+                                                        {commentLoading ? (
+                                                            <div className="text-muted-foreground">Loading comments...</div>
+                                                        ) : comments.filter(c => c.postId === post.id).length === 0 ? (
+                                                            <div className="text-muted-foreground">No comments yet.</div>
+                                                        ) : (
+                                                            <div className="space-y-4">
+                                                                {comments.filter(c => c.postId === post.id).map(comment => (
+                                                                    <div key={comment.id} className="border rounded p-2">
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <Avatar className="w-7 h-7">
+                                                                                <AvatarImage src={comment.author.avatar || getAvatarUrl(comment.author.avatar)} alt={comment.author.name} />
+                                                                                <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
+                                                                            </Avatar>
+                                                                            <span className="font-medium text-foreground">{comment.author.name}</span>
+                                                                            <span className="text-xs text-muted-foreground ml-2">{new Date(comment.createdAt).toLocaleString()}</span>
+                                                                        </div>
+                                                                        <div className="ml-9 text-foreground mb-2">{comment.content}</div>
+                                                                        {/* Reply Button */}
+                                                                        <div className="ml-9">
+                                                                            <Button
+                                                                                size="sm"
+                                                                                variant="ghost"
+                                                                                className="text-green-600 hover:bg-green-50"
+                                                                                onClick={async () => {
+                                                                                    setShowReplies(prev => ({ ...prev, [comment.id]: !prev[comment.id] }));
+                                                                                    if (!showReplies[comment.id]) {
+                                                                                        await getReplies(comment.id);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                {showReplies[comment.id] ? "Hide Replies" : `View Replies (${comment.replies.length})`}
+                                                                            </Button>
+                                                                        </div>
+                                                                        {/* Replies Section */}
+                                                                        {showReplies[comment.id] && (
+                                                                            <div className="ml-9 mt-2 space-y-2">
+                                                                                {/* New Reply Form */}
+                                                                                {user ? (
+                                                                                    <form
+                                                                                        onSubmit={async (e) => {
+                                                                                            e.preventDefault();
+                                                                                            if (!replyInputs[comment.id]?.trim()) return;
+                                                                                            await createReply(comment.id, replyInputs[comment.id]);
+                                                                                            setReplyInputs((prev) => ({ ...prev, [comment.id]: "" }));
+                                                                                            await getReplies(comment.id);
+                                                                                        }}
+                                                                                        className="flex gap-2 mb-2"
+                                                                                    >
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            className="flex-1 border rounded px-2 py-1"
+                                                                                            placeholder="Add a reply..."
+                                                                                            value={replyInputs[comment.id] || ""}
+                                                                                            onChange={e => setReplyInputs(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                                                                                            disabled={commentLoading}
+                                                                                        />
+                                                                                        <Button type="submit" disabled={commentLoading || !replyInputs[comment.id]?.trim()} className="bg-green-600 hover:bg-green-700 text-white">
+                                                                                            Reply
+                                                                                        </Button>
+                                                                                    </form>
+                                                                                ) : null}
+                                                                                {/* Replies List */}
+                                                                                {commentLoading ? (
+                                                                                    <div className="text-muted-foreground">Loading replies...</div>
+                                                                                ) : (replies.filter(r => r.commentId === comment.id).length === 0 ? (
+                                                                                    <div className="text-muted-foreground">No replies yet.</div>
+                                                                                ) : (
+                                                                                    <div className="space-y-2">
+                                                                                        {replies.filter(r => r.commentId === comment.id).map(reply => (
+                                                                                            <div key={reply.id} className="flex items-center gap-2">
+                                                                                                <Avatar className="w-6 h-6">
+                                                                                                    <AvatarImage src={reply.author.avatar || getAvatarUrl(reply.author.avatar)} alt={reply.author.name} />
+                                                                                                    <AvatarFallback>{reply.author.name.charAt(0)}</AvatarFallback>
+                                                                                                </Avatar>
+                                                                                                <span className="font-medium text-foreground">{reply.author.name}</span>
+                                                                                                <span className="text-xs text-muted-foreground ml-2">{new Date(reply.createdAt).toLocaleString()}</span>
+                                                                                                <span className="ml-2 text-foreground">{reply.content}</span>
+                                                                                            </div>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </CardContent>
                                         </Card>
                                     ))
