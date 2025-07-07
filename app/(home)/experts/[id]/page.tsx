@@ -16,6 +16,7 @@ import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 import { useFollowStore } from "@/lib/mainwebsite/follow-store";
 import { toast } from "sonner";
 import { usePostsStore } from "@/lib/mainwebsite/posts-store";
+import { useLikeStore } from "@/lib/mainwebsite/like-store";
 
 interface Experience {
     id: string;
@@ -97,6 +98,14 @@ export default function ExpertProfile() {
         error: followError
     } = useFollowStore();
     const { posts, listPosts, isLoading: postsLoading, error: postsError } = usePostsStore();
+    const {
+        likePost,
+        unlikePost,
+        postLikes,
+        isLoading: likeLoading,
+        error: likeError,
+        getPostLikes,
+    } = useLikeStore();
 
     const [expert, setExpert] = useState<Expert | null>(null);
     const [messageLoading, setMessageLoading] = useState(false);
@@ -129,6 +138,27 @@ export default function ExpertProfile() {
             listPosts({ userId: expert.userId });
         }
     }, [expert?.userId, listPosts]);
+
+    // Track liked state for each post
+    const isPostLikedByUser = (postId: string) => {
+        return postLikes.some(like => like.postId === postId && like.userId === user?.id);
+    };
+
+    // Fetch likes for posts when posts change
+    useEffect(() => {
+        if (posts && posts.length > 0) {
+            posts.forEach(post => {
+                getPostLikes(post.id);
+            });
+        }
+    }, [posts, getPostLikes]);
+
+    // Show error toast for like/unlike
+    useEffect(() => {
+        if (likeError) {
+            toast.error(likeError);
+        }
+    }, [likeError]);
 
     const handleMessage = async () => {
         if (!user) {
@@ -532,9 +562,28 @@ export default function ExpertProfile() {
                                                 <div className="px-4 pb-4">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-6">
-                                                            <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
+                                                            <button
+                                                                className={`flex items-center gap-2 transition-colors ${isPostLikedByUser(post.id)
+                                                                        ? "text-red-500"
+                                                                        : "text-muted-foreground hover:text-red-500"
+                                                                    }`}
+                                                                disabled={likeLoading}
+                                                                onClick={async () => {
+                                                                    if (!user) {
+                                                                        setShowLoginPrompt(true);
+                                                                        return;
+                                                                    }
+                                                                    if (isPostLikedByUser(post.id)) {
+                                                                        await unlikePost(post.id);
+                                                                    } else {
+                                                                        await likePost(post.id);
+                                                                    }
+                                                                }}
+                                                            >
                                                                 <FaHeart />
-                                                                <span className="text-sm">{post.analytics?.likes ?? 0}</span>
+                                                                <span className="text-sm">
+                                                                    {postLikes.filter(like => like.postId === post.id).length}
+                                                                </span>
                                                             </button>
                                                             <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
                                                                 <FaComment />
