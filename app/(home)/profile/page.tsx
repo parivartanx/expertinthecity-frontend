@@ -20,84 +20,51 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 const INTEREST_LABELS: Record<string, string> = {
-  TECHNOLOGY: "Technology",
-  BUSINESS: "Business",
-  HEALTHCARE: "Healthcare",
-  EDUCATION: "Education",
-  ARTS: "Arts",
-  SCIENCE: "Science",
-  ENGINEERING: "Engineering",
-  LAW: "Law",
-  FINANCE: "Finance",
-  MARKETING: "Marketing",
-  DESIGN: "Design",
-  MEDIA: "Media",
-  SPORTS: "Sports",
-  CULINARY: "Culinary",
-  LANGUAGES: "Languages",
-  PSYCHOLOGY: "Psychology",
-  ENVIRONMENT: "Environment",
-  AGRICULTURE: "Agriculture",
-  CONSTRUCTION: "Construction",
-  HOSPITALITY: "Hospitality",
-  RETAIL: "Retail",
-  TRANSPORTATION: "Transportation",
-  ENTERTAINMENT: "Entertainment",
-  NON_PROFIT: "Non Profit",
-  GOVERNMENT: "Government",
-  OTHER: "Other",
+    TECHNOLOGY: "Technology",
+    BUSINESS: "Business",
+    HEALTHCARE: "Healthcare",
+    EDUCATION: "Education",
+    ARTS: "Arts",
+    SCIENCE: "Science",
+    ENGINEERING: "Engineering",
+    LAW: "Law",
+    FINANCE: "Finance",
+    MARKETING: "Marketing",
+    DESIGN: "Design",
+    MEDIA: "Media",
+    SPORTS: "Sports",
+    CULINARY: "Culinary",
+    LANGUAGES: "Languages",
+    PSYCHOLOGY: "Psychology",
+    ENVIRONMENT: "Environment",
+    AGRICULTURE: "Agriculture",
+    CONSTRUCTION: "Construction",
+    HOSPITALITY: "Hospitality",
+    RETAIL: "Retail",
+    TRANSPORTATION: "Transportation",
+    ENTERTAINMENT: "Entertainment",
+    NON_PROFIT: "Non Profit",
+    GOVERNMENT: "Government",
+    OTHER: "Other",
 };
-
-
-
-  // Mock data for followed experts
-  const followedExperts = [
-    {
-      id: "expert-1",
-      name: "Dr. Sarah Johnson",
-      specialty: "Piano Instructor & Music Theory",
-      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      rating: 4.9,
-      reviews: 124,
-      location: "New York, NY"
-    },
-    {
-      id: "expert-2",
-      name: "Michael Chen",
-      specialty: "Web Development & React",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      rating: 4.8,
-      reviews: 89,
-      location: "San Francisco, CA"
-    },
-    {
-      id: "expert-3",
-      name: "Dr. Emily Rodriguez",
-      specialty: "Data Science & Machine Learning",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZmVzc2lvbmFsfGVufDB8fDB8fHww",
-      rating: 4.7,
-      reviews: 156,
-      location: "Austin, TX"
-    }
-];
 
 export default function ProfilePage() {
     const router = useRouter();
     const { user } = useAuthStore();
     const { profile, isLoading, error, fetchUserProfile } = useUserStore();
-    const { 
-        posts, 
-        listPosts, 
-        getFollowingPosts, 
+    const {
+        posts,
+        listPosts,
+        getFollowingPosts,
         createPost,
         updatePost,
         deletePost,
         getUploadUrl,
-        isLoading: postsLoading, 
-        error: postsError 
+        isLoading: postsLoading,
+        error: postsError
     } = usePostsStore();
     const [postsToShow, setPostsToShow] = useState(3);
-    
+
     // Create post state
     const [showCreatePost, setShowCreatePost] = useState(false);
     const [postTitle, setPostTitle] = useState("");
@@ -114,7 +81,7 @@ export default function ProfilePage() {
     const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
     const [isUpdatingPost, setIsUpdatingPost] = useState(false);
     const [isDeletingPost, setIsDeletingPost] = useState(false);
-    
+
     // Delete confirmation dialog state
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -189,7 +156,7 @@ export default function ProfilePage() {
             // Upload image if selected
             if (selectedImage) {
                 const uploadData = await getUploadUrl(selectedImage.type, selectedImage.name);
-                
+
                 // Upload to S3
                 const uploadResponse = await fetch(uploadData.uploadUrl, {
                     method: 'PUT',
@@ -275,7 +242,7 @@ export default function ProfilePage() {
             // Upload new image if selected
             if (editSelectedImage) {
                 const uploadData = await getUploadUrl(editSelectedImage.type, editSelectedImage.name);
-                
+
                 // Upload to S3
                 const uploadResponse = await fetch(uploadData.uploadUrl, {
                     method: 'PUT',
@@ -393,19 +360,19 @@ export default function ProfilePage() {
                                 <div className="h-96 bg-gray-200 rounded-lg mb-4"></div>
                             </div>
                             <div className="lg:col-span-1">
-          <div className="space-y-4">
+                                <div className="space-y-4">
                                     {[1, 2, 3].map((i) => (
                                         <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
-                ))}
-              </div>
+                                    ))}
+                                </div>
                             </div>
                             <div className="lg:col-span-1">
                                 <div className="h-96 bg-gray-200 rounded-lg"></div>
+                            </div>
                         </div>
-                      </div>
                     </div>
+                </div>
             </div>
-          </div>
         );
     }
 
@@ -424,7 +391,7 @@ export default function ProfilePage() {
                         </Button>
                     </div>
                 </div>
-          </div>
+            </div>
         );
     }
 
@@ -440,13 +407,13 @@ export default function ProfilePage() {
                         >
                             Login
                         </Button>
-              </div>
+                    </div>
                 </div>
-          </div>
+            </div>
         );
     }
 
-  return (
+    return (
         <div className="min-h-screen bg-background">
             {/* Back Button */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
@@ -458,7 +425,7 @@ export default function ProfilePage() {
                     >
                         ← Back
                     </Button>
-        </div>
+                </div>
             </div>
 
             {/* Main Content */}
@@ -483,8 +450,8 @@ export default function ProfilePage() {
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
-        </div>
-      )}
+                                        </div>
+                                    )}
                                     <div className="text-center">
                                         <Avatar className="w-24 h-24 mx-auto mb-4">
                                             <AvatarImage src={getAvatarUrl(profile.avatar)} alt={profile.name || user?.name || 'User'} />
@@ -526,8 +493,8 @@ export default function ProfilePage() {
                                                     Update Profile
                                                 </Button>
                                             </Link>
-            </div>
-          </div>
+                                        </div>
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
@@ -577,13 +544,13 @@ export default function ProfilePage() {
                                                         <AvatarImage src={getAvatarUrl(profile.avatar)} alt={profile.name || user?.name || 'User'} />
                                                         <AvatarFallback>{(profile.name || user?.name || 'U').charAt(0)}</AvatarFallback>
                                                     </Avatar>
-                                                    <div 
+                                                    <div
                                                         className="flex-1 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                                                         onClick={() => setShowCreatePost(true)}
                                                     >
                                                         <p className="text-muted-foreground">Share your expertise and insights...</p>
                                                     </div>
-                                                    <Button 
+                                                    <Button
                                                         onClick={() => setShowCreatePost(true)}
                                                         className="bg-green-600 hover:bg-green-700"
                                                     >
@@ -604,7 +571,7 @@ export default function ProfilePage() {
                                                             <FaTimes />
                                                         </Button>
                                                     </div>
-                                                    
+
                                                     <div className="space-y-3">
                                                         <Input
                                                             placeholder="Post title..."
@@ -612,14 +579,14 @@ export default function ProfilePage() {
                                                             onChange={(e) => setPostTitle(e.target.value)}
                                                             className="text-lg font-medium"
                                                         />
-                                                        
+
                                                         <Textarea
                                                             placeholder="Share your expertise, insights, or experiences..."
                                                             value={postContent}
                                                             onChange={(e) => setPostContent(e.target.value)}
                                                             className="min-h-[120px] resize-none"
                                                         />
-                                                        
+
                                                         {/* Image Upload Section */}
                                                         <div className="space-y-2">
                                                             {!imagePreview ? (
@@ -653,7 +620,7 @@ export default function ProfilePage() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        
+
                                                         <div className="flex items-center justify-end gap-2">
                                                             <Button
                                                                 variant="outline"
@@ -728,14 +695,14 @@ export default function ProfilePage() {
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem 
+                                                                        <DropdownMenuItem
                                                                             onClick={() => handleEditPost(post)}
                                                                             disabled={editingPostId === post.id}
                                                                         >
                                                                             <FaEdit className="mr-2 h-4 w-4" />
                                                                             Edit Post
                                                                         </DropdownMenuItem>
-                                                                        <DropdownMenuItem 
+                                                                        <DropdownMenuItem
                                                                             onClick={() => handleDeletePost(post.id)}
                                                                             disabled={isDeletingPost}
                                                                             className="text-red-600 focus:text-red-600"
@@ -759,14 +726,14 @@ export default function ProfilePage() {
                                                                     onChange={(e) => setEditPostTitle(e.target.value)}
                                                                     className="text-lg font-medium"
                                                                 />
-                                                                
+
                                                                 <Textarea
                                                                     placeholder="Share your expertise, insights, or experiences..."
                                                                     value={editPostContent}
                                                                     onChange={(e) => setEditPostContent(e.target.value)}
                                                                     className="min-h-[120px] resize-none"
                                                                 />
-                                                                
+
                                                                 {/* Image Upload Section */}
                                                                 <div className="space-y-2">
                                                                     {!editImagePreview ? (
@@ -800,7 +767,7 @@ export default function ProfilePage() {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                
+
                                                                 <div className="flex items-center justify-end gap-2">
                                                                     <Button
                                                                         variant="outline"
@@ -878,12 +845,12 @@ export default function ProfilePage() {
                                                 {isExpert ? "No Posts Yet" : "No Posts in Your Feed"}
                                             </h3>
                                             <p className="text-muted-foreground mb-4">
-                                                {isExpert 
+                                                {isExpert
                                                     ? "Share your expertise and insights with the community by creating your first post."
                                                     : "Follow some experts to see their posts in your feed, or explore the community to discover great content."
                                                 }
                                             </p>
-                                            <Button className="bg-green-600 hover:bg-green-700">
+                                            <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push('/allexperts')}>
                                                 {isExpert ? (
                                                     <>
                                                         <FaEdit className="mr-2" />
@@ -948,8 +915,6 @@ export default function ProfilePage() {
                                             )}
                                         </div>
 
-
-
                                         {/* Location Section */}
                                         <div className="mb-6">
                                             <div className="flex items-center justify-between mb-3">
@@ -971,10 +936,10 @@ export default function ProfilePage() {
                                             <div>
                                                 <h3 className="font-semibold text-foreground mb-3">Member Since</h3>
                                                 <p className="text-muted-foreground">
-                                                    {new Date(profile.createdAt).toLocaleDateString(undefined, { 
-                                                        year: 'numeric', 
-                                                        month: 'long', 
-                                                        day: 'numeric' 
+                                                    {new Date(profile.createdAt).toLocaleDateString(undefined, {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
                                                     })}
                                                 </p>
                                             </div>
@@ -1206,8 +1171,8 @@ export default function ProfilePage() {
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Member Since</span>
                                                 <span className="font-medium">
-                                                    {profile.createdAt ? 
-                                                        new Date(profile.createdAt).getFullYear() : 
+                                                    {profile.createdAt ?
+                                                        new Date(profile.createdAt).getFullYear() :
                                                         'N/A'
                                                     }
                                                 </span>
@@ -1229,7 +1194,12 @@ export default function ProfilePage() {
                                                 <FaEdit className="w-3 h-3 mr-2" />
                                                 Create Post
                                             </Button>
-                                            <Button variant="outline" size="sm" className="w-full justify-start">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full justify-start"
+                                                onClick={() => router.push("/allexperts")}
+                                            >
                                                 <FaUser className="w-3 h-3 mr-2" />
                                                 Find Experts
                                             </Button>

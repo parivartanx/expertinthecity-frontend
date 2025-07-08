@@ -63,6 +63,69 @@ const suggestedUsers = [
   },
 ];
 
+// Inline CertificationsInput component for certifications array
+const CertificationsInput = ({ certifications, setCertifications }: {
+  certifications: Array<{ name: string; issuingOrganization: string; issueDate: string }>;
+  setCertifications: (certs: Array<{ name: string; issuingOrganization: string; issueDate: string }>) => void;
+}) => {
+  const handleChange = (idx: number, field: string, value: string) => {
+    const updated = certifications.map((cert, i) =>
+      i === idx ? { ...cert, [field]: value } : cert
+    );
+    setCertifications(updated);
+  };
+  const handleAdd = () => {
+    setCertifications([
+      ...certifications,
+      { name: "", issuingOrganization: "", issueDate: "" },
+    ]);
+  };
+  const handleRemove = (idx: number) => {
+    setCertifications(certifications.filter((_, i) => i !== idx));
+  };
+  return (
+    <div className="space-y-2">
+      {certifications.map((cert, idx) => (
+        <div key={idx} className="flex flex-col md:flex-row gap-2 items-center border p-2 rounded">
+          <input
+            className="border rounded px-2 py-1 flex-1"
+            placeholder="Certification Name"
+            value={cert.name}
+            onChange={e => handleChange(idx, 'name', e.target.value)}
+          />
+          <input
+            className="border rounded px-2 py-1 flex-1"
+            placeholder="Issuing Organization"
+            value={cert.issuingOrganization}
+            onChange={e => handleChange(idx, 'issuingOrganization', e.target.value)}
+          />
+          <input
+            className="border rounded px-2 py-1 flex-1"
+            type="date"
+            placeholder="Issue Date"
+            value={cert.issueDate}
+            onChange={e => handleChange(idx, 'issueDate', e.target.value)}
+          />
+          <button
+            type="button"
+            className="text-red-500 px-2 py-1"
+            onClick={() => handleRemove(idx)}
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="border px-3 py-1 rounded text-green-600 mt-2"
+        onClick={handleAdd}
+      >
+        + Add Certification
+      </button>
+    </div>
+  );
+};
+
 const ExpertRegisterForm = () => {
   const router = useRouter();
   const { isAuthenticated, user, login, initializeAuth } = useAuthStore();
@@ -76,10 +139,17 @@ const ExpertRegisterForm = () => {
     phone: string;
     city: string;
     location: string;
-    category: string;
-    bio: string;
+    headline: string;
+    summary: string;
+    expertise: string;
     experience: string;
-    certifications: string;
+    certifications: Array<{
+      name: string;
+      issuingOrganization: string;
+      issueDate: string;
+    }>;
+    languages: string;
+    bio: string;
     profilePhoto: string | null;
     portfolioFiles: any[];
     portfolioMedia: any[];
@@ -88,28 +158,69 @@ const ExpertRegisterForm = () => {
     instagram: string;
     pricing: string;
     availability: string[];
+    hourlyRate: string;
+    about: string;
+    tags: string;
+    experiences: Array<{
+      title: string;
+      company: string;
+      location?: string;
+      startDate: string;
+      endDate?: string;
+      isCurrent: boolean;
+      description?: string;
+      skills?: string;
+    }>;
+    education: Array<{
+      school: string;
+      degree: string;
+      fieldOfStudy: string;
+      startDate: string;
+      endDate?: string;
+      isCurrent: boolean;
+      description?: string;
+      grade?: string;
+      activities?: string;
+    }>;
+    awards: Array<{
+      title: string;
+      issuer: string;
+      date: string;
+      description?: string;
+    }>;
     agree: boolean;
-  }>({
-    fullName: "",
-    email: "",
-    password: "",
-    phone: "",
-    city: "",
-    location: "",
-    category: "",
-    bio: "",
-    experience: "",
-    certifications: "",
-    profilePhoto: null,
-    portfolioFiles: [],
-    portfolioMedia: [],
-    linkedin: "",
-    website: "",
-    instagram: "",
-    pricing: "",
-    availability: [],
-    agree: false,
-  });
+  }>(
+    {
+      fullName: "",
+      email: "",
+      password: "",
+      phone: "",
+      city: "",
+      location: "",
+      headline: "",
+      summary: "",
+      expertise: "",
+      experience: "",
+      certifications: [],
+      languages: "",
+      bio: "",
+      profilePhoto: null,
+      portfolioFiles: [],
+      portfolioMedia: [],
+      linkedin: "",
+      website: "",
+      instagram: "",
+      pricing: "",
+      availability: [],
+      hourlyRate: "",
+      about: "",
+      tags: "",
+      experiences: [],
+      education: [],
+      awards: [],
+      agree: false,
+    }
+  );
   const [uploading, setUploading] = useState(false);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
@@ -170,11 +281,12 @@ const ExpertRegisterForm = () => {
         email: user.email || profile?.email || "",
         bio: profile?.bio || "",
         location:
-          (typeof profile?.location === 'string' ? profile.location : 
-           (profile?.location && typeof profile.location === 'object' && profile.location !== null && 
-            (profile.location as { city?: string; state?: string; country?: string; postalCode?: string }).city)) ||
+          (typeof profile?.location === 'string' ? profile.location :
+            (profile?.location && typeof profile.location === 'object' && profile.location !== null &&
+              (profile.location as { city?: string; state?: string; country?: string; postalCode?: string }).city)) ||
           "",
         profilePhoto: null,
+        certifications: Array.isArray(prev.certifications) ? prev.certifications : [],
       }));
       if (profile?.interests && profile.interests.length > 0) {
         setSelectedInterests(profile.interests);
@@ -293,34 +405,33 @@ const ExpertRegisterForm = () => {
   const handleSubmitApplication = async () => {
     setLoading(true);
     try {
-      // Build payload according to ExpertProfile interface
+      // Build flat JSON payload as in Postman
       const payload = {
         name: form.fullName,
         email: form.email,
         password: form.password,
         bio: form.bio,
-        avatar: typeof form.profilePhoto === 'string' ? form.profilePhoto : undefined, // Only pass string or undefined
+        avatar: form.profilePhoto || '',
         interests: selectedInterests,
-        tags: [], // Add tags if you collect them
-        location: {
-          address: form.location,
-          country: "", // Add country if collected
-          pincode: "", // Add pincode if collected
-        },
-        expertDetails: {
-          headline: form.category,
-          summary: form.bio,
-          expertise: [form.category],
-          experience: Number(form.experience) || undefined,
-          about: form.bio,
-          availability: form.availability.join(", "),
-          // Add more fields as needed from form
-        },
+        tags: form.tags ? form.tags.split(',').map(t => t.trim()) : [],
+        location: form.location,
+        headline: form.headline,
+        summary: form.summary,
+        expertise: form.expertise ? form.expertise.split(',').map(e => e.trim()) : [],
+        experience: Number(form.experience) || undefined,
+        hourlyRate: Number(form.hourlyRate) || undefined,
+        about: form.about,
+        availability: form.availability.join(', '),
+        languages: form.languages ? form.languages.split(',').map(l => l.trim()) : [],
+        certifications: form.certifications,
+        experiences: form.experiences,
+        education: form.education,
       };
-      await createExpertProfile(payload);
+      await createExpertProfile(payload as any);
       setStep(4); // Move to next step (preferences)
-    } catch (err) {
-      alert("Failed to submit application.");
+    } catch (err: any) {
+      console.error('Failed to submit application:', err);
+      alert('Failed to submit application. ' + (err?.message || ''));
     } finally {
       setLoading(false);
     }
@@ -524,59 +635,79 @@ const ExpertRegisterForm = () => {
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Primary Expertise Category
+                Headline
               </label>
-              <select
+              <input
                 className="w-full border rounded-lg px-3 py-2"
-                value={form.category}
+                value={form.headline}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, category: e.target.value }))
+                  setForm((f) => ({ ...f, headline: e.target.value }))
                 }
-              >
-                <option value="">Select a category</option>
-                <option value="Design">Design</option>
-                <option value="Development">Development</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Business">Business</option>
-              </select>
+                placeholder="e.g. Certified Wellness Massage Therapist"
+              />
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Professional Bio
+                Summary
               </label>
               <textarea
                 className="w-full border rounded-lg px-3 py-2 min-h-[60px]"
-                value={form.bio}
+                value={form.summary}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, bio: e.target.value }))
+                  setForm((f) => ({ ...f, summary: e.target.value }))
                 }
-                placeholder="Tell potential clients about yourself and your expertise..."
+                placeholder="Short summary about your professional journey..."
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Expertise (comma separated)
+              </label>
+              <input
+                className="w-full border rounded-lg px-3 py-2"
+                value={form.expertise}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, expertise: e.target.value }))
+                }
+                placeholder="e.g. Swedish Massage, Deep Tissue, Reflexology"
               />
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
                 Years of Experience
               </label>
-              <textarea
-                className="w-full border rounded-lg px-3 py-2 min-h-[60px]"
+              <input
+                className="w-full border rounded-lg px-3 py-2"
+                type="number"
                 value={form.experience}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, experience: e.target.value }))
                 }
-                placeholder="Highlight your expertise, approach, and what makes you unique."
+                placeholder="e.g. 12"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Languages (comma separated)
+              </label>
+              <input
+                className="w-full border rounded-lg px-3 py-2"
+                value={form.languages}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, languages: e.target.value }))
+                }
+                placeholder="e.g. Hindi, English"
               />
             </div>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
                 Qualifications & Certifications
               </label>
-              <textarea
-                className="w-full border rounded-lg px-3 py-2 min-h-[60px]"
-                value={form.certifications}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, certifications: e.target.value }))
+              <CertificationsInput
+                certifications={form.certifications}
+                setCertifications={(certs) =>
+                  setForm((f) => ({ ...f, certifications: certs }))
                 }
-                placeholder="List any relevant qualifications, certifications, or credentials..."
               />
             </div>
             <div className="mb-4">
@@ -603,8 +734,12 @@ const ExpertRegisterForm = () => {
                 Previous Step
               </button>
               <button
-                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 onClick={() => setStep(2)}
+                disabled={
+                  !form.city ||
+                  !form.location
+                }
               >
                 Next Step
               </button>
@@ -838,7 +973,7 @@ const ExpertRegisterForm = () => {
                 Previous Step
               </button>
               <button
-                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 disabled={!form.agree || loading || isLoading}
                 onClick={handleSubmitApplication}
               >
