@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { ArrowUpDown, MoreHorizontal, Award, CheckCircle, Users, ArrowUpRight, Loader2, Star, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
+import { useAdminExpertStore } from "@/lib/mainwebsite/admin-expert-store";
 
 interface Expert {
   id: string;
@@ -51,42 +51,45 @@ interface Expert {
 export default function ExpertsPage() {
   const router = useRouter();
   const {
-    users,
-    fetchUsers,
-    updateUser,
+    experts,
+    fetchExperts,
+    updateExpert,
     isLoading,
     error,
-  } = useAdminUserStore();
+    pagination,
+  } = useAdminExpertStore();
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | "feature" | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   useEffect(() => {
-    fetchUsers({ role: "EXPERT" });
-  }, [fetchUsers]);
+    fetchExperts({ page: currentPage, limit: pageSize });
+  }, [fetchExperts, currentPage, pageSize]);
 
   // Map API users to Expert interface
-  const mappedExperts: Expert[] = users
-    .filter((u) => u.role === "EXPERT")
-    .map((u) => ({
-      id: u.id,
-      name: u.name,
-      email: u.email,
-      category: u.expertDetails?.category || "",
-      status: (u as any).status || "active",
-      profileCompletion: u.expertDetails?.profileCompletion || 0,
-      followers: u.stats?.followers || 0,
-      joinedAt: u.createdAt || "",
-      lastActive: u.updatedAt || "",
-      verified: (u as any).verified ?? false,
-      experience: u.expertDetails?.experience || "",
-      skills: u.expertDetails?.skills || [],
-      featured: u.expertDetails?.featured || false,
-      rating: u.stats?.rating || 0,
-      profileVisitors: u.stats?.profileVisitors || 0,
-    }));
+  const mappedExperts: Expert[] = experts.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    category: u.category || "",
+    status: u.status || "active",
+    profileCompletion: u.profileCompletion || 0,
+    followers: u.followers || 0,
+    joinedAt: u.joinedAt || "",
+    lastActive: u.lastActive || "",
+    verified: u.verified ?? false,
+    experience: u.experience || "",
+    skills: u.skills || [],
+    featured: u.featured || false,
+    rating: u.rating || 0,
+    profileVisitors: u.profileVisitors || 0,
+  }));
 
   const handleAction = (expert: Expert, action: "activate" | "deactivate" | "verify" | "feature") => {
     setSelectedExpert(expert);
@@ -100,50 +103,33 @@ export default function ExpertsPage() {
     router.push(`/admin/experts/${expert.id}`);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!selectedExpert || !actionType) return;
 
     let message = "";
-    let updatedExpert: Partial<Expert> | null = null;
-
-    switch (actionType) {
-      case "activate":
-        updatedExpert = {
-          ...selectedExpert,
-          status: "active"
-        };
-        message = `Expert ${selectedExpert.name} has been activated`;
-        break;
-      case "deactivate":
-        updatedExpert = {
-          ...selectedExpert,
-          status: "inactive",
-          featured: false // Remove from featured when deactivated
-        };
-        message = `Expert ${selectedExpert.name} has been deactivated and removed from featured`;
-        break;
-      case "verify":
-        updatedExpert = {
-          ...selectedExpert,
-          verified: true
-        };
-        message = `Expert ${selectedExpert.name} has been verified`;
-        break;
-      case "feature":
-        updatedExpert = {
-          ...selectedExpert,
-          featured: !selectedExpert.featured
-        };
-        message = `Expert ${selectedExpert.name} has been ${selectedExpert.featured ? 'removed from' : 'added to'} featured experts`;
-        break;
-    }
-
-    if (updatedExpert) {
-      // Update via API
-      updateUser(selectedExpert.id, updatedExpert);
+    try {
+      switch (actionType) {
+        case "activate":
+          await updateExpert(selectedExpert.id, { status: "active" });
+          message = `Expert ${selectedExpert.name} has been activated`;
+          break;
+        case "deactivate":
+          await updateExpert(selectedExpert.id, { status: "inactive", featured: false });
+          message = `Expert ${selectedExpert.name} has been deactivated and removed from featured`;
+          break;
+        case "verify":
+          await updateExpert(selectedExpert.id, { verified: true });
+          message = `Expert ${selectedExpert.name} has been verified`;
+          break;
+        case "feature":
+          await updateExpert(selectedExpert.id, { featured: !selectedExpert.featured });
+          message = `Expert ${selectedExpert.name} has been ${selectedExpert.featured ? 'removed from' : 'added to'} featured experts`;
+          break;
+      }
       toast.success(message);
+    } catch (e) {
+      toast.error("Failed to update expert");
     }
-
     setActionDialogOpen(false);
   };
 
@@ -166,7 +152,7 @@ export default function ExpertsPage() {
             <Award className="h-4 w-4 text-muted-foreground" />
           </div>
           <div>
-            <div 
+            <div
               className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary hover:underline transition-colors"
               onClick={() => handleViewExpert(row.original)}
             >
@@ -194,8 +180,8 @@ export default function ExpertsPage() {
               status === "active"
                 ? "default"
                 : status === "pending"
-                ? "secondary"
-                : "outline"
+                  ? "secondary"
+                  : "outline"
             }
           >
             {status}
@@ -300,17 +286,30 @@ export default function ExpertsPage() {
     }
   ];
 
+  // Pagination handlers
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Expert Management</h1>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={mappedExperts} 
-        searchColumn="name" 
-        searchPlaceholder="Search experts..." 
+      <DataTable
+        columns={columns}
+        data={mappedExperts}
+        searchColumn="name"
+        searchPlaceholder="Search experts..."
+        pagination={pagination || undefined}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        isLoading={isLoading}
       />
 
       {/* View Expert Dialog */}
@@ -345,7 +344,7 @@ export default function ExpertsPage() {
                     <p className="text-sm font-medium mt-1">{selectedExpert.category}</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Status</p>
