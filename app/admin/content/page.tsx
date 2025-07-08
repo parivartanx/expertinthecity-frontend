@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
@@ -32,7 +32,6 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowUpDown, MoreHorizontal, ThumbsUp, MessageSquare, Clock } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
 import { useAdminContentStore } from "@/lib/mainwebsite/admin-content-store";
 
 export default function ContentPage() {
@@ -42,6 +41,8 @@ export default function ContentPage() {
   const [actionType, setActionType] = useState<"approve" | "reject" | "delete" | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const {
     posts,
@@ -50,15 +51,42 @@ export default function ContentPage() {
     fetchPosts,
     deletePost,
     clearError,
+    pagination,
   } = useAdminContentStore();
 
-  // Fetch posts on mount and when filters/search change
+  // Fetch posts on mount and when filters/search/page/limit change
   useEffect(() => {
     fetchPosts({
+      page: currentPage,
+      limit: pageSize,
       search: search || undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, search]);
+  }, [statusFilter, search, currentPage, pageSize]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const handleSearch = (query: string) => {
+    setSearch(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleSearchWithDebounce = useCallback(
+    (query: string) => {
+      const timeoutId = setTimeout(() => {
+        handleSearch(query);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    },
+    []
+  );
 
   const handleAction = (post: any, action: "approve" | "reject" | "delete") => {
     setSelectedPost(post);
@@ -221,7 +249,7 @@ export default function ContentPage() {
             type="text"
             placeholder="Search content..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => handleSearchWithDebounce(e.target.value)}
             className="input input-bordered w-[200px]"
           />
         </div>
@@ -240,6 +268,10 @@ export default function ContentPage() {
         data={posts.filter(post => statusFilter === "all" ? true : post.status === statusFilter)}
         searchColumn="title"
         searchPlaceholder="Search content..."
+        pagination={pagination || undefined}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        isLoading={isLoading}
       />
 
       {/* Action Confirmation Dialog */}
