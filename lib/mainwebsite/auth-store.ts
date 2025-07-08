@@ -261,6 +261,7 @@ interface AdminAuthState {
   logout: () => void;
   clearError: () => void;
   setUser: (user: AdminUser, accessToken: string, refreshToken: string) => void;
+  initializeAuth: () => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
@@ -343,6 +344,29 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           isAuthenticated: true,
           isLoading: false,
         });
+      },
+      initializeAuth: () => {
+        // Check if we have tokens in localStorage
+        const accessToken = localStorage.getItem("adminAccessToken");
+        const refreshToken = localStorage.getItem("adminRefreshToken");
+        // Get the current state to check if we already have user data
+        // (not required for admin, but can be added if needed)
+        if (accessToken && refreshToken) {
+          set({
+            accessToken,
+            refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        } else {
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
       },
     }),
     {

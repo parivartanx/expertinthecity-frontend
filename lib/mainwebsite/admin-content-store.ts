@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "./axios";
+import { useAdminAuthStore } from "./auth-store";
 
 export interface AdminContentPost {
   id: string;
@@ -78,10 +79,17 @@ const refreshAdminToken = async () => {
 
 // Helper function to make authenticated admin API calls
 const makeAdminApiCall = async (url: string, options: RequestInit = {}) => {
-  const adminToken = localStorage.getItem("adminAccessToken");
-  
+
+  let adminToken = localStorage.getItem("adminAccessToken");
   if (!adminToken) {
-    throw new Error("No admin access token available");
+    // Try to re-initialize from Zustand auth store
+    if (typeof window !== 'undefined' && useAdminAuthStore?.getState) {
+      useAdminAuthStore.getState().initializeAuth?.();
+      adminToken = localStorage.getItem("adminAccessToken");
+    }
+    if (!adminToken) {
+      throw new Error("No admin access token available");
+    }
   }
 
   const config = {
