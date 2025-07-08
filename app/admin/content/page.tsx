@@ -64,6 +64,7 @@ export default function ContentPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, search, currentPage, pageSize]);
 
+  // Handlers for pagination
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
   };
