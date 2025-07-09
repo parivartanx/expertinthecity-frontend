@@ -8,7 +8,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  Legend
+  Legend,
+  Area
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -42,6 +43,14 @@ export function LineChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={350}>
           <RechartsLineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <defs>
+              {lines.map((line, index) => (
+                <linearGradient key={index} id={`color-${line.key}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={line.color} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={line.color} stopOpacity={0} />
+                </linearGradient>
+              ))}
+            </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
             <XAxis 
               dataKey={xAxisKey} 
@@ -65,6 +74,17 @@ export function LineChart({
               }}
             />
             <Legend verticalAlign="top" height={36} />
+            {lines.map((line, index) => (
+              <Area
+                key={`area-${index}`}
+                type="monotone"
+                dataKey={line.key}
+                stroke="none"
+                fill={`url(#color-${line.key})`}
+                fillOpacity={1}
+                isAnimationActive={false}
+              />
+            ))}
             {lines.map((line, index) => (
               <Line
                 key={index}

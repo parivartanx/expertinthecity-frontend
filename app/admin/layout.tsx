@@ -1,5 +1,4 @@
-"use client";
-
+"use client"
 import { ThemeProvider } from "next-themes";
 import { Sidebar } from "@/components/admin/sidebar";
 import { Header } from "@/components/admin/header";
