@@ -151,25 +151,20 @@ export default function AllExperts() {
 
       // Try to find an existing chat with this expert
       let chat = chats.find(
-        (c) =>
-          c.type === "expert" &&
-          c.participants.some((p) => p.id === expert.id)
+        (c: any) =>
+          c.participants.includes(expert.id) &&
+          Object.values(c.participantDetails).some((p: any) => p.role === "EXPERT")
       );
 
       if (!chat) {
         // Create a new chat if not found
-        await createChat({
-          type: "expert",
-          participants: [{ id: expert.id, name: expert.name, avatar: expert.image, role: "expert", isOnline: false }],
-          name: expert.name,
-          avatar: expert.image,
-        });
+        await createChat([expert.id]);
 
         // Refetch chats to get the new chatId
         chat = chats.find(
-          (c) =>
-            c.type === "expert" &&
-            c.participants.some((p) => p.id === expert.id)
+          (c: any) =>
+            c.participants.includes(expert.id) &&
+            Object.values(c.participantDetails).some((p: any) => p.role === "EXPERT")
         );
       }
 

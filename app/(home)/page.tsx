@@ -118,15 +118,6 @@ export default function HomePage() {
   // Get first 3 experts for featured section
   const featuredExperts = experts.slice(0, 3);
 
-  // Debug current state
-  console.log("🎯 Current state:", {
-    categoriesCount: categories.length,
-    subcategoriesCount: subcategories.length,
-    groupedCategoriesCount: groupedCategories.length,
-    activeTab,
-    categoriesLoading
-  });
-
   return (
     <main
       className="font-sans bg-white text-neutral-900"

@@ -34,6 +34,7 @@ import { RiCustomerService2Line } from "react-icons/ri";
 import { IconType } from "react-icons";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
+import { useChatStore } from "@/lib/mainwebsite/chat-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -97,6 +98,15 @@ const Header = () => {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { searchSuggestions } = useAllExpertsStore();
+  const { chats } = useChatStore();
+  const { user: chatUser } = useAuthStore();
+  // Calculate unread chats count for the current user
+  const unreadChatsCount = React.useMemo(() => {
+    if (!user || !chats) return 0;
+    return chats.filter(
+      (chat) => chat.unreadCount && chat.unreadCount[user.id] > 0
+    ).length;
+  }, [chats, user]);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
 
   // Add state for portal
@@ -380,9 +390,21 @@ const Header = () => {
                     : (pathname === "/" || pathname === "/") && !isScrolled
                       ? "text-white/80"
                       : "text-green-600"
-                    } hover:text-green-600 transition px-1 flex items-center gap-2`}
+                    } hover:text-green-600 transition px-1 flex items-center gap-2 relative`}
                 >
-                  <link.icon className="text-lg" />
+                  {/* Add badge to chat icon */}
+                  {link.name === "Chats" ? (
+                    <span className="relative">
+                      <link.icon className="text-lg" />
+                      {unreadChatsCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1 min-w-[18px] h-5 flex items-center justify-center">
+                          {unreadChatsCount}
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <link.icon className="text-lg" />
+                  )}
                   {link.name}
                 </Link>
               ) : (

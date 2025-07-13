@@ -1,89 +1,361 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FaSearch,
   FaCheck,
-  FaMicrophone,
   FaPaperPlane,
-  FaPhoneAlt,
-  FaVideo,
   FaEllipsisH,
   FaArrowLeft,
+  FaCircle,
+  FaUserPlus,
 } from "react-icons/fa";
 import { FiCheck } from "react-icons/fi";
 import { BsPinAngleFill } from "react-icons/bs";
-import {
-  IoIosNotificationsOutline,
-  IoMdNotificationsOutline,
-} from "react-icons/io";
+import { IoIosNotificationsOutline } from "react-icons/io";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { MdOutlineAttachFile } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { useChatStore } from "@/lib/mainwebsite/chat-store";
+import { useAuthStore } from "@/lib/mainwebsite/auth-store";
+import { useUserStore } from "@/lib/mainwebsite/user-store";
+import StartChatModal from "./StartChatModal";
+import { useFollowStore } from "@/lib/mainwebsite/follow-store";
+import { toast } from "sonner";
+
+// Types
+interface ChatParticipant {
+  id: string;
+  name: string;
+  avatar?: string;
+  role: "USER" | "EXPERT";
+  isOnline: boolean;
+  lastSeen: Date;
+}
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  senderId: string;
+  senderName: string;
+  senderAvatar?: string;
+  senderRole: "USER" | "EXPERT";
+  timestamp: Date;
+  readBy: string[];
+}
+
+interface Chat {
+  id: string;
+  participants: string[];
+  participantDetails: {
+    [userId: string]: ChatParticipant;
+  };
+  lastMessage?: ChatMessage;
+  unreadCount: { [userId: string]: number };
+  createdAt: Date;
+  updatedAt: Date;
+  isActive: boolean;
+}
 
 const ChatUI = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [showStartChatModal, setShowStartChatModal] = useState(false);
+  const [showFollowingsModal, setShowFollowingsModal] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const { user: currentUser } = useAuthStore();
+  const { fetchUserProfile } = useUserStore();
+  
   const {
     chats,
     messages,
     fetchChats,
     fetchMessages,
     sendMessage,
+    createChat,
+    markMessageAsRead,
+    setTypingStatus,
     isLoading,
     currentChat,
     setCurrentChat,
     clearMessages,
-  } = useChatStore();
+    onlineUsers,
+    typingUsers,
+  } =   useChatStore();
 
-  // Fetch chats on mount
+  const { getFollowing, following, getFollowers, followers, isLoading: isFollowLoading } = useFollowStore();
+
+  // Scroll to bottom when new messages arrive
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+  }, []);
+
   useEffect(() => {
-    fetchChats();
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Fetch chats and user profile on mount
+  useEffect(() => {
+    if (currentUser) {
+      fetchChats();
+      fetchUserProfile();
+    }
+    
     // Cleanup messages listener on unmount
     return () => {
       clearMessages();
     };
-    // eslint-disable-next-line
-  }, []);
+  }, [currentUser, fetchChats, fetchUserProfile, clearMessages]);
 
   // Fetch messages when a chat is selected
   useEffect(() => {
     if (selectedChatId) {
       fetchMessages(selectedChatId);
-      const chat = chats.find((c) => c.id === selectedChatId) || null;
+      const chat = chats.find((c: Chat) => c.id === selectedChatId) || null;
       setCurrentChat(chat);
     }
-  }, [selectedChatId]);
+  }, [selectedChatId, chats, fetchMessages, setCurrentChat]);
 
-  // Filtered chats for search
-  const filteredChats = chats.filter(
-    (chat) =>
-      chat.name?.toLowerCase().includes(search.toLowerCase()) ||
-      chat.lastMessage?.content?.toLowerCase().includes(search.toLowerCase())
+  // Handle typing indicator
+  useEffect(() => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (isTyping && selectedChatId) {
+      setTypingStatus(selectedChatId, true);
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false);
+        setTypingStatus(selectedChatId, false);
+      }, 3000);
+    } else if (!isTyping && selectedChatId) {
+      setTypingStatus(selectedChatId, false);
+    }
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [isTyping, selectedChatId, setTypingStatus]);
+
+  // Fetch followings and followers when modal opens
+  useEffect(() => {
+    if (showFollowingsModal) {
+      getFollowing(1, 100); // Fetch up to 100 followings
+      getFollowers(1, 100); // Fetch up to 100 followers
+    }
+  }, [showFollowingsModal, getFollowing, getFollowers]);
+
+  // Combine and deduplicate users (by id)
+  const allPossibleUsers = React.useMemo(() => {
+    const users = [...following, ...followers];
+    const seen = new Set();
+    return users.filter(user => {
+      if (seen.has(user.id)) return false;
+      seen.add(user.id);
+      return true;
+    });
+  }, [following, followers]);
+
+  // Filter by search
+  const filteredUsers = allPossibleUsers.filter(user =>
+    user.name?.toLowerCase().includes(userSearch.toLowerCase())
   );
 
+  // Filtered chats for search
+  const filteredChats = chats.filter((chat: Chat) => {
+    if (!chat.participantDetails) return false;
+    
+    const participantMatch = Object.values(chat.participantDetails).some(
+      (participant: ChatParticipant) =>
+        participant.name?.toLowerCase().includes(search.toLowerCase())
+    );
+    
+    const messageMatch = chat.lastMessage?.content?.toLowerCase().includes(search.toLowerCase()) || false;
+    
+    return participantMatch || messageMatch;
+  });
+
+  // DEBUG: Log chats array to diagnose sidebar issue
+  console.log("Sidebar chats:", chats);
+
+  // Get other participant in chat
+  const getOtherParticipant = useCallback((chat: Chat): ChatParticipant | null => {
+    if (!currentUser || !chat.participantDetails) return null;
+    return Object.values(chat.participantDetails).find(
+      (participant: ChatParticipant) => participant.id !== currentUser.id
+    ) || null;
+  }, [currentUser]);
+
   // Handle send message
-  const [input, setInput] = useState("");
-  const handleSend = async () => {
-    if (!input.trim() || !selectedChatId) return;
-    // TODO: Replace 'senderId' with actual user id from auth
-    await sendMessage(selectedChatId, "demo-user-id", input);
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || !selectedChatId || !currentUser) return;
+    
+    await sendMessage(selectedChatId, input);
     setInput("");
+    setIsTyping(false);
+  }, [input, selectedChatId, currentUser, sendMessage]);
+
+  // Handle input change for typing indicator
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    if (!isTyping) {
+      setIsTyping(true);
+    }
+  }, [isTyping]);
+
+  // Handle key press
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }, [handleSend]);
+
+  // Mark messages as read when chat is opened
+  useEffect(() => {
+    if (selectedChatId && messages[selectedChatId] && currentUser) {
+      const unreadMessages = messages[selectedChatId].filter(
+        (msg: ChatMessage) => !msg.readBy.includes(currentUser.id)
+      );
+      
+      unreadMessages.forEach((msg: ChatMessage) => {
+        markMessageAsRead(selectedChatId, msg.id);
+      });
+    }
+  }, [selectedChatId, messages, currentUser, markMessageAsRead]);
+
+  // Format timestamp
+  const formatTimestamp = useCallback((timestamp: Date) => {
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
+
+  // Chat list item component
+  const ChatListItem = ({ chat, isPinned = false }: { chat: Chat; isPinned?: boolean }) => {
+    const otherParticipant = getOtherParticipant(chat);
+    const isSelected = selectedChatId === chat.id;
+    const unreadCount = currentUser ? chat.unreadCount[currentUser.id] || 0 : 0;
+
+    return (
+      <div
+        className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer transition-colors ${
+          isSelected ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
+        }`}
+        onClick={() => {
+          setSelectedChatId(chat.id);
+          setSidebarOpen(false);
+        }}
+      >
+        <div className="relative">
+          <img
+            src={otherParticipant?.avatar || "/default-avatar.png"}
+            alt={otherParticipant?.name || "User"}
+            className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
+          />
+          {otherParticipant && onlineUsers.has(otherParticipant.id) && (
+            <FaCircle className="absolute -bottom-1 -right-1 text-green-500 text-xs bg-white rounded-full" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm md:text-base text-[#222] truncate">
+              {otherParticipant?.name || "Unknown User"}
+            </span>
+            {isPinned && <BsPinAngleFill className="text-green-600 text-xs flex-shrink-0" />}
+            {otherParticipant?.role && (
+              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex-shrink-0">
+                {otherParticipant.role}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-[#BDBDBD] truncate">
+            {chat.lastMessage?.content || "No messages yet"}
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <span className="text-xs text-[#BDBDBD]">
+            {chat.lastMessage?.timestamp ? formatTimestamp(chat.lastMessage.timestamp) : ""}
+          </span>
+          {unreadCount > 0 && (
+            <span className="bg-green-600 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+              {unreadCount}
+            </span>
+          )}
+        </div>
+      </div>
+    );
   };
 
-  // Sidebar content as a function for reuse
+  // Message component
+  const MessageItem = ({ message }: { message: ChatMessage }) => {
+    const isOwnMessage = message.senderId === currentUser?.id;
+    const isRead = message.readBy.length > 1;
+
+    return (
+      <div className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+        <div className="flex flex-col max-w-[85vw] md:max-w-[60%]">
+          <div
+            className={`px-3 md:px-5 py-2 md:py-3 rounded-2xl ${
+              isOwnMessage
+                ? "bg-green-600 text-white rounded-br-none"
+                : "bg-white text-[#222] rounded-bl-none"
+            } shadow-sm text-sm md:text-base`}
+          >
+            <span>{message.content}</span>
+          </div>
+          <div className={`flex items-center gap-1 mt-1 text-xs text-[#BDBDBD] ${
+            isOwnMessage ? "justify-end" : "justify-start"
+          }`}>
+            <span>{formatTimestamp(message.timestamp)}</span>
+            {isOwnMessage && (
+              <div className="flex items-center gap-1">
+                {isRead ? (
+                  <FaCheck className="text-blue-500" />
+                ) : (
+                  <FiCheck className="text-gray-400" />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Sidebar content
   const SidebarContent = () => (
     <>
       <div className="flex items-center justify-between px-4 md:px-6 pt-4 md:pt-6">
         <h2 className="text-xl md:text-2xl font-bold text-green-600">Chats</h2>
         <div className="flex gap-4">
+          <button
+            onClick={() => setShowFollowingsModal(true)}
+            className="bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors"
+            title="Start chat with following expert"
+          >
+            <FaUserPlus className="text-sm" />
+          </button>
+          <button
+            onClick={() => setShowStartChatModal(true)}
+            className="bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors"
+            title="Start new chat"
+          >
+            <FaSearch className="text-sm" />
+          </button>
           <IoIosNotificationsOutline
-            onClick={() => {
-              router.push("/notifications");
-            }}
-            className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer"
+            onClick={() => router.push("/notifications")}
+            className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer hover:text-gray-600 transition-colors"
           />
         </div>
       </div>
@@ -100,87 +372,15 @@ const ChatUI = () => {
           <FaSearch className="absolute right-3 top-2.5 text-[#BDBDBD] text-lg" />
         </div>
       </div>
-      <div className="px-4 md:px-6 pb-2 text-xs text-[#BDBDBD] font-semibold">
-        Pinned Message
-      </div>
-      <div className="flex flex-col gap-1 px-2">
-        {filteredChats
-          .filter((c) => c.isActive)
-          .map((chat) => (
-            <div
-              key={chat.id}
-              className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer ${selectedChatId === chat.id ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
-                }`}
-              onClick={() => {
-                setSelectedChatId(chat.id);
-                setSidebarOpen(false);
-              }}
-            >
-              <img
-                src={chat.avatar || "/default-avatar.png"}
-                alt={chat.name}
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm md:text-base text-[#222]">
-                    {chat.name}
-                  </span>
-                  <BsPinAngleFill className="text-green-600 text-xs" />
-                </div>
-                <div className="text-xs text-[#BDBDBD] flex items-center gap-1">
-                  {chat.lastMessage?.content}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-xs text-[#BDBDBD]">{chat.lastMessage?.createdAt ? new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
-                {chat.unreadCount > 0 && (
-                  <span className="bg-green-600 text-white text-xs rounded-full px-2 py-0.5">
-                    {chat.unreadCount}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-      </div>
+      {/* All Messages */}
       <div className="px-4 md:px-6 pt-4 pb-2 text-xs text-[#BDBDBD] font-semibold">
-        All Message
+        All Messages
       </div>
       <div className="flex-1 overflow-y-auto min-h-0 px-2 pb-4">
         {filteredChats
-          .filter((c) => c.isActive)
-          .map((chat) => (
-            <div
-              key={chat.id}
-              className={`flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl cursor-pointer ${selectedChatId === chat.id ? "bg-[#F7F9FB]" : "hover:bg-[#F7F9FB]"
-                }`}
-              onClick={() => {
-                setSelectedChatId(chat.id);
-                setSidebarOpen(false);
-              }}
-            >
-              <img
-                src={chat.avatar || "/default-avatar.png"}
-                alt={chat.name}
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
-              />
-              <div className="flex-1">
-                <div className="font-semibold text-sm md:text-base text-[#222]">
-                  {chat.name}
-                </div>
-                <div className="text-xs text-[#BDBDBD] flex items-center gap-1">
-                  {chat.lastMessage?.content}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="text-xs text-[#BDBDBD]">{chat.lastMessage?.createdAt ? new Date(chat.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
-                {chat.unreadCount > 0 && (
-                  <span className="bg-green-600 text-white text-xs rounded-full px-2 py-0.5">
-                    {chat.unreadCount}
-                  </span>
-                )}
-              </div>
-            </div>
+          .filter((chat: Chat) => chat.isActive)
+          .map((chat: Chat) => (
+            <ChatListItem key={chat.id} chat={chat} />
           ))}
       </div>
       {/* Sticky Join Community Button */}
@@ -196,133 +396,285 @@ const ChatUI = () => {
     </>
   );
 
-  return (
-    <div className="flex flex-col min-h-screen bg-[#F7F9FB] font-sans">
-      {/* Sticky Navigation Bar */}
-      <div className="sticky top-0 left-0 z-30 flex items-center justify-between p-2 bg-white border-b border-[#E6E6E6] shadow-sm w-full min-h-[56px] md:min-h-[64px]">
-        <div className="flex items-center gap-2 md:gap-3">
-          <FaArrowLeft
-            className="text-green-600 text-lg md:text-xl cursor-pointer hover:bg-green-50 rounded-full p-1 transition"
-            onClick={() => router.push("/")}
-          />
-          <span className="text-base md:text-lg font-semibold text-green-600 whitespace-nowrap">
-            Back to Home
-          </span>
-        </div>
-      </div>
-      <div className="flex flex-1 min-h-0 w-full pt-0">
-        {/* Sidebar for desktop/tablet */}
-        <div
-          className={`hidden md:flex w-[350px] bg-white border-r border-[#E6E6E6] flex-col min-h-0 ${sidebarOpen ? "md:hidden" : ""
-            }`}
+  // Get current chat participant
+  const currentChatParticipant = currentChat ? getOtherParticipant(currentChat) : null;
+  const isCurrentParticipantOnline = currentChatParticipant && onlineUsers.has(currentChatParticipant.id);
+  const isCurrentParticipantTyping = selectedChatId && 
+    currentChatParticipant && 
+    typingUsers[selectedChatId]?.has(currentChatParticipant.id);
+
+  // Modal for selecting any user (following or follower)
+  const FollowingsModal = () => (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 ${showFollowingsModal ? "" : "hidden"}`}
+      onClick={() => setShowFollowingsModal(false)}
+    >
+      <div
+        className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative"
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+          onClick={() => setShowFollowingsModal(false)}
         >
-          <SidebarContent />
-        </div>
-        {/* Sidebar Drawer Button for mobile (only if sidebar is closed) */}
-        {!sidebarOpen && (
-          <button
-            className="md:hidden fixed top-[70px] right-2 z-30 bg-green-600 text-white p-2 rounded-full shadow-lg transition-all duration-300"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open chat sidebar"
-          >
-            <FaSearch />
-          </button>
-        )}
-        {/* Sidebar Drawer for mobile with transition (from left) */}
-        <div
-          className={`fixed inset-0 z-40 flex transition-all duration-300 ${sidebarOpen ? "pointer-events-auto" : "pointer-events-none"
-            }`}
-          style={{ visibility: sidebarOpen ? "visible" : "hidden" }}
-        >
-          {/* Drawer (slides in from left) */}
-          <div
-            className={`w-72 bg-white h-full flex flex-col p-0 transform transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-              }`}
-          >
-            <div className="flex justify-between items-center px-4 py-3 border-b border-[#E6E6E6]">
-              <h2 className="text-xl font-bold text-green-600">Chats</h2>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="text-green-600 text-2xl"
-                aria-label="Close chat sidebar"
+          &times;
+        </button>
+        <h3 className="text-lg font-bold mb-4">Start Chat with User You Follow or Follows You</h3>
+        <input
+          type="text"
+          className="w-full mb-3 px-3 py-2 border rounded"
+          placeholder="Search users..."
+          value={userSearch}
+          onChange={e => setUserSearch(e.target.value)}
+        />
+        {isFollowLoading ? (
+          <div>Loading...</div>
+        ) : filteredUsers.length === 0 ? (
+          <div>No users found.</div>
+        ) : (
+          <ul className="divide-y divide-gray-200 max-h-72 overflow-y-auto">
+            {filteredUsers.map(user => (
+              <li
+                key={user.id}
+                className="flex items-center gap-3 py-2 cursor-pointer hover:bg-green-50 px-2 rounded"
+                onClick={async () => {
+                  setShowFollowingsModal(false);
+                  // Check if chat already exists
+                  let chat = chats.find((c) => c.participants.includes(user.id));
+                  let chatId;
+                  if (!chat) {
+                    chatId = await createChat([user.id]);
+                    if (!chatId) return;
+                    chat = { id: chatId } as any;
+                  } else {
+                    chatId = chat.id;
+                  }
+                  setSelectedChatId(chatId);
+                }}
               >
-                &times;
+                <img
+                  src={user.avatar || "/default-avatar.png"}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <span className="font-medium">{user.name}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen w-full bg-[#F7F9FB] font-sans pt-[60px]">
+      {/* Sidebar (Left) */}
+      <div className="hidden md:flex flex-col w-[360px] h-full bg-white border-r border-[#E6E6E6] shadow-md">
+        {/* Sidebar Header */}
+        <div className="sticky top-0 z-20 bg-white px-6 py-4 border-b border-[#E6E6E6] flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-green-600">Chats</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowFollowingsModal(true)}
+                className="bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors"
+                title="Start chat with following expert"
+              >
+                <FaUserPlus className="text-sm" />
+              </button>
+              <button
+                onClick={() => setShowStartChatModal(true)}
+                className="bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors"
+                title="Start new chat"
+              >
+                <FaSearch className="text-sm" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0">
-              <SidebarContent />
             </div>
+          {/* Future: Tabs/Filters (All, Unread, etc.) */}
+          {/* <div className="flex gap-2 mt-2">
+            <button className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-xs">All</button>
+            <button className="px-3 py-1 rounded-full text-[#BDBDBD] font-semibold text-xs">Unread</button>
+          </div> */}
+          {/* Search Bar */}
+          <div className="relative mt-3">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search chats..."
+              className="w-full px-4 py-2 rounded-lg border border-[#E6E6E6] bg-[#F7F9FB] focus:outline-none text-sm"
+            />
+            <FaSearch className="absolute right-3 top-2.5 text-[#BDBDBD] text-lg" />
           </div>
-          {/* Overlay */}
-          <div
-            className={`flex-1 bg-black bg-opacity-40 transition-opacity duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0"
-              }`}
-            onClick={() => setSidebarOpen(false)}
-          />
         </div>
-        {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-[#F7F9FB] min-h-0 w-full max-w-full">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 md:px-8 py-4 md:py-6 border-b border-[#E6E6E6] bg-white">
-            <div className="flex items-center gap-3 md:gap-4">
-              <img
-                src={currentChat?.avatar || "/default-avatar.png"}
-                alt={currentChat?.name || "Chat"}
-                className="w-10 h-10 md:w-16 md:h-16 rounded-full object-cover"
-              />
+        {/* Chat List */}
+        <div className="flex-1 overflow-y-auto px-2 pb-4 pt-2">
+          <div className="text-xs text-[#BDBDBD] font-semibold px-2 mb-2">All Messages</div>
+          {filteredChats
+            .filter((chat: Chat) => chat.isActive)
+            .map((chat: Chat) => (
+              <ChatListItem key={chat.id} chat={chat} />
+            ))}
+        </div>
+        {/* Sticky Join Community Button */}
+        <div className="sticky bottom-0 left-0 w-full flex justify-center bg-white py-3 z-10 border-t border-[#E6E6E6]">
+          <button
+            onClick={() => router.push("/community")}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold rounded-full shadow-md hover:scale-95 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm md:text-base"
+          >
+            <HiOutlineUserGroup className="text-xl md:text-2xl" />
+            <span>Join Our Community</span>
+          </button>
+        </div>
+        </div>
+
+      {/* Main Chat Area (Right) */}
+      <div className="flex-1 flex flex-col h-full bg-[#F7F9FB]">
+        {/* Sticky chat header */}
+        <div className="sticky top-0 z-20 bg-white shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E6E6] bg-white">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <img
+                  src={currentChatParticipant?.avatar || "/default-avatar.png"}
+                  alt={currentChatParticipant?.name || "Chat"}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                {isCurrentParticipantOnline && (
+                  <FaCircle className="absolute -bottom-1 -right-1 text-green-500 text-sm bg-white rounded-full" />
+                )}
+              </div>
               <div className="flex flex-col gap-1 justify-center">
-                <span className="font-semibold text-base md:text-lg text-[#222]">
-                  {currentChat?.name || "Select a chat"}
+                <span className="font-semibold text-lg text-[#222]">
+                  {currentChatParticipant?.name || "Select a chat"}
                 </span>
-                {/* Optionally show typing status or last seen */}
+                <div className="flex items-center gap-2">
+                  {isCurrentParticipantOnline ? (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <FaCircle className="text-green-500 text-xs" />
+                      Online
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[#BDBDBD]">
+                      {currentChatParticipant?.lastSeen
+                        ? `Last seen ${new Date(currentChatParticipant.lastSeen).toLocaleString()}`
+                        : "Offline"}
+                    </span>
+                  )}
+                  {currentChatParticipant?.role && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                      {currentChatParticipant.role}
+                    </span>
+                  )}
+                </div>
+                {/* Typing indicator */}
+                {isCurrentParticipantTyping && (
+                  <span className="text-xs text-[#BDBDBD] italic">typing...</span>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-4 md:gap-6">
-              <FaEllipsisH className="text-[#BDBDBD] text-lg cursor-pointer" />
+            <div className="flex items-center gap-4">
+              <FaEllipsisH className="text-[#BDBDBD] text-lg cursor-pointer hover:text-gray-600 transition-colors" />
             </div>
           </div>
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-2 md:px-8 py-4 md:py-6 flex flex-col gap-3 md:gap-4 min-h-0 w-full max-w-full">
-            {messages.length === 0 && (
-              <div className="flex justify-center text-[#BDBDBD]">No messages yet.</div>
-            )}
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.senderId === "demo-user-id" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85vw] md:max-w-[60%] px-3 md:px-5 py-2 md:py-3 rounded-2xl ${msg.senderId === "demo-user-id"
-                    ? "bg-green-600 text-white rounded-br-none"
-                    : "bg-white text-[#222] rounded-bl-none"
-                    } shadow-sm text-sm md:text-base`}
-                >
-                  <span>{msg.content}</span>
+        </div>
+        {/* Scrollable messages area with its own scrollbar */}
+        <div className="flex-1 min-h-0 max-h-full overflow-y-auto px-8 py-6 flex flex-col gap-4 w-full max-w-full">
+            {!selectedChatId ? (
+              <div className="flex justify-center items-center h-full text-[#BDBDBD]">
+                <div className="text-center">
+                  <div className="text-4xl mb-4">💬</div>
+                  <div className="text-lg font-semibold mb-2">Select a chat to start messaging</div>
+                  <div className="text-sm">Choose from your conversations or start a new one</div>
                 </div>
               </div>
-            ))}
+            ) : messages[selectedChatId]?.length === 0 ? (
+              <div className="flex justify-center text-[#BDBDBD]">No messages yet. Start the conversation!</div>
+            ) : (
+              messages[selectedChatId]?.map((message: ChatMessage) => (
+                <MessageItem key={message.id} message={message} />
+              ))
+            )}
+            <div ref={messagesEndRef} />
           </div>
-          {/* Message Input */}
-          <div className="flex items-center gap-2 md:gap-4 px-2 md:px-8 py-4 md:py-6 bg-white border-t border-[#E6E6E6] w-full">
-            <MdOutlineAttachFile className="text-[#BDBDBD] text-xl md:text-2xl cursor-pointer" />
+        {/* Sticky message input at the bottom */}
+        <div className="sticky bottom-0 left-0 w-full z-20 bg-white shadow-md">
+          <div className="flex items-center gap-4 px-8 py-6 bg-white border-t border-[#E6E6E6] w-full">
+            <MdOutlineAttachFile className="text-[#BDBDBD] text-2xl cursor-pointer hover:text-gray-600 transition-colors" />
             <input
               type="text"
               placeholder="Type a message"
-              className="flex-1 px-2 md:px-4 py-2 md:py-3 rounded-xl border border-[#E6E6E6] bg-[#F7F9FB] focus:outline-none text-sm md:text-base"
+              className="flex-1 px-4 py-3 rounded-xl border border-[#E6E6E6] bg-[#F7F9FB] focus:outline-none text-base"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSend();
-              }}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyPress}
               disabled={!selectedChatId}
             />
             <FaPaperPlane
-              className="text-green-600 text-xl md:text-2xl cursor-pointer"
+              className={`text-2xl cursor-pointer transition-colors ${
+                input.trim() && selectedChatId ? "text-green-600 hover:text-green-700" : "text-[#BDBDBD]"
+              }`}
               onClick={handleSend}
             />
           </div>
         </div>
       </div>
+
+      {/* Mobile Sidebar Drawer */}
+      {!sidebarOpen && (
+        <button
+          className="md:hidden fixed top-[70px] right-2 z-30 bg-green-600 text-white p-2 rounded-full shadow-lg transition-all duration-300"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open chat sidebar"
+        >
+          <FaSearch />
+        </button>
+      )}
+      <div
+        className={`fixed inset-0 z-40 flex transition-all duration-300 ${
+          sidebarOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
+        style={{ visibility: sidebarOpen ? "visible" : "hidden" }}
+      >
+        <div
+          className={`w-72 bg-white h-full flex flex-col p-0 transform transition-transform duration-300 ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex justify-between items-center px-4 py-3 border-b border-[#E6E6E6]">
+            <h2 className="text-xl font-bold text-green-600">Chats</h2>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-green-600 text-2xl"
+              aria-label="Close chat sidebar"
+            >
+              &times;
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <SidebarContent />
+          </div>
+        </div>
+        <div
+          className={`flex-1 bg-black bg-opacity-40 transition-opacity duration-300 ${
+            sidebarOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setSidebarOpen(false)}
+        />
+      </div>
+
+      {/* Start Chat Modal */}
+      <StartChatModal
+        isOpen={showStartChatModal}
+        onClose={() => setShowStartChatModal(false)}
+        onChatStarted={(chatId) => {
+          setSelectedChatId(chatId);
+          setShowStartChatModal(false);
+        }}
+      />
+      {/* Followings Modal */}
+      <FollowingsModal />
     </div>
   );
 };
