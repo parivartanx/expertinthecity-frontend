@@ -412,7 +412,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         r.userId === currentUser.id && r.reaction === reaction
       );
 
-      let updatedReactions;
+      let updatedReactions: MessageReaction[];
       if (existingReactionIndex !== -1) {
         // Remove existing reaction (toggle behavior)
         updatedReactions = reactions.filter((_: any, index: number) => index !== existingReactionIndex);
