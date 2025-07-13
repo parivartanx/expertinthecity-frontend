@@ -141,6 +141,12 @@ const Header = () => {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, searchFocused, searchSuggestions]);
 
+  // Filter navLinks to hide 'Chats' if not authenticated
+  const filteredNavLinks = React.useMemo(() => {
+    if (isAuthenticated) return navLinks;
+    return navLinks.filter(link => link.name !== "Chats");
+  }, [isAuthenticated]);
+
   // Helper function to get category icon component
   const getCategoryIconComponent = (iconName: string) => {
     const iconMap: { [key: string]: any } = {
@@ -378,7 +384,7 @@ const Header = () => {
 
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-4 ml-4 font-semibold text-sm">
-            {navLinks.map((link) =>
+            {filteredNavLinks.map((link) =>
               !link.dropdown ? (
                 <Link
                   key={link.name}
@@ -741,7 +747,7 @@ const Header = () => {
 
               {/* Mobile Nav */}
               <nav className="flex flex-col gap-3">
-                {navLinks.map((link) =>
+                {filteredNavLinks.map((link) =>
                   !link.dropdown ? (
                     <Link
                       key={link.name}
