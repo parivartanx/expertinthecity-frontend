@@ -172,7 +172,7 @@ export interface User {
   email: string;
   avatar?: string;
   phone?: string;
-  location?: string;
+  location?: string | { city?: string; state?: string; country?: string; postalCode?: string };
   bio?: string;
   dateOfBirth?: string;
   gender?: string;

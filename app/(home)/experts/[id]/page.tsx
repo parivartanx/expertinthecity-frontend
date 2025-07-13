@@ -87,8 +87,8 @@ export default function ExpertProfile() {
     const router = useRouter();
     const expertId = params.id as string;
 
-    const { getExpertById, sendMessageToExpert, isLoading, error } = useAllExpertsStore();
-    const { createChat, chats } = useChatStore();
+    const { getExpertById, isLoading, error } = useAllExpertsStore();
+    const { createChat, chats, fetchChats, sendMessage } = useChatStore();
     const { user } = useAuthStore();
     const {
         followExpert,
@@ -150,6 +150,15 @@ export default function ExpertProfile() {
         fetchExpert();
     }, [expertId, getExpertById, user, checkFollowStatus]);
 
+    // Fetch chats when user is authenticated (only when user changes)
+    useEffect(() => {
+        if (user) {
+            fetchChats();
+        }
+        // Only depend on user, not fetchChats or chats
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
+
     // Fetch posts for this expert when expert.userId is available
     useEffect(() => {
         if (expert?.userId) {
@@ -204,44 +213,53 @@ export default function ExpertProfile() {
 
             // Try to find an existing chat with this expert
             let chat = chats.find(
-                (c) =>
-                    c.type === "expert" &&
-                    c.participants.some((p) => p.id === expert.id)
+                (c: any) =>
+                    c.participants.includes(expert.userId) &&
+                    Object.values(c.participantDetails).some((p: any) => p.role === "EXPERT")
             );
+
+            let chatId: string;
 
             if (!chat) {
                 // Create a new chat if not found
-                await createChat({
-                    type: "expert",
-                    participants: [{ id: expert.id, name: expert.name, avatar: expert.avatar, role: "expert", isOnline: false }],
-                    name: expert.name,
-                    avatar: expert.avatar,
-                });
-
-                // Refetch chats to get the new chatId
+                chatId = await createChat([expert.userId]);
+                if (!chatId) {
+                    throw new Error("Failed to create chat");
+                }
+                // Wait a moment for the chat to be created
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Try to find the chat again
                 chat = chats.find(
-                    (c) =>
-                        c.type === "expert" &&
-                        c.participants.some((p) => p.id === expert.id)
+                    (c: any) =>
+                        c.participants.includes(expert.userId) &&
+                        Object.values(c.participantDetails).some((p: any) => p.role === "EXPERT")
                 );
+                if (!chat) {
+                    // If still not found, create a minimal chat object with the ID we got
+                    chat = { 
+                        id: chatId,
+                        participants: [user.id, expert.userId],
+                        participantDetails: {},
+                        unreadCount: {},
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        isActive: true
+                    } as any;
+                }
+            } else {
+                chatId = chat.id;
             }
 
-            if (chat) {
-                // Send initial message to expert
-                const messageSent = await sendMessageToExpert(expert.id, "Hello! I'm interested in your services.");
-
-                if (messageSent) {
-                    toast.success("Message sent successfully!");
-                    router.push(`/chat?chatId=${chat.id}`);
-                } else {
-                    toast.error("Failed to send message");
-                }
+            if (chat && chat.id) {
+                // Navigate directly to the chat page without sending a message
+                toast.success("Opening chat with " + expert.name);
+                router.push(`/chats/${chat.id}`);
             } else {
                 toast.error("Failed to create chat");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error handling message:", error);
-            toast.error("Failed to send message");
+            toast.error(error.message || "Failed to open chat");
         } finally {
             setMessageLoading(false);
         }

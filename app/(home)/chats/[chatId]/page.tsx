@@ -6,19 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useChatStore } from "@/lib/mainwebsite/chat-store";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 
-export default function ExpertPage() {
-  const searchParams = useSearchParams();
-  const chatId = searchParams.get("chatId");
+export default function ChatByIdPage() {
+  const params = useParams();
+  const chatId = params.chatId as string;
 
   // Zustand store
   const {
     currentChat,
     messages,
-    fetchChatById,
+    chats,
+    fetchChats,
     fetchMessages,
     sendMessage,
+    setCurrentChat,
     isLoading,
     error,
   } = useChatStore();
@@ -40,15 +42,18 @@ export default function ExpertPage() {
   // Fetch chat and messages on mount or when chatId changes
   useEffect(() => {
     if (chatId) {
-      fetchChatById(chatId);
+      fetchChats();
       fetchMessages(chatId);
+      // Set current chat from chats array
+      const chat = chats.find(c => c.id === chatId);
+      setCurrentChat(chat || null);
     }
-  }, [chatId, fetchChatById, fetchMessages]);
+  }, [chatId, fetchChats, fetchMessages, chats, setCurrentChat]);
 
   // Send message handler
   const handleSendMessage = async () => {
-    if (!chatId || !senderId || newMessageText.trim() === "") return;
-    await sendMessage(chatId, senderId, newMessageText);
+    if (!chatId || newMessageText.trim() === "") return;
+    await sendMessage(chatId, newMessageText);
     setNewMessageText("");
   };
 
@@ -69,7 +74,7 @@ export default function ExpertPage() {
   };
 
   // Get expert info from currentChat participants (show first non-user as expert)
-  const expert = currentChat?.participants?.find((p) => p.role === "expert") || currentChat?.participants?.[0];
+  const expert = currentChat ? Object.values(currentChat.participantDetails).find((p: any) => p.role === "EXPERT") || Object.values(currentChat.participantDetails)[0] : null;
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
@@ -124,7 +129,7 @@ export default function ExpertPage() {
           {isLoading ? (
             <div>Loading messages...</div>
           ) : (
-            messages.map((message) => (
+            (messages[chatId || ''] || []).map((message: any) => (
               <div
                 key={message.id}
                 className={`self-${message.senderId === expert?.id
@@ -196,4 +201,4 @@ export default function ExpertPage() {
       )}
     </div>
   );
-}
+} 

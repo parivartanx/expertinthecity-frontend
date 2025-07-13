@@ -1,8 +1,5 @@
-import React from "react";
+"use client";
 import ChatUI from "@/components/mainwebsite/ChatUI";
-
-const ChatsPage = () => {
+export default function ChatsPage() {
   return <ChatUI />;
-};
-
-export default ChatsPage;
+} 

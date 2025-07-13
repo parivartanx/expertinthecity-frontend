@@ -1,31 +1,37 @@
-import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 import { ExpertsProvider } from "@/lib/contexts/experts-context";
 import { UsersProvider } from "@/lib/contexts/users-context";
-import { Toaster } from "@/components/ui/sonner";
+import PresenceProvider from "@/components/PresenceProvider";
+import GlobalChatNotifier from "@/components/mainwebsite/GlobalChatNotifier";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Expert in the City",
-  description: "Connect with experts in your city",
+  title: "ExpertInTheCity - Connect with Experts",
+  description: "Connect with verified experts in various fields for one-on-one consultations and guidance.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ExpertsProvider>
-          <UsersProvider>
-            {children}
-            <Toaster position="top-right" />
-          </UsersProvider>
-        </ExpertsProvider>
+        {/* Global chat notifier for new message notifications */}
+        <GlobalChatNotifier />
+        <PresenceProvider>
+          <ExpertsProvider>
+            <UsersProvider>
+              {children}
+            </UsersProvider>
+          </ExpertsProvider>
+        </PresenceProvider>
+        <Toaster />
       </body>
     </html>
   );
