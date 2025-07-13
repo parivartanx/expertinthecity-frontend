@@ -66,7 +66,7 @@ interface NavItem {
 
 const navLinks: NavItem[] = [
   { name: "Home", href: "/", icon: BsHouseDoor },
-  { name: "Experts", href: "/experts", icon: BsPeople },
+  { name: "Find an Expert", href: "/experts", icon: BsPeople },
   { name: "Categories", href: "/categories", icon: BsGrid },
   { name: "Chats", href: "/chats", icon: BsChatDots },
   {
@@ -445,16 +445,18 @@ const Header = () => {
                 </div>
               )
             )}
-            <Link
-              href="/becomeanexpert"
-              className={`${(pathname === "/" || pathname === "/") && !isScrolled
-                ? "text-white/80"
-                : "text-green-600"
-                } hover:text-green-600 transition px-1 flex items-center gap-2`}
-            >
-              <HiAcademicCap className="text-lg" />
-              Become an Expert
-            </Link>
+            {user?.role !== "EXPERT" && (
+              <Link
+                href="/becomeanexpert"
+                className={`${(pathname === "/" || pathname === "/") && !isScrolled
+                  ? "text-white/80"
+                  : "text-green-600"
+                  } hover:text-green-600 transition px-1 flex items-center gap-2`}
+              >
+                <HiAcademicCap className="text-lg" />
+                Become an Expert
+              </Link>
+            )}
           </nav>
 
           {/* Auth Buttons */}
@@ -790,17 +792,19 @@ const Header = () => {
                   )
                 )}
                 {/* Become an Expert Button */}
-                <Link
-                  href="/becomeanexpert"
-                  className={`${pathname === "/becomeanexpert"
-                    ? "text-green-600 bg-green-50"
-                    : "text-neutral-900"
-                    } hover:text-green-600 hover:bg-green-50 transition-all duration-200 text-sm font-medium px-3 py-2.5 rounded-lg flex items-center gap-2`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <HiAcademicCap className="text-lg" />
-                  Become an Expert
-                </Link>
+                {user?.role !== "EXPERT" && (
+                  <Link
+                    href="/becomeanexpert"
+                    className={`${pathname === "/becomeanexpert"
+                      ? "text-green-600 bg-green-50"
+                      : "text-neutral-900"
+                      } hover:text-green-600 hover:bg-green-50 transition-all duration-200 text-sm font-medium px-3 py-2.5 rounded-lg flex items-center gap-2`}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <HiAcademicCap className="text-lg" />
+                    Become an Expert
+                  </Link>
+                )}
               </nav>
 
               {/* Mobile Auth Buttons */}
