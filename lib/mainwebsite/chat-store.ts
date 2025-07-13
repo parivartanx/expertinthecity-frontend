@@ -19,6 +19,13 @@ import { db } from "./firebase";
 import { useAuthStore } from "./auth-store";
 
 // Types
+export interface MessageReaction {
+  userId: string;
+  userName: string;
+  reaction: string;
+  timestamp: Date;
+}
+
 export interface ChatMessage {
   id: string;
   content: string;
@@ -28,6 +35,7 @@ export interface ChatMessage {
   senderRole: "USER" | "EXPERT";
   timestamp: Date;
   readBy: string[];
+  reactions?: MessageReaction[];
 }
 
 export interface ChatParticipant {
@@ -70,6 +78,10 @@ interface ChatState {
   setCurrentChat: (chat: Chat | null) => void;
   clearMessages: () => void;
   clearError: () => void;
+  
+  // Reaction Actions
+  addReaction: (chatId: string, messageId: string, reaction: string) => Promise<void>;
+  removeReaction: (chatId: string, messageId: string, reaction: string) => Promise<void>;
 }
 
 // Helper to fetch user info from backend API
@@ -165,6 +177,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
             senderRole: data.senderRole,
             timestamp: data.timestamp?.toDate() || new Date(),
             readBy: data.readBy || [],
+            reactions: data.reactions?.map((r: any) => ({
+              userId: r.userId,
+              userName: r.userName,
+              reaction: r.reaction,
+              timestamp: r.timestamp?.toDate() || new Date(),
+            })) || [],
           });
         });
         
@@ -369,5 +387,164 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  // Reaction Actions
+  addReaction: async (chatId: string, messageId: string, reaction: string) => {
+    try {
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser) {
+        throw new Error("User not authenticated");
+      }
+
+      const messageRef = doc(db, "chats", chatId, "messages", messageId);
+      const messageSnap = await getDoc(messageRef);
+      
+      if (!messageSnap.exists()) {
+        throw new Error("Message not found");
+      }
+
+      const messageData = messageSnap.data();
+      const reactions = messageData.reactions || [];
+      
+      // Check if user already has this reaction
+      const existingReactionIndex = reactions.findIndex((r: any) => 
+        r.userId === currentUser.id && r.reaction === reaction
+      );
+
+      let updatedReactions;
+      if (existingReactionIndex !== -1) {
+        // Remove existing reaction (toggle behavior)
+        updatedReactions = reactions.filter((_: any, index: number) => index !== existingReactionIndex);
+      } else {
+        // Add new reaction
+        updatedReactions = [...reactions, {
+          userId: currentUser.id,
+          userName: currentUser.name,
+          reaction,
+          timestamp: new Date(),
+        }];
+      }
+
+      // Optimistically update the UI immediately
+      const { messages } = get();
+      const updatedMessages = messages[chatId]?.map(msg => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            reactions: updatedReactions,
+          };
+        }
+        return msg;
+      }) || [];
+      
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [chatId]: updatedMessages,
+        },
+      }));
+
+      // Then update the database
+      await updateDoc(messageRef, {
+        reactions: updatedReactions,
+      });
+      
+    } catch (error: any) {
+      console.error("Error adding reaction:", error);
+      
+      // Revert optimistic update on error
+      const { messages } = get();
+      const originalMessages = messages[chatId]?.map(msg => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            reactions: msg.reactions || [],
+          };
+        }
+        return msg;
+      }) || [];
+      
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [chatId]: originalMessages,
+        },
+      }));
+      
+      set({ error: error.message });
+    }
+  },
+
+  removeReaction: async (chatId: string, messageId: string, reaction: string) => {
+    try {
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser) {
+        throw new Error("User not authenticated");
+      }
+
+      const messageRef = doc(db, "chats", chatId, "messages", messageId);
+      const messageSnap = await getDoc(messageRef);
+      
+      if (!messageSnap.exists()) {
+        throw new Error("Message not found");
+      }
+
+      const messageData = messageSnap.data();
+      const reactions = messageData.reactions || [];
+      
+      // Remove user's reaction
+      const updatedReactions = reactions.filter((r: any) => 
+        !(r.userId === currentUser.id && r.reaction === reaction)
+      );
+
+      // Optimistically update the UI immediately
+      const { messages } = get();
+      const updatedMessages = messages[chatId]?.map(msg => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            reactions: updatedReactions,
+          };
+        }
+        return msg;
+      }) || [];
+      
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [chatId]: updatedMessages,
+        },
+      }));
+
+      // Then update the database
+      await updateDoc(messageRef, {
+        reactions: updatedReactions,
+      });
+      
+    } catch (error: any) {
+      console.error("Error removing reaction:", error);
+      
+      // Revert optimistic update on error
+      const { messages } = get();
+      const originalMessages = messages[chatId]?.map(msg => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            reactions: msg.reactions || [],
+          };
+        }
+        return msg;
+      }) || [];
+      
+      set((state) => ({
+        messages: {
+          ...state.messages,
+          [chatId]: originalMessages,
+        },
+      }));
+      
+      set({ error: error.message });
+    }
   },
 })); 

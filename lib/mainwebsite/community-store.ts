@@ -23,6 +23,13 @@ import { db, rtdb } from "./firebase";
 import { useAuthStore } from "./auth-store";
 
 // Types
+export interface MessageReaction {
+  userId: string;
+  userName: string;
+  reaction: string;
+  timestamp: Date;
+}
+
 export interface CommunityMessage {
   id: string;
   content: string;
@@ -33,6 +40,7 @@ export interface CommunityMessage {
   timestamp: Date;
   edited?: boolean;
   editedAt?: Date;
+  reactions?: MessageReaction[];
 }
 
 export interface CommunityMember {
@@ -91,6 +99,10 @@ interface CommunityState {
   sendMessage: (communityId: string, content: string) => Promise<void>;
   editMessage: (communityId: string, messageId: string, content: string) => Promise<void>;
   deleteMessage: (communityId: string, messageId: string) => Promise<void>;
+  
+  // Reaction Actions
+  addReaction: (communityId: string, messageId: string, reaction: string) => Promise<void>;
+  removeReaction: (communityId: string, messageId: string, reaction: string) => Promise<void>;
   
   // Membership Actions
   fetchUserMemberships: () => Promise<void>;
@@ -280,6 +292,31 @@ export const useCommunityStore = create<CommunityState>()(
             return;
           }
 
+          // Check if user has an inactive membership (left the community before)
+          const membershipsRef = collection(db, "userCommunityMemberships");
+          const membershipQuery = query(
+            membershipsRef,
+            where("communityId", "==", communityId),
+            where("userId", "==", user.id)
+          );
+          const membershipSnap = await getDocs(membershipQuery);
+          
+          if (!membershipSnap.empty) {
+            // Reactivate existing membership
+            const membershipDoc = membershipSnap.docs[0];
+            await updateDoc(doc(db, "userCommunityMemberships", membershipDoc.id), {
+              isActive: true,
+            });
+          } else {
+            // Create new membership
+            await addDoc(collection(db, "userCommunityMemberships"), {
+              communityId,
+              userId: user.id,
+              joinedAt: serverTimestamp(),
+              isActive: true,
+            });
+          }
+
           // Update community
           await updateDoc(communityRef, {
             members: arrayUnion(user.id),
@@ -299,16 +336,8 @@ export const useCommunityStore = create<CommunityState>()(
             updatedAt: serverTimestamp(),
           });
 
-          // Add user membership
-          await addDoc(collection(db, "userCommunityMemberships"), {
-            communityId,
-            userId: user.id,
-            joinedAt: serverTimestamp(),
-            isActive: true,
-          });
-
-          // Don't refresh data here to avoid infinite loops
-          // The changes will be picked up by existing subscriptions
+          // Refresh user memberships to update the UI
+          await get().fetchUserMemberships();
           
         } catch (error) {
           console.error("Error joining community:", error);
@@ -367,8 +396,14 @@ export const useCommunityStore = create<CommunityState>()(
             });
           }
 
-          // Don't refresh data here to avoid infinite loops
-          // The changes will be picked up by existing subscriptions
+          // Clear current community if it's the one being left
+          const { currentCommunity } = get();
+          if (currentCommunity?.id === communityId) {
+            set({ currentCommunity: null, messages: [] });
+          }
+
+          // Refresh user memberships to update the UI
+          await get().fetchUserMemberships();
           
         } catch (error) {
           console.error("Error leaving community:", error);
@@ -383,6 +418,18 @@ export const useCommunityStore = create<CommunityState>()(
       // Message Actions
       fetchMessages: async (communityId: string) => {
         set({ isLoading: true, error: null });
+        
+        // Check if user is a member of the community before fetching messages
+        const { userMemberships } = get();
+        const isMember = userMemberships.some(membership => 
+          membership.communityId === communityId && membership.isActive
+        );
+
+        if (!isMember) {
+          set({ error: "You must join the community before viewing messages", isLoading: false });
+          return;
+        }
+        
         try {
           const messagesRef = collection(db, "communities", communityId, "messages");
           const q = query(messagesRef, orderBy("timestamp", "asc"), limit(100));
@@ -418,6 +465,17 @@ export const useCommunityStore = create<CommunityState>()(
           return;
         }
 
+        // Check if user is a member of the community
+        const { userMemberships } = get();
+        const isMember = userMemberships.some(membership => 
+          membership.communityId === communityId && membership.isActive
+        );
+
+        if (!isMember) {
+          set({ error: "You must join the community before sending messages" });
+          return;
+        }
+
         try {
           const messageData = {
             content,
@@ -446,6 +504,17 @@ export const useCommunityStore = create<CommunityState>()(
         const { user } = useAuthStore.getState();
         if (!user) {
           set({ error: "User not authenticated" });
+          return;
+        }
+
+        // Check if user is a member of the community
+        const { userMemberships } = get();
+        const isMember = userMemberships.some(membership => 
+          membership.communityId === communityId && membership.isActive
+        );
+
+        if (!isMember) {
+          set({ error: "You must join the community before editing messages" });
           return;
         }
 
@@ -483,6 +552,17 @@ export const useCommunityStore = create<CommunityState>()(
           return;
         }
 
+        // Check if user is a member of the community
+        const { userMemberships } = get();
+        const isMember = userMemberships.some(membership => 
+          membership.communityId === communityId && membership.isActive
+        );
+
+        if (!isMember) {
+          set({ error: "You must join the community before deleting messages" });
+          return;
+        }
+
         try {
           const messageRef = doc(db, "communities", communityId, "messages", messageId);
           const messageSnap = await getDoc(messageRef);
@@ -515,8 +595,8 @@ export const useCommunityStore = create<CommunityState>()(
           const membershipsRef = collection(db, "userCommunityMemberships");
           const q = query(
             membershipsRef,
-            where("userId", "==", user.id),
-            where("isActive", "==", true)
+            where("userId", "==", user.id)
+            // Removed the isActive filter to get both active and inactive memberships
           );
           const snapshot = await getDocs(q);
           
@@ -561,6 +641,17 @@ export const useCommunityStore = create<CommunityState>()(
       },
 
       subscribeToCommunityMessages: (communityId: string) => {
+        // Check if user is a member of the community before subscribing
+        const { userMemberships } = get();
+        const isMember = userMemberships.some(membership => 
+          membership.communityId === communityId && membership.isActive
+        );
+
+        if (!isMember) {
+          console.warn(`User is not a member of community ${communityId}, skipping subscription`);
+          return () => {}; // Return empty unsubscribe function
+        }
+
         const messagesRef = collection(db, "communities", communityId, "messages");
         const q = query(messagesRef, orderBy("timestamp", "asc"), limit(100));
         
@@ -578,6 +669,12 @@ export const useCommunityStore = create<CommunityState>()(
               timestamp: data.timestamp?.toDate() || new Date(),
               edited: data.edited || false,
               editedAt: data.editedAt?.toDate(),
+              reactions: data.reactions?.map((r: any) => ({
+                userId: r.userId,
+                userName: r.userName,
+                reaction: r.reaction,
+                timestamp: r.timestamp?.toDate() || new Date(),
+              })) || [],
             });
           });
           
@@ -617,6 +714,164 @@ export const useCommunityStore = create<CommunityState>()(
         });
 
         return unsubscribe;
+      },
+
+      // Reaction Actions
+      addReaction: async (communityId: string, messageId: string, reaction: string) => {
+        const { user } = useAuthStore.getState();
+        if (!user) {
+          set({ error: "User not authenticated" });
+          return;
+        }
+
+        try {
+          // Check if user is a member of the community
+          const { userMemberships } = get();
+          const isMember = userMemberships.some(membership => 
+            membership.communityId === communityId && membership.isActive
+          );
+
+          if (!isMember) {
+            set({ error: "You must join the community before reacting to messages" });
+            return;
+          }
+
+          const messageRef = doc(db, "communities", communityId, "messages", messageId);
+          const messageSnap = await getDoc(messageRef);
+          
+          if (!messageSnap.exists()) {
+            set({ error: "Message not found" });
+            return;
+          }
+
+          const messageData = messageSnap.data();
+          const reactions = messageData.reactions || [];
+          
+          // Check if user already has this reaction
+          const existingReactionIndex = reactions.findIndex((r: any) => 
+            r.userId === user.id && r.reaction === reaction
+          );
+
+          let updatedReactions;
+          if (existingReactionIndex !== -1) {
+            // Remove existing reaction (toggle behavior)
+            updatedReactions = reactions.filter((_: any, index: number) => index !== existingReactionIndex);
+          } else {
+            // Add new reaction
+            updatedReactions = [...reactions, {
+              userId: user.id,
+              userName: user.name,
+              reaction,
+              timestamp: new Date(),
+            }];
+          }
+
+          // Optimistically update the UI immediately
+          const { messages } = get();
+          const updatedMessages = messages.map(msg => {
+            if (msg.id === messageId) {
+              return {
+                ...msg,
+                reactions: updatedReactions,
+              };
+            }
+            return msg;
+          });
+          set({ messages: updatedMessages });
+
+          // Then update the database
+          await updateDoc(messageRef, {
+            reactions: updatedReactions,
+          });
+          
+          set({ error: null }); // Clear any previous errors
+          
+        } catch (error: any) {
+          console.error("Error adding reaction:", error);
+          
+          // Revert optimistic update on error
+          const { messages } = get();
+          const originalMessages = messages.map(msg => {
+            if (msg.id === messageId) {
+              return {
+                ...msg,
+                reactions: msg.reactions || [],
+              };
+            }
+            return msg;
+          });
+          set({ messages: originalMessages });
+          
+          if (error.code === 'permission-denied') {
+            set({ error: "Permission denied. You may not have access to this community." });
+          } else if (error.code === 'not-found') {
+            set({ error: "Message or community not found." });
+          } else {
+            set({ error: `Failed to add reaction: ${error.message || 'Unknown error'}` });
+          }
+        }
+      },
+
+      removeReaction: async (communityId: string, messageId: string, reaction: string) => {
+        const { user } = useAuthStore.getState();
+        if (!user) {
+          set({ error: "User not authenticated" });
+          return;
+        }
+
+        try {
+          const messageRef = doc(db, "communities", communityId, "messages", messageId);
+          const messageSnap = await getDoc(messageRef);
+          
+          if (!messageSnap.exists()) {
+            set({ error: "Message not found" });
+            return;
+          }
+
+          const messageData = messageSnap.data();
+          const reactions = messageData.reactions || [];
+          
+          // Remove user's reaction
+          const updatedReactions = reactions.filter((r: any) => 
+            !(r.userId === user.id && r.reaction === reaction)
+          );
+
+          // Optimistically update the UI immediately
+          const { messages } = get();
+          const updatedMessages = messages.map(msg => {
+            if (msg.id === messageId) {
+              return {
+                ...msg,
+                reactions: updatedReactions,
+              };
+            }
+            return msg;
+          });
+          set({ messages: updatedMessages });
+
+          // Then update the database
+          await updateDoc(messageRef, {
+            reactions: updatedReactions,
+          });
+          
+        } catch (error) {
+          console.error("Error removing reaction:", error);
+          
+          // Revert optimistic update on error
+          const { messages } = get();
+          const originalMessages = messages.map(msg => {
+            if (msg.id === messageId) {
+              return {
+                ...msg,
+                reactions: msg.reactions || [],
+              };
+            }
+            return msg;
+          });
+          set({ messages: originalMessages });
+          
+          set({ error: "Failed to remove reaction" });
+        }
       },
     }),
     {
