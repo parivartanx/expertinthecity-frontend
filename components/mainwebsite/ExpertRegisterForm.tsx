@@ -40,6 +40,9 @@ const defaultInterests = [
   "Fashion",
   "Nature",
   "Volunteering",
+  "Nutrition",
+  "Weight Loss",
+  "Sports Diet",
 ];
 
 const suggestedUsers = [
@@ -126,12 +129,293 @@ const CertificationsInput = ({ certifications, setCertifications }: {
   );
 };
 
+// Inline ExperiencesInput component for experiences array
+const ExperiencesInput = ({ experiences, setExperiences }: {
+  experiences: Array<{
+    title: string;
+    company: string;
+    location?: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent: boolean;
+    description?: string;
+    skills?: string;
+  }>;
+  setExperiences: (exps: Array<{
+    title: string;
+    company: string;
+    location?: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent: boolean;
+    description?: string;
+    skills?: string;
+  }>) => void;
+}) => {
+  const handleChange = (idx: number, field: string, value: string | boolean) => {
+    const updated = experiences.map((exp, i) =>
+      i === idx ? { ...exp, [field]: value } : exp
+    );
+    setExperiences(updated);
+  };
+
+  const handleAdd = () => {
+    setExperiences([
+      ...experiences,
+      {
+        title: "",
+        company: "",
+        location: "",
+        startDate: "",
+        endDate: "",
+        isCurrent: false,
+        description: "",
+        skills: ""
+      },
+    ]);
+  };
+
+  const handleRemove = (idx: number) => {
+    setExperiences(experiences.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="space-y-4">
+      {experiences.map((exp, idx) => (
+        <div key={idx} className="border p-4 rounded-lg space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Job Title"
+              value={exp.title}
+              onChange={e => handleChange(idx, 'title', e.target.value)}
+            />
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Company"
+              value={exp.company}
+              onChange={e => handleChange(idx, 'company', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Location"
+              value={exp.location || ''}
+              onChange={e => handleChange(idx, 'location', e.target.value)}
+            />
+            <input
+              className="border rounded px-3 py-2"
+              type="date"
+              placeholder="Start Date"
+              value={exp.startDate}
+              onChange={e => handleChange(idx, 'startDate', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              type="date"
+              placeholder="End Date"
+              value={exp.endDate || ''}
+              onChange={e => handleChange(idx, 'endDate', e.target.value)}
+              disabled={exp.isCurrent}
+            />
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={exp.isCurrent}
+                onChange={e => handleChange(idx, 'isCurrent', e.target.checked)}
+                className="accent-green-600"
+              />
+              <span className="text-sm">Currently working here</span>
+            </label>
+          </div>
+          <textarea
+            className="w-full border rounded px-3 py-2"
+            placeholder="Description"
+            value={exp.description || ''}
+            onChange={e => handleChange(idx, 'description', e.target.value)}
+            rows={3}
+          />
+          <input
+            className="w-full border rounded px-3 py-2"
+            placeholder="Skills (comma separated)"
+            value={exp.skills || ''}
+            onChange={e => handleChange(idx, 'skills', e.target.value)}
+          />
+          <button
+            type="button"
+            className="text-red-500 px-3 py-1 border border-red-300 rounded hover:bg-red-50"
+            onClick={() => handleRemove(idx)}
+          >
+            Remove Experience
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="border px-4 py-2 rounded text-green-600 mt-2 hover:bg-green-50"
+        onClick={handleAdd}
+      >
+        + Add Experience
+      </button>
+    </div>
+  );
+};
+
+// Inline EducationInput component for education array
+const EducationInput = ({ education, setEducation }: {
+  education: Array<{
+    school: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent: boolean;
+    description?: string;
+    grade?: string;
+    activities?: string;
+  }>;
+  setEducation: (edu: Array<{
+    school: string;
+    degree: string;
+    fieldOfStudy: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent: boolean;
+    description?: string;
+    grade?: string;
+    activities?: string;
+  }>) => void;
+}) => {
+  const handleChange = (idx: number, field: string, value: string | boolean) => {
+    const updated = education.map((edu, i) =>
+      i === idx ? { ...edu, [field]: value } : edu
+    );
+    setEducation(updated);
+  };
+
+  const handleAdd = () => {
+    setEducation([
+      ...education,
+      {
+        school: "",
+        degree: "",
+        fieldOfStudy: "",
+        startDate: "",
+        endDate: "",
+        isCurrent: false,
+        description: "",
+        grade: "",
+        activities: ""
+      },
+    ]);
+  };
+
+  const handleRemove = (idx: number) => {
+    setEducation(education.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div className="space-y-4">
+      {education.map((edu, idx) => (
+        <div key={idx} className="border p-4 rounded-lg space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="School/University"
+              value={edu.school}
+              onChange={e => handleChange(idx, 'school', e.target.value)}
+            />
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Degree"
+              value={edu.degree}
+              onChange={e => handleChange(idx, 'degree', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Field of Study"
+              value={edu.fieldOfStudy}
+              onChange={e => handleChange(idx, 'fieldOfStudy', e.target.value)}
+            />
+            <input
+              className="border rounded px-3 py-2"
+              type="date"
+              placeholder="Start Date"
+              value={edu.startDate}
+              onChange={e => handleChange(idx, 'startDate', e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              type="date"
+              placeholder="End Date"
+              value={edu.endDate || ''}
+              onChange={e => handleChange(idx, 'endDate', e.target.value)}
+              disabled={edu.isCurrent}
+            />
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={edu.isCurrent}
+                onChange={e => handleChange(idx, 'isCurrent', e.target.checked)}
+                className="accent-green-600"
+              />
+              <span className="text-sm">Currently studying here</span>
+            </label>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Grade/GPA"
+              value={edu.grade || ''}
+              onChange={e => handleChange(idx, 'grade', e.target.value)}
+            />
+            <input
+              className="border rounded px-3 py-2"
+              placeholder="Activities"
+              value={edu.activities || ''}
+              onChange={e => handleChange(idx, 'activities', e.target.value)}
+            />
+          </div>
+          <textarea
+            className="w-full border rounded px-3 py-2"
+            placeholder="Description"
+            value={edu.description || ''}
+            onChange={e => handleChange(idx, 'description', e.target.value)}
+            rows={3}
+          />
+          <button
+            type="button"
+            className="text-red-500 px-3 py-1 border border-red-300 rounded hover:bg-red-50"
+            onClick={() => handleRemove(idx)}
+          >
+            Remove Education
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="border px-4 py-2 rounded text-green-600 mt-2 hover:bg-green-50"
+        onClick={handleAdd}
+      >
+        + Add Education
+      </button>
+    </div>
+  );
+};
+
 const ExpertRegisterForm = () => {
   const router = useRouter();
   const { isAuthenticated, user, login, initializeAuth } = useAuthStore();
   const { createExpertProfile, isLoading, error } = useExpertStore();
   const { profile } = useUserStore();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(0); // Start from Personal Information
   const [form, setForm] = useState<{
     fullName: string;
     email: string;
@@ -279,6 +563,7 @@ const ExpertRegisterForm = () => {
         ...prev,
         fullName: user.name || profile?.name || "",
         email: user.email || profile?.email || "",
+        password: "",
         bio: profile?.bio || "",
         location:
           (typeof profile?.location === 'string' ? profile.location :
@@ -287,6 +572,14 @@ const ExpertRegisterForm = () => {
           "",
         profilePhoto: null,
         certifications: Array.isArray(prev.certifications) ? prev.certifications : [],
+        about: profile?.about || "",
+        tags: profile?.tags ? profile.tags.join(', ') : "",
+        headline: profile?.headline || "",
+        summary: profile?.summary || "",
+        expertise: profile?.expertise ? profile.expertise.join(', ') : "",
+        experience: profile?.experience?.toString() || "",
+        languages: profile?.languages ? profile.languages.join(', ') : "",
+        hourlyRate: profile?.hourlyRate?.toString() || "",
       }));
       if (profile?.interests && profile.interests.length > 0) {
         setSelectedInterests(profile.interests);
@@ -387,7 +680,7 @@ const ExpertRegisterForm = () => {
       await axios.patch("/API/users/profile", {
         interests: selectedInterests,
       });
-      setStep(5); // Move to follow users step
+      setStep(4); // Move to follow users step
     } catch (err) {
       alert("Failed to update preferences.");
     } finally {
@@ -405,7 +698,7 @@ const ExpertRegisterForm = () => {
   const handleSubmitApplication = async () => {
     setLoading(true);
     try {
-      // Build flat JSON payload as in Postman
+      // Build flat payload as required by backend
       const payload = {
         name: form.fullName,
         email: form.email,
@@ -425,8 +718,27 @@ const ExpertRegisterForm = () => {
         languages: form.languages ? form.languages.split(',').map(l => l.trim()) : [],
         certifications: form.certifications,
         experiences: form.experiences,
+        awards: form.awards,
         education: form.education,
       };
+
+      // Remove undefined, null, empty string, or empty array fields
+      Object.keys(payload).forEach(key => {
+        const value = (payload as any)[key];
+        if (
+          value === undefined ||
+          value === null ||
+          (typeof value === 'string' && value.trim() === '') ||
+          (Array.isArray(value) && value.length === 0)
+        ) {
+          delete (payload as any)[key];
+        }
+      });
+
+      console.log('🔍 DEBUG - Final payload being sent:', payload);
+      console.log('🔍 DEBUG - User authenticated:', isAuthenticated);
+      console.log('🔍 DEBUG - User object:', user);
+
       await createExpertProfile(payload as any);
       setStep(4); // Move to next step (preferences)
     } catch (err: any) {
@@ -473,7 +785,7 @@ const ExpertRegisterForm = () => {
         ))}
       </div>
       <div className="bg-white rounded-xl border p-6 md:p-8">
-        {/* Step 1: Personal Information */}
+        {/* Step 0: Personal Information */}
         {step === 0 && (
           <>
             <h2 className="text-xl font-bold mb-1">Personal Information</h2>
@@ -593,7 +905,7 @@ const ExpertRegisterForm = () => {
             </div>
           </>
         )}
-        {/* Step 2: Professional Details */}
+        {/* Step 1: Professional Details */}
         {step === 1 && (
           <>
             <h2 className="text-xl font-bold mb-1">Professional Details</h2>
@@ -746,132 +1058,76 @@ const ExpertRegisterForm = () => {
             </div>
           </>
         )}
-        {/* Step 3: Portfolio & Expertise */}
+        {/* Step 2: About, Tags, Hourly Rate, Work Experience, Education */}
         {step === 2 && (
           <>
-            <h2 className="text-xl font-bold mb-1">Portfolio & Expertise</h2>
+            <h2 className="text-xl font-bold mb-1">More About You</h2>
             <p className="text-gray-500 mb-6 text-sm">
-              Showcase your work and connect your professional profiles to build
-              credibility.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {/* Upload Files */}
-              <div
-                className="border rounded-lg flex flex-col items-center justify-center py-8 relative group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-green-500 bg-gray-50"
-                onClick={() => fileInputRef.current?.click()}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ")
-                    fileInputRef.current?.click();
-                }}
-              >
-                <FaUpload className="text-3xl text-gray-400 mb-2 group-hover:text-green-600 transition-colors" />
-                <div className="font-semibold mb-1">Upload Files</div>
-                <div className="text-xs text-gray-500 mb-2">
-                  Drag and drop files or click to browse
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  onChange={handleFileUpload}
-                  tabIndex={-1}
-                />
-                {/* File Previews */}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {filePreviews.map((src, i) => (
-                    <div
-                      key={i}
-                      className="w-16 h-16 bg-white border rounded flex items-center justify-center overflow-hidden shadow-sm"
-                    >
-                      <span className="text-xs text-gray-500 text-center px-1 break-all">
-                        {form.portfolioFiles[i]?.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Upload Media */}
-              <div
-                className="border rounded-lg flex flex-col items-center justify-center py-8 relative group cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-green-500 bg-gray-50"
-                onClick={() => mediaInputRef.current?.click()}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ")
-                    mediaInputRef.current?.click();
-                }}
-              >
-                <FaUpload className="text-3xl text-gray-400 mb-2 group-hover:text-green-600 transition-colors" />
-                <div className="font-semibold mb-1">Upload Media</div>
-                <div className="text-xs text-gray-500 mb-2">
-                  Add images or videos of your work
-                </div>
-                <input
-                  ref={mediaInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*,video/*"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  onChange={handleMediaUpload}
-                  tabIndex={-1}
-                />
-                {/* Media Previews */}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {mediaPreviews.map((src, i) =>
-                    src.match(/video/) ? (
-                      <video
-                        key={i}
-                        src={src}
-                        className="w-16 h-16 object-cover rounded"
-                        controls
-                      />
-                    ) : (
-                      <img
-                        key={i}
-                        src={src}
-                        alt="media"
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mb-4">
-              Add examples of your work to showcase your skills and experience.
-              You can upload documents, images, or videos.
+              Tell us more about yourself, your skills, and your background.
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">
-                Social & Professional Links
+                About
+              </label>
+              <textarea
+                className="w-full border rounded-lg px-3 py-2 min-h-[80px]"
+                value={form.about}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, about: e.target.value }))
+                }
+                placeholder="Tell us more about yourself and your expertise..."
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Tags (comma separated)
               </label>
               <input
-                className="w-full border rounded-lg px-3 py-2 mb-2"
-                placeholder="https://linkedin.com/in/yourprofile"
-                value={form.linkedin}
+                className="w-full border rounded-lg px-3 py-2"
+                value={form.tags}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, linkedin: e.target.value }))
+                  setForm((f) => ({ ...f, tags: e.target.value }))
                 }
+                placeholder="e.g. Meal Planning, Macronutrients, Fat Loss"
               />
-              <input
-                className="w-full border rounded-lg px-3 py-2 mb-2"
-                placeholder="https://yourwebsite.com"
-                value={form.website}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, website: e.target.value }))
-                }
-              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">
+                Hourly Rate ($)
+              </label>
               <input
                 className="w-full border rounded-lg px-3 py-2"
-                placeholder="https://twitter.com/yourusername"
-                value={form.instagram}
+                type="number"
+                value={form.hourlyRate}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, instagram: e.target.value }))
+                  setForm((f) => ({ ...f, hourlyRate: e.target.value }))
+                }
+                placeholder="e.g. 25"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-3">
+                Work Experience
+              </label>
+              <ExperiencesInput
+                experiences={form.experiences}
+                setExperiences={(exps) =>
+                  setForm((f) => ({ ...f, experiences: exps }))
                 }
               />
             </div>
-            <div className="flex justify-between mt-6">
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-3">
+                Education
+              </label>
+              <EducationInput
+                education={form.education}
+                setEducation={(edu) =>
+                  setForm((f) => ({ ...f, education: edu }))
+                }
+              />
+            </div>
+            <div className="flex justify-between">
               <button
                 className="px-4 py-2 border rounded-lg font-medium"
                 onClick={() => setStep(1)}
@@ -887,7 +1143,7 @@ const ExpertRegisterForm = () => {
             </div>
           </>
         )}
-        {/* Step 4: Services & Availability */}
+        {/* Step 3: Services & Availability */}
         {step === 3 && (
           <>
             <h2 className="text-xl font-bold mb-1">Services & Availability</h2>
@@ -982,7 +1238,7 @@ const ExpertRegisterForm = () => {
             </div>
           </>
         )}
-        {/* Step 5: Preferences */}
+        {/* Step 4: Preferences */}
         {step === 4 && (
           <>
             <h2 className="text-xl font-bold mb-1">Select Your Interests</h2>
@@ -1015,7 +1271,7 @@ const ExpertRegisterForm = () => {
             </div>
           </>
         )}
-        {/* Step 6: Follow Users */}
+        {/* Step 5: Follow Users */}
         {step === 5 && (
           <>
             <h2 className="text-xl font-bold mb-1">
