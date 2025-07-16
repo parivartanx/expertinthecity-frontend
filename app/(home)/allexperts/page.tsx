@@ -48,9 +48,11 @@ const SearchFilterSection = () => {
     toggleRating,
     fetchExperts,
     searchQuery,
-    setSearchQuery
+    setSearchQuery,
+    fetchExpertsByCategory,
+    fetchExpertsBySubcategory
   } = useAllExpertsStore();
-  
+
   const { categories, subcategories, fetchAllCategories, fetchAllSubcategories } = useCategoriesStore();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
@@ -67,14 +69,21 @@ const SearchFilterSection = () => {
     setSelectedSubcategory("");
     // Clear previously selected services when category changes
     selectedServices.forEach(service => toggleService(service));
+    // Find the category name from the id
+    const selectedCat = categories.find(cat => cat.id === categoryId);
+    if (selectedCat) {
+      fetchExpertsByCategory(selectedCat.name);
+    }
   };
 
   const handleSubcategoryChange = (subcategoryId: string) => {
     setSelectedSubcategory(subcategoryId);
     const subcategory = subcategories.find(sub => sub.id === subcategoryId);
-    
+
     if (subcategory) {
       toggleService(subcategory.name);
+      // Fetch experts by subcategory
+      fetchExpertsBySubcategory(subcategory.name);
     }
   };
 
@@ -167,8 +176,8 @@ const SearchFilterSection = () => {
 
 
           {/* Clear Filters Button */}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               setSelectedCategory("");
               setSelectedSubcategory("");
@@ -176,6 +185,8 @@ const SearchFilterSection = () => {
               setLocation("");
               selectedRatings.forEach(r => toggleRating(r));
               selectedServices.forEach(s => toggleService(s));
+              // Fetch all experts again
+              fetchExperts();
             }}
             className="w-full h-9"
           >
@@ -202,7 +213,7 @@ export default function AllExperts() {
     sendMessageToExpert,
     clearSearchState
   } = useAllExpertsStore();
-  
+
   const { user } = useAuthStore();
   const { followExpert, unfollowExpert, checkFollowStatus, followStatuses, isLoading: followLoading } = useFollowStore();
   const router = useRouter();
@@ -372,7 +383,7 @@ export default function AllExperts() {
                                 </span>
                               </div>
                             </div>
-                            
+
                             {/* Rating */}
                           </div>
 
