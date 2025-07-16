@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal } from "react-icons/fa";
+import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal, FaBolt, FaUserShield, FaTrophy, FaGlobe, FaClock as FaClockIcon, FaUsers, FaAward, FaRocket, FaThumbsUp, FaCommentDots } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,9 @@ import { toast } from "sonner";
 import { usePostsStore } from "@/lib/mainwebsite/posts-store";
 import { useLikeStore } from "@/lib/mainwebsite/like-store";
 import { useCommentStore } from "@/lib/mainwebsite/comment-store";
+import FeedbackForm from "@/components/mainwebsite/FeedbackForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import StarRating from "@/components/ui/StarRating";
 
 interface Experience {
     id: string;
@@ -72,7 +75,7 @@ interface Expert {
     badges: string[];
     progressLevel: string;
     progressShow: boolean;
-    ratings: number;
+    rating: number;
     updatedAt: string;
     certifications: (string | Certification)[];
     experiences: Experience[];
@@ -129,6 +132,7 @@ export default function ExpertProfile() {
     const [replyInputs, setReplyInputs] = useState<{ [commentId: string]: string }>({});
     const [showReplies, setShowReplies] = useState<{ [commentId: string]: boolean }>({});
     const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
+    const [feedbackOpen, setFeedbackOpen] = useState(false);
 
     useEffect(() => {
         const fetchExpert = async () => {
@@ -436,7 +440,7 @@ export default function ExpertProfile() {
                                                         {getProgressLevelIcon(expert.progressLevel)}
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>{expert.progressLevel} Level</p>
+                                                        <p>{expert.progressLevel.charAt(0) + expert.progressLevel.slice(1).toLowerCase()} Level</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -447,22 +451,91 @@ export default function ExpertProfile() {
                                             <AvatarImage src={getAvatarUrl(expert.image)} alt={expert.name} />
                                             <AvatarFallback>{expert.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
-                                        <h1 className="text-2xl font-bold text-foreground mb-2">
+                                        <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                                             {expert.name}
                                             {expert.verified && (
-                                                <FaCheckCircle className="inline ml-2 text-green-500" />
+                                                <FaCheckCircle className="inline text-green-500" title="Verified Expert" />
                                             )}
                                         </h1>
                                         {expert.headline && (
                                             <p className="text-sm text-muted-foreground mb-3">{expert.headline}</p>
                                         )}
 
-                                        <div className="flex items-center justify-center gap-1 text-yellow-500 mb-3">
-                                            <FaStar />
-                                            <span className="font-medium text-foreground">
-                                                {expert.ratings} reviews
-                                            </span>
+                                        {/* Star Rating */}
+                                        <div className="flex items-center justify-center gap-1 mb-2">
+                                            <FaStar className="text-yellow-500" />
+                                            <span className="text-yellow-600 font-semibold text-lg">{expert.rating}</span>
                                         </div>
+
+                                        {/* Badges */}
+                                        {expert.badges && expert.badges.length > 0 && (
+                                            <div className="flex flex-wrap justify-center gap-2 mb-2">
+                                                {expert.badges.map((badge) => {
+                                                    let icon = null, label = badge.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+                                                    switch (badge) {
+                                                        case 'VERIFIED_EXPERT':
+                                                            icon = <FaUserShield className="text-blue-500" title="Verified Expert" />; break;
+                                                        case 'TOP_RATED':
+                                                            icon = <FaStar className="text-yellow-400" title="Top Rated" />; break;
+                                                        case 'RISING_EXPERT':
+                                                            icon = <FaRocket className="text-purple-500" title="Rising Expert" />; break;
+                                                        case 'IN_DEMAND':
+                                                            icon = <FaBolt className="text-orange-500" title="In Demand" />; break;
+                                                        case 'ELITE_EXPERT':
+                                                            icon = <FaTrophy className="text-yellow-600" title="Elite Expert" />; break;
+                                                        case 'MULTICITY_EXPERT':
+                                                            icon = <FaGlobe className="text-green-500" title="Multicity Expert" />; break;
+                                                        case 'QUICK_RESPONDER':
+                                                            icon = <FaClockIcon className="text-blue-400" title="Quick Responder" />; break;
+                                                        case 'COMMUNITY_CONTRIBUTOR':
+                                                            icon = <FaUsers className="text-pink-500" title="Community Contributor" />; break;
+                                                        case 'SPECIALIST':
+                                                            icon = <FaAward className="text-indigo-500" title="Specialist" />; break;
+                                                        case 'VERSATILE_PRO':
+                                                            icon = <FaCommentDots className="text-teal-500" title="Versatile Pro" />; break;
+                                                        default:
+                                                            icon = <FaMedal className="text-gray-400" title={label} />;
+                                                    }
+                                                    return (
+                                                        <TooltipProvider key={badge}>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 text-xs font-medium border border-gray-200">
+                                                                        {icon} {label}
+                                                                    </span>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>
+                                                                    <span>{label}</span>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* Progress Level (with label) */}
+                                        {expert.progressLevel && (
+                                            <div className="flex items-center justify-center gap-2 mb-3">
+                                                {(() => {
+                                                    switch (expert.progressLevel) {
+                                                        case 'BRONZE':
+                                                            return <FaMedal className="text-amber-600" title="Bronze" />;
+                                                        case 'SILVER':
+                                                            return <FaMedal className="text-gray-400" title="Silver" />;
+                                                        case 'GOLD':
+                                                            return <FaMedal className="text-yellow-500" title="Gold" />;
+                                                        case 'PLATINUM':
+                                                            return <FaMedal className="text-slate-300" title="Platinum" />;
+                                                        default:
+                                                            return <FaMedal className="text-gray-300" title={expert.progressLevel} />;
+                                                    }
+                                                })()}
+                                                <span className="text-xs font-semibold text-foreground">
+                                                    {expert.progressLevel.charAt(0) + expert.progressLevel.slice(1).toLowerCase()} Level
+                                                </span>
+                                            </div>
+                                        )}
 
                                         <div className="space-y-2 mb-6">
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -502,7 +575,7 @@ export default function ExpertProfile() {
                                                     </Button>
                                                 </div>
                                             ) : followStatuses[expert.userId] ? (
-                                                // When following - show Message and Unfollow buttons
+                                                // When following - show Message, Unfollow, and Give Feedback buttons
                                                 <div className="space-y-2">
                                                     <Button
                                                         onClick={handleMessage}
@@ -519,6 +592,20 @@ export default function ExpertProfile() {
                                                     >
                                                         {followLoading ? "Updating..." : "Unfollow"}
                                                     </Button>
+                                                    <Button
+                                                        onClick={() => setFeedbackOpen(true)}
+                                                        variant="outline"
+                                                        className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                                                    >
+                                                        Give Feedback
+                                                    </Button>
+                                                    <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                                                        <DialogContent className="max-w-lg w-full p-0">
+                                                            <div className="p-6">
+                                                                <FeedbackForm expertId={expert.id} onSuccess={() => setFeedbackOpen(false)} onCancel={() => setFeedbackOpen(false)} />
+                                                            </div>
+                                                        </DialogContent>
+                                                    </Dialog>
                                                 </div>
                                             ) : (
                                                 // When not following - show Message Request and Follow buttons
@@ -976,11 +1063,11 @@ export default function ExpertProfile() {
                                         )}
                                         <div className="flex items-center gap-2 text-sm">
                                             <FaStar className="text-yellow-500 w-4" />
-                                            <span className="text-foreground">{expert.ratings} reviews</span>
+                                            <span className="text-foreground">{expert.rating} reviews</span>
                                         </div>
                                         {expert.availability && (
                                             <div className="flex items-center gap-2 text-sm">
-                                                <FaClock className="text-muted-foreground w-4" />
+                                                <FaClock />
                                                 <span className="text-foreground">{expert.availability}</span>
                                             </div>
                                         )}
