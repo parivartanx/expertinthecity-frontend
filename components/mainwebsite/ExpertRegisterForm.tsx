@@ -699,10 +699,7 @@ const ExpertRegisterForm = () => {
     setLoading(true);
     try {
       // Build flat payload as required by backend
-      const payload = {
-        name: form.fullName,
-        email: form.email,
-        password: form.password,
+      let payload: any = {
         bio: form.bio,
         avatar: form.profilePhoto || '',
         interests: selectedInterests,
@@ -721,7 +718,15 @@ const ExpertRegisterForm = () => {
         awards: form.awards,
         education: form.education,
       };
-
+      // Only include name, email, password if NOT authenticated
+      if (!isAuthenticated) {
+        payload = {
+          ...payload,
+          name: form.fullName,
+          email: form.email,
+          password: form.password,
+        };
+      }
       // Remove undefined, null, empty string, or empty array fields
       Object.keys(payload).forEach(key => {
         const value = (payload as any)[key];
@@ -734,11 +739,9 @@ const ExpertRegisterForm = () => {
           delete (payload as any)[key];
         }
       });
-
       console.log('🔍 DEBUG - Final payload being sent:', payload);
       console.log('🔍 DEBUG - User authenticated:', isAuthenticated);
       console.log('🔍 DEBUG - User object:', user);
-
       await createExpertProfile(payload as any);
       setStep(4); // Move to next step (preferences)
     } catch (err: any) {

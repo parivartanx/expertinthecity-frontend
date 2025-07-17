@@ -1,3 +1,4 @@
+"use client";
 import {
   FaFacebookF,
   FaInstagram,
@@ -18,22 +19,53 @@ import {
   FaPaw,
 } from "react-icons/fa6";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useCategoriesStore } from "@/lib/mainwebsite/categories-store";
+import type { IconType } from "react-icons";
 
 export default function Footer() {
-  const categories = [
-    { name: "Plumbing", icon: FaWrench, slug: "plumbing" },
-    { name: "Electrical", icon: FaBolt, slug: "electrical" },
-    { name: "Cleaning", icon: FaBroom, slug: "cleaning" },
-    { name: "Gardening", icon: FaSeedling, slug: "gardening" },
-    { name: "Tutoring", icon: FaBook, slug: "tutoring" },
-    { name: "Photography", icon: FaCamera, slug: "photography" },
-    { name: "Personal Training", icon: FaDumbbell, slug: "personal-training" },
-    { name: "Catering", icon: FaUtensils, slug: "catering" },
-    { name: "Accounting", icon: FaChartBar, slug: "accounting" },
-    { name: "Legal Services", icon: FaGavel, slug: "legal-services" },
-    { name: "Web Design", icon: FaLaptopCode, slug: "web-design" },
-    { name: "Pet Care", icon: FaPaw, slug: "pet-care" },
-  ];
+  const {
+    categories,
+    isLoaded,
+    isLoading,
+    error,
+    fetchAllCategories,
+  } = useCategoriesStore();
+
+  useEffect(() => {
+    if (!isLoaded && !isLoading) {
+      fetchAllCategories();
+    }
+  }, [isLoaded, isLoading, fetchAllCategories]);
+
+  const iconMap: Record<string, IconType> = {
+    Plumbing: FaWrench,
+    Electrical: FaBolt,
+    Cleaning: FaBroom,
+    Gardening: FaSeedling,
+    Tutoring: FaBook,
+    Photography: FaCamera,
+    "Personal Training": FaDumbbell,
+    Catering: FaUtensils,
+    Accounting: FaChartBar,
+    "Legal Services": FaGavel,
+    "Web Design": FaLaptopCode,
+    "Pet Care": FaPaw,
+  };
+
+  let categoriesFirst: typeof categories = [];
+  let categoriesMore: typeof categories = [];
+
+  if (categories.length <= 6) {
+    // Split as evenly as possible
+    const half = Math.ceil(categories.length / 2);
+    categoriesFirst = categories.slice(0, half);
+    categoriesMore = categories.slice(half);
+  } else {
+    // Show 5 in first, rest in more
+    categoriesFirst = categories.slice(0, 5);
+    categoriesMore = categories.slice(5);
+  }
 
   return (
     <footer className="bg-white text-black border-t border-neutral-200">
@@ -58,32 +90,38 @@ export default function Footer() {
         {/* Categories */}
         <div>
           <h4 className="font-semibold mb-2">Categories</h4>
+          {isLoading && <div>Loading categories...</div>}
+          {error && <div className="text-red-500">{error}</div>}
           <ul className="space-y-1 text-gray-700">
-            {categories.slice(0, 6).map((category) => (
-              <li key={category.slug}>
-                <Link
-                  href={`/categories/${category.slug}`}
-                  className="hover:text-green-600 flex items-center gap-2"
-                >
-                  <category.icon className="text-sm" />
-                  {category.name}
-                </Link>
-              </li>
-            ))}
+            {categoriesFirst.map((category) => {
+              const Icon = iconMap[category.name] || FaWrench;
+              return (
+                <li key={category.id}>
+                  <Link
+                    href={`/categories/${category.id}`}
+                    className="hover:text-green-600 flex items-center gap-2"
+                  >
+                    <Icon className="text-sm" />
+                    {category.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
         {/* More Categories */}
         <div>
           <h4 className="font-semibold mb-2">More Categories</h4>
+          {isLoading && <div>Loading categories...</div>}
+          {error && <div className="text-red-500">{error}</div>}
           <ul className="space-y-1 text-gray-700">
-            {categories.slice(6).map((category) => (
-              <li key={category.slug}>
+            {categoriesMore.map((category) => (
+              <li key={category.id}>
                 <Link
-                  href={`/categories/${category.slug}`}
+                  href={`/categories/${category.id}`}
                   className="hover:text-green-600 flex items-center gap-2"
                 >
-                  <category.icon className="text-sm" />
                   {category.name}
                 </Link>
               </li>

@@ -257,7 +257,7 @@ export const useAllExpertsStore = create<AllExpertsState>()(
             params: {
               page,
               limit,
-              subcategory,
+              subcategory, // Use subcategory name as filter
               ...get().filters,
             },
           });
