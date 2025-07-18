@@ -36,6 +36,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Trash2, Save, RefreshCw, ShieldCheck } from "lucide-react";
+import { useAdminAuthStore } from "@/lib/mainwebsite/auth-store";
+import Image from "next/image";
 
 // Mock admin users for the roles table
 const mockAdmins = [
@@ -58,6 +60,8 @@ export default function SettingsPage() {
     violence: false,
   });
 
+  const { user } = useAdminAuthStore();
+
   const handleSaveGeneral = () => {
     toast.success("General settings saved successfully");
   };
@@ -65,6 +69,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight">Platform Settings</h1>
+
       
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
@@ -75,34 +80,37 @@ export default function SettingsPage() {
         <TabsContent value="general" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Site Configuration</CardTitle>
+              <CardTitle>Admin Profile</CardTitle>
               <CardDescription>
-                Configure general platform settings
+                Your admin account details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="site-name">Platform Name</Label>
-                <Input id="site-name" defaultValue="ExpertInTheCity" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-email">Support Email</Label>
-                <Input id="contact-email" defaultValue="support@expertinthecity.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maintenance-mode">Maintenance Mode</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch id="maintenance-mode" />
-                  <Label htmlFor="maintenance-mode">Enable maintenance mode</Label>
+              {user && (
+                <div className="flex items-center gap-6">
+                  <Image
+                    src={user.avatar || "/default-avatar.png"}
+                    alt="Admin Avatar"
+                    width={80}
+                    height={80}
+                    className="rounded-full border"
+                  />
+                  <div className="space-y-1">
+                    <div className="text-lg font-semibold">{user.name}</div>
+                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="px-2 py-0.5 rounded bg-muted text-xs font-medium border">{user.role}</span>
+                      {user.createdAt && (
+                        <span className="text-xs text-muted-foreground ml-2">Joined: {new Date(user.createdAt).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                    {user.bio && (
+                      <div className="text-sm mt-2 text-muted-foreground">{user.bio}</div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  When enabled, only admins can access the platform
-                </p>
-              </div>
+              )}
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleSaveGeneral}>Save Changes</Button>
-            </CardFooter>
           </Card>
           
           <Card>

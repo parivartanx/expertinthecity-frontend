@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal, FaEdit, FaImage, FaTimes, FaTrash, FaEllipsisH } from "react-icons/fa";
+import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal, FaEdit, FaImage, FaTimes, FaTrash, FaEllipsisH, FaFlag } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,9 @@ import { useUserStore } from "@/lib/mainwebsite/user-store";
 import { usePostsStore } from "@/lib/mainwebsite/posts-store";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useReportStore } from "@/lib/mainwebsite/report-store";
+import { useLikeStore } from "@/lib/mainwebsite/like-store";
+import { useCommentStore } from "@/lib/mainwebsite/comment-store";
 
 const INTEREST_LABELS: Record<string, string> = {
     TECHNOLOGY: "Technology",
@@ -63,6 +66,34 @@ export default function ProfilePage() {
         isLoading: postsLoading,
         error: postsError
     } = usePostsStore();
+    const { reportPost, isLoading: reportLoading, success: reportSuccess, error: reportError, clearError, clearSuccess } = useReportStore();
+    // FIX: Add all required variables from zustand stores
+    const {
+        postLikes,
+        likePost,
+        unlikePost,
+        getPostLikes,
+        isLoading: likeLoading
+    } = useLikeStore();
+    const {
+        comments,
+        getComments,
+        createComment,
+        isLoading: commentLoading,
+        getReplies,
+        replies,
+        createReply,
+        isLoading: replyLoading
+    } = useCommentStore();
+    // FIX: Add missing state and refs for modals and timeouts
+    const [showLikesModal, setShowLikesModal] = useState(false);
+    const [likesModalPostId, setLikesModalPostId] = useState<string | null>(null);
+    const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
+    const desktopHoverTimeout = useRef<NodeJS.Timeout | null>(null);
+    const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [reportPostId, setReportPostId] = useState<string | null>(null);
     const [postsToShow, setPostsToShow] = useState(3);
 
     // Create post state
@@ -85,6 +116,11 @@ export default function ProfilePage() {
     // Delete confirmation dialog state
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [postToDelete, setPostToDelete] = useState<string | null>(null);
+
+    // Add state for comment/reply inputs and showReplies
+    const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
+    const [replyInputs, setReplyInputs] = useState<{ [commentId: string]: string }>({});
+    const [showReplies, setShowReplies] = useState<{ [commentId: string]: boolean }>({});
 
     const isExpert = user?.role?.toUpperCase() === "EXPERT";
     const isUser = user?.role?.toUpperCase() === "USER";
@@ -121,6 +157,31 @@ export default function ProfilePage() {
             isUser
         });
     }, [user, profile, isLoading, error, isExpert, isUser]);
+
+    // Handler for opening the report dialog
+    const handleOpenReportDialog = (postId: string) => {
+        setReportPostId(postId);
+        setReportReason("");
+        setReportDialogOpen(true);
+        clearError();
+        clearSuccess();
+    };
+
+    // Handler for submitting the report
+    const handleSubmitReport = async () => {
+        if (reportPostId && reportReason.trim()) {
+            await reportPost(reportPostId, reportReason);
+            setReportReason("");
+        }
+    };
+
+    // Close dialog on success
+    useEffect(() => {
+        if (reportSuccess) {
+            setReportDialogOpen(false);
+            setTimeout(() => clearSuccess(), 2000);
+        }
+    }, [reportSuccess, clearSuccess]);
 
     const handleShowMorePosts = () => {
         setPostsToShow(prev => Math.min(prev + 2, posts.length));
@@ -502,7 +563,7 @@ export default function ProfilePage() {
 
                     {/* Middle Column - Tabbed Content */}
                     <div className="lg:col-span-6">
-                        <Tabs defaultValue="about" className="w-full">
+                        <Tabs defaultValue="posts" className="w-full">
                             <TabsList className="grid w-full grid-cols-4 mb-6">
                                 <TabsTrigger value="posts" className="flex items-center gap-2">
                                     <FaUser className="w-4 h-4" />
@@ -687,7 +748,7 @@ export default function ProfilePage() {
                                                                 </p>
                                                             </div>
                                                             {/* Post Actions Menu - Only for own posts */}
-                                                            {user && post.authorId === user.id && (
+                                                            {user && (
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger asChild>
                                                                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -695,6 +756,8 @@ export default function ProfilePage() {
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
+                                                                        {post.authorId === user.id ? (
+                                                                            <>
                                                                         <DropdownMenuItem
                                                                             onClick={() => handleEditPost(post)}
                                                                             disabled={editingPostId === post.id}
@@ -710,6 +773,16 @@ export default function ProfilePage() {
                                                                             <FaTrash className="mr-2 h-4 w-4" />
                                                                             Delete Post
                                                                         </DropdownMenuItem>
+                                                                            </>
+                                                                        ) : (
+                                                                            <DropdownMenuItem
+                                                                                onClick={() => handleOpenReportDialog(post.id)}
+                                                                                className="text-red-600 focus:text-red-600"
+                                                                            >
+                                                                                <FaFlag className="mr-2 h-4 w-4" />
+                                                                                Report Post
+                                                                            </DropdownMenuItem>
+                                                                        )}
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
                                                             )}
@@ -789,7 +862,8 @@ export default function ProfilePage() {
                                                     ) : (
                                                         <div className="p-4">
                                                             <h4 className="font-semibold text-foreground mb-2">{post.title}</h4>
-                                                            <p className="text-foreground mb-4">{post.content}</p>
+                                                            {/* Render post.content as HTML */}
+                                                            <div className="text-foreground mb-4" dangerouslySetInnerHTML={{ __html: post.content }} />
                                                             {post.image && (
                                                                 <img
                                                                     src={post.image}
@@ -804,18 +878,86 @@ export default function ProfilePage() {
                                                     <div className="px-4 pb-4">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-6">
-                                                                <button className="flex items-center gap-2 text-muted-foreground hover:text-red-500 transition-colors">
+                                                                <button
+                                                                    className={`flex items-center gap-2 transition-colors ${postLikes.some(like => like.postId === post.id && like.userId === user?.id)
+                                                                        ? "text-red-500"
+                                                                        : "text-muted-foreground hover:text-red-500"
+                                                                        }`}
+                                                                    disabled={likeLoading}
+                                                                    onMouseEnter={async () => {
+                                                                        if (window.innerWidth > 768) {
+                                                                            desktopHoverTimeout.current = setTimeout(async () => {
+                                                                                if (!postLikes.some(like => like.postId === post.id)) {
+                                                                                    await getPostLikes(post.id);
+                                                                                }
+                                                                                setLikesModalPostId(post.id);
+                                                                                setShowLikesModal(true);
+                                                                            }, 2000);
+                                                                        }
+                                                                    }}
+                                                                    onMouseLeave={() => {
+                                                                        if (window.innerWidth > 768 && desktopHoverTimeout.current) {
+                                                                            clearTimeout(desktopHoverTimeout.current);
+                                                                            desktopHoverTimeout.current = null;
+                                                                            setShowLikesModal(false);
+                                                                            setLikesModalPostId(null);
+                                                                        }
+                                                                    }}
+                                                                    onTouchStart={e => {
+                                                                        if (window.innerWidth <= 768) {
+                                                                            longPressTimeout.current = setTimeout(async () => {
+                                                                                if (!postLikes.some(like => like.postId === post.id)) {
+                                                                                    await getPostLikes(post.id);
+                                                                                }
+                                                                                setLikesModalPostId(post.id);
+                                                                                setShowLikesModal(true);
+                                                                            }, 500);
+                                                                        }
+                                                                    }}
+                                                                    onTouchEnd={e => {
+                                                                        if (window.innerWidth <= 768 && longPressTimeout.current) {
+                                                                            clearTimeout(longPressTimeout.current);
+                                                                        }
+                                                                    }}
+                                                                    onClick={async () => {
+                                                                        if (!user) {
+                                                                            // Show login prompt if needed
+                                                                            return;
+                                                                        }
+                                                                        if (postLikes.some(like => like.postId === post.id && like.userId === user.id)) {
+                                                                            await unlikePost(post.id);
+                                                                        } else {
+                                                                            await likePost(post.id);
+                                                                        }
+                                                                        await getPostLikes(post.id); // Always refresh likes after action
+                                                                    }}
+                                                                >
                                                                     <FaHeart />
-                                                                    <span className="text-sm">{post.analytics?.likes || 0}</span>
+                                                                    <span className="text-sm">
+                                                                        {/* Show count from analytics, fallback to postLikes */}
+                                                                        {post.analytics?.likes ?? postLikes.filter(like => like.postId === post.id).length}
+                                                                    </span>
                                                                 </button>
-                                                                <button className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors">
+                                                                <button
+                                                                    className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors"
+                                                                    onClick={async () => {
+                                                                        if (openCommentPostId !== post.id) {
+                                                                            if (!comments.some(c => c.postId === post.id)) {
+                                                                                await getComments(post.id);
+                                                                            }
+                                                                            setOpenCommentPostId(post.id);
+                                                                        } else {
+                                                                            setOpenCommentPostId(null);
+                                                                        }
+                                                                    }}
+                                                                >
                                                                     <FaComment />
-                                                                    <span className="text-sm">{post.analytics?.comments || 0}</span>
+                                                                    <span className="text-sm">
+                                                                        {/* Show count from analytics, fallback to comments */}
+                                                                        {post.analytics?.comments ?? comments.filter(c => c.postId === post.id).length}
+                                                                    </span>
                                                                 </button>
                                                             </div>
-                                                            <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
-                                                                <FaBookmark />
-                                                            </button>
                                                         </div>
                                                     </div>
                                                 </CardContent>
@@ -1181,36 +1323,6 @@ export default function ProfilePage() {
                                     </CardContent>
                                 </Card>
                             )}
-
-                            {/* Quick Actions - For Users */}
-                            {isUser && (
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Quick Actions</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <div className="space-y-2">
-                                            <Button variant="outline" size="sm" className="w-full justify-start">
-                                                <FaEdit className="w-3 h-3 mr-2" />
-                                                Create Post
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full justify-start"
-                                                onClick={() => router.push("/allexperts")}
-                                            >
-                                                <FaUser className="w-3 h-3 mr-2" />
-                                                Find Experts
-                                            </Button>
-                                            <Button variant="outline" size="sm" className="w-full justify-start">
-                                                <FaComment className="w-3 h-3 mr-2" />
-                                                Start Chat
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -1245,6 +1357,123 @@ export default function ProfilePage() {
                         </Button>
                     </DialogFooter>
                 </DialogContent>
+            </Dialog>
+
+            {/* Report Post Dialog */}
+            <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Report Post</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <Input
+                            placeholder="Enter reason for reporting this post"
+                            value={reportReason}
+                            onChange={e => setReportReason(e.target.value)}
+                            disabled={reportLoading}
+                        />
+                        {reportError && <div className="text-red-500 text-sm">{reportError}</div>}
+                        {reportSuccess && <div className="text-green-600 text-sm">{reportSuccess}</div>}
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            onClick={handleSubmitReport}
+                            disabled={reportLoading || !reportReason.trim()}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {reportLoading ? "Reporting..." : "Submit Report"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Likes Modal */}
+            {showLikesModal && likesModalPostId && (
+                <Dialog open={showLikesModal} onOpenChange={setShowLikesModal}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Liked by</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {postLikes.filter(like => like.postId === likesModalPostId).length === 0 ? (
+                                <div className="text-muted-foreground">No likes yet.</div>
+                            ) : (
+                                postLikes.filter(like => like.postId === likesModalPostId).map(like => (
+                                    <div key={like.id} className="flex items-center gap-2">
+                                        <Avatar className="w-7 h-7">
+                                            <AvatarImage src={like.user?.avatar || ''} alt={like.user?.name || "User"} />
+                                            <AvatarFallback>{like.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-medium text-foreground">{like.user?.name || "User"}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={() => setShowLikesModal(false)} className="w-full">Close</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Comments Section */}
+            <Dialog open={!!openCommentPostId} onOpenChange={open => setOpenCommentPostId(open ? openCommentPostId : null)}>
+                {openCommentPostId && (
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Comments</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                            {commentLoading ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin">⚙️</div>
+                                    <p className="text-muted-foreground">Loading comments...</p>
+                                </div>
+                            ) : comments.filter(c => c.postId === openCommentPostId).length === 0 ? (
+                                <div className="text-center py-8">
+                                    <FaComment className="text-muted-foreground w-12 h-12 mx-auto mb-4" />
+                                    <p className="text-muted-foreground">No comments yet. Be the first to leave one!</p>
+                                </div>
+                            ) : (
+                                comments.filter(c => c.postId === openCommentPostId).map(comment => (
+                                    <div key={comment.id} className="flex items-start gap-2">
+                                        <Avatar className="w-8 h-8">
+                                            <AvatarImage src={comment.author?.avatar || ''} alt={comment.author?.name || 'User'} />
+                                            <AvatarFallback>{comment.author?.name?.charAt(0) || 'U'}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 bg-muted/20 p-2 rounded-lg">
+                                            <p className="text-sm text-foreground">{comment.content}</p>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                {new Date(comment.createdAt).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <div className="mt-4">
+                            <Textarea
+                                placeholder="Add a comment..."
+                                className="min-h-[80px] resize-none"
+                            />
+                            <Button
+                                onClick={async () => {
+                                    const textArea = document.querySelector('textarea') as HTMLTextAreaElement;
+                                    if (textArea && textArea.value.trim()) {
+                                        await createComment(openCommentPostId, textArea.value.trim());
+                                        textArea.value = '';
+                                    }
+                                }}
+                                className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                Post Comment
+                            </Button>
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={() => setOpenCommentPostId(null)} className="w-full">Close</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                )}
             </Dialog>
         </div>
     );

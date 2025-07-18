@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal, FaBolt, FaUserShield, FaTrophy, FaGlobe, FaClock as FaClockIcon, FaUsers, FaAward, FaRocket, FaThumbsUp, FaCommentDots } from "react-icons/fa";
+import { FaStar, FaMapMarkerAlt, FaClock, FaDollarSign, FaCheckCircle, FaHeart, FaComment, FaShare, FaBookmark, FaUser, FaBriefcase, FaCertificate, FaMedal, FaBolt, FaUserShield, FaTrophy, FaGlobe, FaClock as FaClockIcon, FaUsers, FaAward, FaRocket, FaThumbsUp, FaCommentDots, FaEllipsisH, FaFlag } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +19,11 @@ import { usePostsStore } from "@/lib/mainwebsite/posts-store";
 import { useLikeStore } from "@/lib/mainwebsite/like-store";
 import { useCommentStore } from "@/lib/mainwebsite/comment-store";
 import FeedbackForm from "@/components/mainwebsite/FeedbackForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import StarRating from "@/components/ui/StarRating";
+import { useReportStore } from "@/lib/mainwebsite/report-store";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Experience {
     id: string;
@@ -123,6 +126,10 @@ export default function ExpertProfile() {
         clearError: clearCommentError,
         clearSuccess: clearCommentSuccess,
     } = useCommentStore();
+    const { reportPost, isLoading: reportLoading, success: reportSuccess, error: reportError, clearError, clearSuccess } = useReportStore();
+    const [reportDialogOpen, setReportDialogOpen] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [reportPostId, setReportPostId] = useState<string | null>(null);
 
     const [expert, setExpert] = useState<Expert | null>(null);
     const [messageLoading, setMessageLoading] = useState(false);
@@ -133,6 +140,10 @@ export default function ExpertProfile() {
     const [showReplies, setShowReplies] = useState<{ [commentId: string]: boolean }>({});
     const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
     const [feedbackOpen, setFeedbackOpen] = useState(false);
+    const [showLikesModal, setShowLikesModal] = useState(false);
+    const [likesModalPostId, setLikesModalPostId] = useState<string | null>(null);
+    const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+    const desktopHoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const fetchExpert = async () => {
@@ -178,12 +189,11 @@ export default function ExpertProfile() {
     // Fetch likes and comments for posts when posts change
     useEffect(() => {
         if (posts && posts.length > 0) {
-            posts.forEach(post => {
-                getPostLikes(post.id);
-                getComments(post.id);
-            });
+            // posts.forEach(post => {
+            //     getPostLikes(post.id);
+            // });
         }
-    }, [posts, getPostLikes, getComments]);
+    }, [posts]);
 
     // Show error toast for like/unlike and comment
     useEffect(() => {
@@ -342,6 +352,31 @@ export default function ExpertProfile() {
         // Fallback to a default avatar
         return `https://ui-avatars.com/api/?name=${expert?.name || 'Expert'}&background=random`;
     };
+
+    // Handler for opening the report dialog
+    const handleOpenReportDialog = (postId: string) => {
+        setReportPostId(postId);
+        setReportReason("");
+        setReportDialogOpen(true);
+        clearError();
+        clearSuccess();
+    };
+
+    // Handler for submitting the report
+    const handleSubmitReport = async () => {
+        if (reportPostId && reportReason.trim()) {
+            await reportPost(reportPostId, reportReason);
+            setReportReason("");
+        }
+    };
+
+    // Close dialog on success
+    useEffect(() => {
+        if (reportSuccess) {
+            setReportDialogOpen(false);
+            setTimeout(() => clearSuccess(), 2000);
+        }
+    }, [reportSuccess, clearSuccess]);
 
     if (isLoading) {
         return (
@@ -679,12 +714,39 @@ export default function ExpertProfile() {
                                                             <h3 className="font-semibold text-foreground">{post.author.name}</h3>
                                                             <p className="text-sm text-muted-foreground">{new Date(post.createdAt).toLocaleString()}</p>
                                                         </div>
+                                                        {user && (
+                                                            <DropdownMenu>
+                                                                <DropdownMenuTrigger asChild>
+                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                                        <FaEllipsisH className="h-4 w-4" />
+                                                                    </Button>
+                                                                </DropdownMenuTrigger>
+                                                                <DropdownMenuContent align="end">
+                                                                    {post.author.id === user.id ? (
+                                                                        <>
+                                                                            {/* Owner actions (edit/delete) if needed */}
+                                                                        </>
+                                                                    ) : (
+                                                                        followStatuses[expert?.userId] && (
+                                                                            <DropdownMenuItem
+                                                                                onClick={() => handleOpenReportDialog(post.id)}
+                                                                                className="text-red-600 focus:text-red-600"
+                                                                            >
+                                                                                <FaFlag className="mr-2 h-4 w-4" />
+                                                                                Report Post
+                                                                            </DropdownMenuItem>
+                                                                        )
+                                                                    )}
+                                                                </DropdownMenuContent>
+                                                            </DropdownMenu>
+                                                        )}
                                                     </div>
                                                 </div>
 
                                                 {/* Post Content */}
                                                 <div className="p-4">
-                                                    <p className="text-foreground mb-4">{post.content}</p>
+                                                    {/* Render post.content as HTML */}
+                                                    <div className="text-foreground mb-4" dangerouslySetInnerHTML={{ __html: post.content }} />
                                                     {post.image && (
                                                         <img
                                                             src={post.image}
@@ -704,6 +766,41 @@ export default function ExpertProfile() {
                                                                     : "text-muted-foreground hover:text-red-500"
                                                                     }`}
                                                                 disabled={likeLoading}
+                                                                onMouseEnter={async () => {
+                                                                    if (window.innerWidth > 768) {
+                                                                        desktopHoverTimeout.current = setTimeout(async () => {
+                                                                            if (!postLikes.some(like => like.postId === post.id)) {
+                                                                                await getPostLikes(post.id);
+                                                                            }
+                                                                            setLikesModalPostId(post.id);
+                                                                            setShowLikesModal(true);
+                                                                        }, 2000); // 2 seconds
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={() => {
+                                                                    if (window.innerWidth > 768 && desktopHoverTimeout.current) {
+                                                                        clearTimeout(desktopHoverTimeout.current);
+                                                                        desktopHoverTimeout.current = null;
+                                                                        setShowLikesModal(false);
+                                                                        setLikesModalPostId(null);
+                                                                    }
+                                                                }}
+                                                                onTouchStart={e => {
+                                                                    if (window.innerWidth <= 768) {
+                                                                        longPressTimeout.current = setTimeout(async () => {
+                                                                            if (!postLikes.some(like => like.postId === post.id)) {
+                                                                                await getPostLikes(post.id);
+                                                                            }
+                                                                            setLikesModalPostId(post.id);
+                                                                            setShowLikesModal(true);
+                                                                        }, 500); // 500ms for long press
+                                                                    }
+                                                                }}
+                                                                onTouchEnd={e => {
+                                                                    if (window.innerWidth <= 768 && longPressTimeout.current) {
+                                                                        clearTimeout(longPressTimeout.current);
+                                                                    }
+                                                                }}
                                                                 onClick={async () => {
                                                                     if (!user) {
                                                                         setShowLoginPrompt(true);
@@ -723,8 +820,16 @@ export default function ExpertProfile() {
                                                             </button>
                                                             <button
                                                                 className="flex items-center gap-2 text-muted-foreground hover:text-blue-500 transition-colors"
-                                                                onClick={() => {
-                                                                    setOpenCommentPostId(prev => prev === post.id ? null : post.id);
+                                                                onClick={async () => {
+                                                                    if (openCommentPostId !== post.id) {
+                                                                        // Only fetch if not already open
+                                                                        if (!comments.some(c => c.postId === post.id)) {
+                                                                            await getComments(post.id);
+                                                                        }
+                                                                        setOpenCommentPostId(post.id);
+                                                                    } else {
+                                                                        setOpenCommentPostId(null);
+                                                                    }
                                                                 }}
                                                             >
                                                                 <FaComment />
@@ -732,11 +837,7 @@ export default function ExpertProfile() {
                                                                     comments.filter(c => c.postId === post.id).length
                                                                 }</span>
                                                             </button>
-                                                            {/* Optionally add share/bookmark */}
                                                         </div>
-                                                        <button className="text-muted-foreground hover:text-yellow-500 transition-colors">
-                                                            <FaBookmark />
-                                                        </button>
                                                     </div>
                                                 </div>
 
@@ -1130,6 +1231,63 @@ export default function ExpertProfile() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Report Post Dialog */}
+            <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Report Post</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <Input
+                            placeholder="Enter reason for reporting this post"
+                            value={reportReason}
+                            onChange={e => setReportReason(e.target.value)}
+                            disabled={reportLoading}
+                        />
+                        {reportError && <div className="text-red-500 text-sm">{reportError}</div>}
+                        {reportSuccess && <div className="text-green-600 text-sm">{reportSuccess}</div>}
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            onClick={handleSubmitReport}
+                            disabled={reportLoading || !reportReason.trim()}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                            {reportLoading ? "Reporting..." : "Submit Report"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Likes Modal for Mobile */}
+            {showLikesModal && likesModalPostId && (
+                <Dialog open={showLikesModal} onOpenChange={setShowLikesModal}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Liked by</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {postLikes.filter(like => like.postId === likesModalPostId).length === 0 ? (
+                                <div className="text-muted-foreground">No likes yet.</div>
+                            ) : (
+                                postLikes.filter(like => like.postId === likesModalPostId).map(like => (
+                                    <div key={like.id} className="flex items-center gap-2">
+                                        <Avatar className="w-7 h-7">
+                                            <AvatarImage src={like.user?.avatar || getAvatarUrl(like.user?.avatar)} alt={like.user?.name || "User"} />
+                                            <AvatarFallback>{like.user?.name?.charAt(0) || "U"}</AvatarFallback>
+                                        </Avatar>
+                                        <span className="font-medium text-foreground">{like.user?.name || "User"}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={() => setShowLikesModal(false)} className="w-full">Close</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     );
