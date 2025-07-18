@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
-import { mockReports } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,93 +30,85 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { ArrowUpDown, MoreHorizontal, AlertTriangle, Clock, Flag } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, AlertTriangle, Clock, Flag, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-
-interface Report {
-  id: string;
-  targetType: string;
-  targetId: string;
-  targetParentId?: string;
-  reportedBy: string;
-  reason: string;
-  description: string;
-  status: string;
-  createdAt: string;
-  priority: string;
-  resolvedAt?: string;
-  resolution?: string;
-}
+import { useReportStore } from "@/lib/mainwebsite/report-store";
 
 export default function ReportsPage() {
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const {
+    adminReports,
+    pagination,
+    isLoading,
+    error,
+    adminGetAllReports,
+    adminUpdateReport,
+    adminDeleteReport,
+    adminGetReportById,
+    clearError,
+    clearSuccess,
+  } = useReportStore();
+
+  const [selectedReport, setSelectedReport] = useState<any>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"resolve" | "dismiss" | null>(null);
+  const [actionType, setActionType] = useState(null);
   const [resolution, setResolution] = useState("");
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const handleAction = (report: Report, action: "resolve" | "dismiss") => {
+  useEffect(() => {
+    adminGetAllReports({ status: filter !== "all" ? filter : undefined, page, limit });
+  }, [filter, page, limit, adminGetAllReports]);
+
+  const handleAction = (report: any, action: any) => {
     setSelectedReport(report);
     setActionType(action);
     setResolution("");
     setActionDialogOpen(true);
   };
 
-  const handleViewReport = (report: Report) => {
+  const handleViewReport = async (report: any) => {
     setSelectedReport(report);
     setViewDialogOpen(true);
+    await adminGetReportById(report.id);
   };
 
-  const confirmAction = () => {
+  const confirmAction = async () => {
     if (!selectedReport || !actionType) return;
-
-    let message = "";
-    switch (actionType) {
-      case "resolve":
-        message = `Report #${selectedReport.id} has been resolved`;
-        break;
-      case "dismiss":
-        message = `Report #${selectedReport.id} has been dismissed`;
-        break;
-    }
-
-    toast.success(message);
-    setActionDialogOpen(false);
-  };
-
-  // Function to get the priority badge color
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return (
-          <Badge variant="destructive" className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" />
-            High
-          </Badge>
-        );
-      case "medium":
-        return (
-          <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800">
-            Medium
-          </Badge>
-        );
-      case "low":
-        return (
-          <Badge variant="outline">
-            Low
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{priority}</Badge>;
+    setActionLoading(true);
+    try {
+      await adminUpdateReport((selectedReport as any).id, { status: (actionType as any).toUpperCase() });
+      toast.success(`Report #${(selectedReport as any).id} has been ${actionType}d`);
+      setActionDialogOpen(false);
+      adminGetAllReports({ status: filter !== "all" ? filter : undefined, page, limit });
+    } catch (e) {
+      toast.error("Failed to update report");
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  // Table columns definition
-  const columns: ColumnDef<Report>[] = [
+  const handleDelete = async (report: any) => {
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
+    setActionLoading(true);
+    try {
+      await adminDeleteReport(report.id);
+      toast.success("Report deleted");
+      adminGetAllReports({ status: filter !== "all" ? filter : undefined, page, limit });
+    } catch (e) {
+      toast.error("Failed to delete report");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Update columns to use nested fields safely and show post/reporter/reportedUser info
+  const columns = [
     {
       accessorKey: "reason",
-      header: ({ column }) => (
+      header: ({ column }: { column: any }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -126,12 +117,15 @@ export default function ReportsPage() {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <div>
           <div className="font-medium">{row.original.reason}</div>
           <div className="text-sm text-muted-foreground truncate max-w-[200px]">
-            {row.original.description.substring(0, 50)}
-            {row.original.description.length > 50 ? "..." : ""}
+            {row.original.post?.title && (
+              <span className="block font-semibold">Post: {row.original.post.title}</span>
+            )}
+            {row.original.description?.substring(0, 50)}
+            {row.original.description?.length > 50 ? "..." : ""}
           </div>
         </div>
       ),
@@ -139,7 +133,7 @@ export default function ReportsPage() {
     {
       accessorKey: "targetType",
       header: "Type",
-      cell: ({ row }) => (
+      cell: ({ row }: { row: any }) => (
         <div className="flex items-center gap-1.5">
           <Flag className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="capitalize">{row.original.targetType}</span>
@@ -148,43 +142,51 @@ export default function ReportsPage() {
     },
     {
       accessorKey: "reportedBy",
-      header: "Reported By",
-      cell: ({ row }) => row.original.reportedBy,
+      header: "Reporter",
+      cell: ({ row }: { row: any }) => (
+        <div className="flex items-center gap-2">
+          {row.original.reporter?.avatar && (
+            <img src={row.original.reporter.avatar} alt={row.original.reporter.name} className="w-6 h-6 rounded-full" />
+          )}
+          <span>{row.original.reporter?.name || row.original.reportedBy || "-"}</span>
+        </div>
+      ),
     },
     {
-      accessorKey: "priority",
-      header: "Priority",
-      cell: ({ row }) => getPriorityBadge(row.original.priority),
+      accessorKey: "reportedUser",
+      header: "Reported User",
+      cell: ({ row }: { row: any }) => (
+        <div className="flex items-center gap-2">
+          {row.original.reportedUser?.avatar && (
+            <img src={row.original.reportedUser.avatar} alt={row.original.reportedUser.name} className="w-6 h-6 rounded-full" />
+          )}
+          <span>{row.original.reportedUser?.name || "-"}</span>
+        </div>
+      ),
     },
     {
       accessorKey: "status",
       header: "Status",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         const status = row.original.status;
         return (
-          <Badge
-            variant={status === "pending" ? "secondary" : "default"}
-          >
-            {status}
-          </Badge>
+          <Badge variant={status === "pending" ? "secondary" : "default"}>{status}</Badge>
         );
       },
     },
     {
       accessorKey: "createdAt",
       header: "Created",
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>{format(new Date(row.original.createdAt), "MMM d, yyyy")}</span>
-          </div>
-        );
-      },
+      cell: ({ row }: { row: any }) => (
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{row.original.createdAt ? format(new Date(row.original.createdAt), "MMM d, yyyy") : "-"}</span>
+        </div>
+      ),
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: ({ row }: { row: any }) => {
         const report = row.original;
         return (
           <DropdownMenu>
@@ -200,36 +202,22 @@ export default function ReportsPage() {
                 View details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {report.status === "pending" && (
+              {report.status?.toUpperCase() === "PENDING" && (
                 <>
-                  <DropdownMenuItem onClick={() => handleAction(report, "resolve")}>
-                    Resolve report
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAction(report, "dismiss")}>
-                    Dismiss report
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAction(report, "resolve")}>Resolve report</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAction(report, "dismiss")}>Dismiss report</DropdownMenuItem>
                 </>
               )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleDelete(report)} className="text-red-600">
+                <Trash2 className="h-4 w-4 mr-2" /> Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
     },
   ];
-
-  // Filter reports based on selected filter
-  const filteredReports = mockReports.filter((report) => {
-    switch (filter) {
-      case "pending":
-        return report.status === "pending";
-      case "resolved":
-        return report.status === "resolved";
-      case "high":
-        return report.priority === "high";
-      default:
-        return true; // Show all reports
-    }
-  });
 
   return (
     <div className="space-y-6">
@@ -248,16 +236,31 @@ export default function ReportsPage() {
         </Select>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={filteredReports} 
-        searchColumn="reason" 
-        searchPlaceholder="Search reports..." 
+      {error && <div className="text-red-600">{error}</div>}
+      <DataTable
+        columns={columns}
+        data={adminReports}
+        searchColumn="reason"
+        searchPlaceholder="Search reports..."
+        isLoading={isLoading}
       />
+
+      {/* Pagination Controls */}
+      <div className="flex justify-end mt-4 gap-2 items-center">
+        <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+          Previous
+        </Button>
+        <span className="mx-2">
+          Page {pagination?.page || 1} of {pagination?.pages || 1}
+        </span>
+        <Button disabled={page >= (pagination?.pages || 1)} onClick={() => setPage(page + 1)}>
+          Next
+        </Button>
+      </div>
 
       {/* View Report Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Report Details</DialogTitle>
             <DialogDescription>
@@ -270,50 +273,67 @@ export default function ReportsPage() {
                 <div>
                   <h3 className="font-semibold">Report #{selectedReport.id}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Reported on {format(new Date(selectedReport.createdAt), "PPP")}
+                    Reported on {selectedReport.createdAt ? format(new Date(selectedReport.createdAt), "PPP") : "-"}
                   </p>
                 </div>
-                {getPriorityBadge(selectedReport.priority)}
               </div>
-              
               <div className="space-y-2">
                 <div>
                   <p className="text-sm text-muted-foreground">Reason</p>
                   <p className="font-medium">{selectedReport.reason}</p>
                 </div>
-                
                 <div>
                   <p className="text-sm text-muted-foreground">Description</p>
                   <div className="border rounded-md p-3 bg-muted/30 mt-1">
                     <p>{selectedReport.description}</p>
                   </div>
                 </div>
+                {selectedReport.post && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Post</p>
+                    <div className="border rounded-md p-3 bg-muted/30 mt-1">
+                      <div className="font-semibold">{selectedReport.post.title}</div>
+                      <div className="text-xs text-muted-foreground">ID: {selectedReport.post.id}</div>
+                      <div className="mt-1">{selectedReport.post.content}</div>
+                    </div>
+                  </div>
+                )}
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Reported By</p>
-                  <p className="font-medium">{selectedReport.reportedBy}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Target Type</p>
-                  <p className="font-medium capitalize">{selectedReport.targetType}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Target ID</p>
-                  <p className="font-medium">{selectedReport.targetId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge
-                    variant={selectedReport.status === "pending" ? "secondary" : "default"}
-                    className="mt-1"
-                  >
-                    {selectedReport.status}
-                  </Badge>
+              <div>
+                <p className="text-sm text-muted-foreground">Reporter</p>
+                <div className="flex items-center gap-2">
+                  {selectedReport.reporter?.avatar && (
+                    <img src={selectedReport.reporter.avatar} alt={selectedReport.reporter.name} className="w-6 h-6 rounded-full" />
+                  )}
+                  <span className="font-medium">{selectedReport.reporter?.name || selectedReport.reportedBy || "-"}</span>
                 </div>
               </div>
-              
+              <div>
+                <p className="text-sm text-muted-foreground">Reported User</p>
+                <div className="flex items-center gap-2">
+                  {selectedReport.reportedUser?.avatar && (
+                    <img src={selectedReport.reportedUser.avatar} alt={selectedReport.reportedUser.name} className="w-6 h-6 rounded-full" />
+                  )}
+                  <span className="font-medium">{selectedReport.reportedUser?.name || "-"}</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Target Type</p>
+                <p className="font-medium capitalize">{selectedReport.targetType}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Target ID</p>
+                <p className="font-medium">{selectedReport.targetId || selectedReport.postId || "-"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge
+                  variant={selectedReport.status === "pending" ? "secondary" : "default"}
+                  className="mt-1"
+                >
+                  {selectedReport.status}
+                </Badge>
+              </div>
               {selectedReport.status === "resolved" && (
                 <div>
                   <p className="text-sm text-muted-foreground">Resolution</p>
@@ -321,21 +341,18 @@ export default function ReportsPage() {
                     <p>{selectedReport.resolution}</p>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Resolved on {format(new Date(selectedReport.resolvedAt!), "PPP")}
+                    Resolved on {selectedReport.resolvedAt ? format(new Date(selectedReport.resolvedAt), "PPP") : "-"}
                   </p>
                 </div>
               )}
-              
-              {selectedReport.status === "pending" && (
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => handleAction(selectedReport, "dismiss")}>
-                    Dismiss
-                  </Button>
-                  <Button onClick={() => handleAction(selectedReport, "resolve")}>
-                    Resolve
-                  </Button>
-                </div>
-              )}
+              <div className="flex justify-end gap-2 pt-2">
+                {selectedReport.status === "PENDING" && (
+                  <>
+                    <Button variant="outline" onClick={() => handleAction(selectedReport, "dismiss")}>Dismiss</Button>
+                    <Button onClick={() => handleAction(selectedReport, "resolve")}>Resolve</Button>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
@@ -349,48 +366,17 @@ export default function ReportsPage() {
               {actionType === "resolve" ? "Resolve Report" : "Dismiss Report"}
             </DialogTitle>
             <DialogDescription>
-              {actionType === "resolve" 
-                ? "Please provide details on how this report was resolved."
-                : "Please provide a reason for dismissing this report."}
+              {actionType === "resolve"
+                ? "Are you sure you want to resolve this report?"
+                : "Are you sure you want to dismiss this report?"}
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Resolution Notes</p>
-              <Textarea
-                placeholder="Enter details about the action taken..."
-                value={resolution}
-                onChange={(e) => setResolution(e.target.value)}
-                rows={4}
-              />
-            </div>
-            
-            {actionType === "resolve" && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Actions Taken</p>
-                <Select defaultValue="none">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select action taken" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No action required</SelectItem>
-                    <SelectItem value="content_removed">Content removed</SelectItem>
-                    <SelectItem value="content_edited">Content edited</SelectItem>
-                    <SelectItem value="user_warned">User warned</SelectItem>
-                    <SelectItem value="user_suspended">User suspended</SelectItem>
-                    <SelectItem value="user_banned">User banned</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-          
+          {/* Remove Resolution Notes and Actions Taken UI */}
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={confirmAction}>
+            <Button onClick={confirmAction} disabled={actionLoading}>
               {actionType === "resolve" ? "Resolve Report" : "Dismiss Report"}
             </Button>
           </DialogFooter>

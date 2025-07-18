@@ -75,6 +75,7 @@ export default function DashboardPage() {
     categoryStats,
     expertQualityMetrics,
     monthlyUserExpertCounts, // <-- new
+    reportStats,
     isLoading,
     error,
     fetchAnalytics,
@@ -107,6 +108,15 @@ export default function DashboardPage() {
         <StatCard title="Total Categories" value={totalStats?.totalCategories ?? null} icon={Folder} colorClass={cardColors[4]} loading={isLoading || totalStats?.totalCategories === undefined} />
         <StatCard title="Total Subcategories" value={totalStats?.totalSubcategories ?? null} icon={Layers} colorClass={cardColors[5]} loading={isLoading || totalStats?.totalSubcategories === undefined} />
         <StatCard title="Total Reviews" value={totalStats?.totalReviews ?? null} icon={Star} colorClass={cardColors[3]} loading={isLoading || totalStats?.totalReviews === undefined} />
+        {/* New: Total Reports Card */}
+        <StatCard
+          title="Total Reports"
+          value={reportStats?.totalReports ?? null}
+          icon={ListChecks}
+          colorClass={cardColors[3]}
+          details={reportStats?.recentReports !== undefined ? `Recent (7d): ${reportStats.recentReports}` : undefined}
+          loading={isLoading || reportStats?.totalReports === undefined}
+        />
         {/* Notification Card */}
         <StatCard 
           title="Notifications" 
@@ -265,6 +275,16 @@ export default function DashboardPage() {
               dataKey="count"
               nameKey="satisfaction"
             />
+            {/* Report Stats Pie Chart */}
+            {reportStats?.byStatus && reportStats.byStatus.length > 0 && (
+              <PieChart
+                title="Report Status Distribution"
+                description="Breakdown of report statuses"
+                data={reportStats.byStatus}
+                dataKey="count"
+                nameKey="status"
+              />
+            )}
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import {
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import type { AdminUser } from "@/lib/mainwebsite/admin-user-store";
+import { useAdminNotificationsStore } from "@/lib/mainwebsite/admin-notifications-store";
 
 interface HeaderProps {
   user: AdminUser | null;
@@ -23,16 +24,58 @@ export function Header({ user }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [notifications, setNotifications] = useState<{ id: string; text: string; read: boolean; expertId?: string }[]>([
-    { id: "1", text: "New report submitted: Inappropriate content", read: false, expertId: "expert-1" },
-    { id: "2", text: "New expert application pending review", read: false, expertId: "expert-2" },
-    { id: "3", text: "System alert: Daily backup completed", read: true, expertId: "expert-3" },
-  ]);
 
-  // Fix hydration issues with theme
+  // Use admin notifications store
+  const {
+    notifications,
+    fetchNotifications,
+    updateNotification,
+    bulkMarkAsRead,
+    isLoading,
+  } = useAdminNotificationsStore();
+
+  // Fetch notifications on mount (only first page, limit 5 for performance)
   useEffect(() => {
     setMounted(true);
+    if (notifications.length === 0) {
+      fetchNotifications({ page: 1, limit: 5, sortBy: "createdAt", sortOrder: "desc" });
+    }
   }, []);
+
+  // Compute unread count and recent notifications
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const recentNotifications = notifications.slice(0, 2);
+
+  // Mark all as read handler
+  const markAllAsRead = async () => {
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+    if (unreadIds.length > 0) {
+      await bulkMarkAsRead(unreadIds);
+    }
+  };
+
+  // Notification text logic (copied from notifications page)
+  const getNotificationText = (notification: any) => {
+    switch (notification.type) {
+      case "FOLLOW":
+        return `${notification.sender?.name || "Unknown"} followed ${notification.recipient?.name || "Unknown"}`;
+      case "LIKE":
+        return `${notification.sender?.name || "Unknown"} liked a post by ${notification.recipient?.name || "Unknown"}`;
+      case "COMMENT":
+        return `${notification.sender?.name || "Unknown"} commented on a post by ${notification.recipient?.name || "Unknown"}`;
+      case "MESSAGE":
+        return `${notification.sender?.name || "Unknown"} sent a message to ${notification.recipient?.name || "Unknown"}`;
+      case "MESSAGE_SCHEDULE":
+        return `Message scheduled from ${notification.sender?.name || "Unknown"} to ${notification.recipient?.name || "Unknown"}`;
+      case "BADGE_EARNED":
+        return `${notification.recipient?.name || "Unknown"} earned a badge`;
+      case "SUGGESTION":
+        return `Suggestion from ${notification.sender?.name || "Unknown"} to ${notification.recipient?.name || "Unknown"}`;
+      case "OTHER":
+      default:
+        return notification.content;
+    }
+  };
 
   // Generate page title based on current route
   const getPageTitle = () => {
@@ -45,12 +88,6 @@ export function Header({ user }: HeaderProps) {
     const lastSegment = path[path.length - 1];
     return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
   };
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (!mounted) {
     return (
@@ -86,24 +123,24 @@ export function Header({ user }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between p-2 border-b">
               <span className="text-sm font-medium">Notifications</span>
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} disabled={isLoading || unreadCount === 0}>
                 Mark all as read
               </Button>
             </div>
             <div className="max-h-96 overflow-auto">
-              {notifications.length === 0 ? (
+              {recentNotifications.length === 0 ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   No notifications
                 </div>
               ) : (
-                notifications.map((notification) => (
+                recentNotifications.map((notification) => (
                   <DropdownMenuItem key={notification.id} className="cursor-pointer p-3 focus:bg-accent">
                     <div className="flex items-start gap-2">
                       {!notification.read && (
                         <div className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0"></div>
                       )}
                       <span className={`text-sm ${notification.read ? 'text-muted-foreground' : ''}`}>
-                        {notification.text}
+                        {getNotificationText(notification)}
                       </span>
                     </div>
                   </DropdownMenuItem>
@@ -134,15 +171,9 @@ export function Header({ user }: HeaderProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setTheme("light")}>
-              Light
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("dark")}>
-              Dark
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("system")}>
-              System
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

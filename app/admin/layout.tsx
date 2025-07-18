@@ -23,7 +23,7 @@ export default function AdminLayout({
         enableSystem
       >
         {children}
-        <Toaster position="top-right" />
+        {/* <Toaster position="top-right" /> Removed to prevent duplicate toasts */}
       </ThemeProvider>
     );
   }
@@ -43,7 +43,7 @@ export default function AdminLayout({
           </main>
         </div>
       </div>
-      <Toaster position="top-right" />
+      {/* <Toaster position="top-right" /> Removed to prevent duplicate toasts */}
     </ThemeProvider>
   );
 }

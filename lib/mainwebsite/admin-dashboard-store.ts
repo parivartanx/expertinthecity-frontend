@@ -92,6 +92,14 @@ export interface MonthlyUserExpertCount {
   EXPERT: number;
 }
 
+export interface ReportStats {
+  totalReports: number;
+  byStatus: Array<{ status: string; count: number }>;
+  byTargetType: Array<{ type: string; count: number }>;
+  monthlyCounts: Array<{ month: string; count: number }>;
+  recentReports: number;
+}
+
 interface AdminDashboardState {
   totalStats: TotalStats | null;
   recentActivity: RecentActivity | null;
@@ -106,6 +114,7 @@ interface AdminDashboardState {
   categoryStats: CategoryStats[] | null;
   expertQualityMetrics: ExpertQualityMetrics | null;
   monthlyUserExpertCounts: MonthlyUserExpertCount[] | null;
+  reportStats: ReportStats | null;
   isLoading: boolean;
   error: string | null;
   fetchAnalytics: () => Promise<void>;
@@ -128,6 +137,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>()(
       categoryStats: null,
       expertQualityMetrics: null,
       monthlyUserExpertCounts: null,
+      reportStats: null,
       isLoading: false,
       error: null,
 
@@ -149,7 +159,8 @@ export const useAdminDashboardStore = create<AdminDashboardState>()(
               expertiseDistribution,
               categoryStats,
               expertQualityMetrics,
-              monthlyUserExpertCounts
+              monthlyUserExpertCounts,
+              reportStats
             } = response.data.data;
             set({
               totalStats,
@@ -165,6 +176,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>()(
               categoryStats,
               expertQualityMetrics,
               monthlyUserExpertCounts,
+              reportStats,
               isLoading: false
             });
           } else {
@@ -199,6 +211,7 @@ export const useAdminDashboardStore = create<AdminDashboardState>()(
         categoryStats: state.categoryStats,
         expertQualityMetrics: state.expertQualityMetrics,
         monthlyUserExpertCounts: state.monthlyUserExpertCounts,
+        reportStats: state.reportStats,
       }),
     }
   )
