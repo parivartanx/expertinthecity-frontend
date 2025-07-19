@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -71,8 +71,12 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInputValue, setSearchInputValue] = useState(""); // Separate state for input value
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
+  
+  // Debouncing ref
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchUsers({
@@ -80,9 +84,19 @@ export default function UsersPage() {
       limit: pageSize,
       search: searchQuery,
       sortBy,
-      sortOrder
+      sortOrder,
+      role: "USER" // Filter for users with role USER
     });
   }, [fetchUsers, currentPage, pageSize, searchQuery, sortBy, sortOrder]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleAction = (user: User, action: "activate" | "deactivate" | "verify") => {
     setSelectedUser(user);
@@ -143,15 +157,20 @@ export default function UsersPage() {
     setCurrentPage(1); // Reset to first page when searching
   };
 
-  const handleSearchWithDebounce = useCallback(
-    (query: string) => {
-      const timeoutId = setTimeout(() => {
-        handleSearch(query);
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    },
-    []
-  );
+  const handleSearchInputChange = (query: string) => {
+    // Update input value immediately
+    setSearchInputValue(query);
+    
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set new timeout for API call
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearch(query);
+    }, 500);
+  };
 
   const handleSort = (column: string, order: string) => {
     setSortBy(column);
@@ -165,15 +184,15 @@ export default function UsersPage() {
     name: u.name,
     email: u.email,
     role: u.role,
-    status: (u as any).status || "active",
+    status: u.isAdmin ? "admin" : "active", // Use isAdmin to determine status
     joinedAt: u.createdAt,
     lastActive: u.updatedAt,
-    verified: (u as any).verified ?? false,
+    verified: false, // Default to false since not in API response
     profilePicture: u.avatar,
     bio: u.bio,
-    location: (u as any).location || "",
-    profileVisitors: (u as any).profileVisitors || 0,
-    preferences: (u as any).preferences || [],
+    location: "", // Not in API response
+    profileVisitors: 0, // Not in API response
+    preferences: [], // Not in API response
     stats: u.stats
   }));
 
@@ -189,15 +208,23 @@ export default function UsersPage() {
             handleSort("name", newOrder);
           }}
         >
-          Name
+          User
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <User className="h-4 w-4 text-muted-foreground" />
-          </div>
+        <div className="flex items-center gap-3">
+          {row.original.profilePicture ? (
+            <img 
+              src={row.original.profilePicture} 
+              alt={row.original.name}
+              className="h-10 w-10 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+              <User className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
           <div>
             <div
               className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary hover:underline transition-colors"
@@ -214,12 +241,19 @@ export default function UsersPage() {
       ),
     },
     {
-      accessorKey: "role",
-      header: "Role",
+      accessorKey: "bio",
+      header: "Bio",
       cell: ({ row }) => {
+        const bio = row.original.bio;
         return (
-          <div className="text-sm">
-            {row.original.role}
+          <div className="text-sm max-w-[200px]">
+            {bio ? (
+              <div className="truncate" title={bio}>
+                {bio}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">No bio</span>
+            )}
           </div>
         );
       },
@@ -234,7 +268,7 @@ export default function UsersPage() {
             variant={
               status === "active"
                 ? "default"
-                : status === "pending"
+                : status === "admin"
                   ? "secondary"
                   : "outline"
             }
@@ -252,12 +286,12 @@ export default function UsersPage() {
         return (
           <div className="flex flex-col gap-1 text-xs">
             <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">Posts:</span>
-              <span className="font-medium">{stats?.posts || 0}</span>
-            </div>
-            <div className="flex items-center gap-1">
               <span className="text-muted-foreground">Followers:</span>
               <span className="font-medium">{stats?.followers || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Following:</span>
+              <span className="font-medium">{stats?.following || 0}</span>
             </div>
           </div>
         );
@@ -362,10 +396,11 @@ export default function UsersPage() {
           data={mappedUsers}
           searchColumn="name"
           searchPlaceholder="Search users..."
+          searchValue={searchInputValue}
           pagination={pagination || undefined}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
-          onSearch={handleSearchWithDebounce}
+          onSearch={handleSearchInputChange}
           isLoading={isLoading}
         />
       )}
@@ -382,9 +417,17 @@ export default function UsersPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                  <User className="h-8 w-8 text-muted-foreground" />
-                </div>
+                {selectedUser.profilePicture ? (
+                  <img 
+                    src={selectedUser.profilePicture} 
+                    alt={selectedUser.name}
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
                 <div>
                   <div className="flex items-center gap-1">
                     <h3 className="text-lg font-semibold">{selectedUser.name}</h3>
@@ -417,7 +460,7 @@ export default function UsersPage() {
               </div>
 
               {selectedUser.stats && (
-                <div className="grid grid-cols-3 gap-4 pt-2">
+                <div className="grid grid-cols-5 gap-4 pt-2">
                   <div>
                     <p className="text-sm text-muted-foreground">Posts</p>
                     <p className="font-medium">{selectedUser.stats.posts}</p>
@@ -429,6 +472,14 @@ export default function UsersPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Following</p>
                     <p className="font-medium">{selectedUser.stats.following}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Likes</p>
+                    <p className="font-medium">{selectedUser.stats.likes}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Comments</p>
+                    <p className="font-medium">{selectedUser.stats.comments}</p>
                   </div>
                 </div>
               )}
