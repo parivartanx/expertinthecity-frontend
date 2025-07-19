@@ -572,14 +572,14 @@ const ExpertRegisterForm = () => {
           "",
         profilePhoto: null,
         certifications: Array.isArray(prev.certifications) ? prev.certifications : [],
-        about: profile?.about || "",
-        tags: profile?.tags ? profile.tags.join(', ') : "",
-        headline: profile?.headline || "",
-        summary: profile?.summary || "",
-        expertise: profile?.expertise ? profile.expertise.join(', ') : "",
-        experience: profile?.experience?.toString() || "",
-        languages: profile?.languages ? profile.languages.join(', ') : "",
-        hourlyRate: profile?.hourlyRate?.toString() || "",
+        about: profile?.expertDetails?.about || "",
+        tags: "",
+        headline: profile?.expertDetails?.headline ?? "",
+        summary: profile?.expertDetails?.summary ?? "",
+        expertise: Array.isArray(profile?.expertDetails?.expertise) ? (profile?.expertDetails?.expertise?.join(', ') ?? "") : "",
+        experience: profile?.expertDetails?.experience != null ? String(profile.expertDetails.experience) : "",
+        languages: Array.isArray(profile?.expertDetails?.languages) ? (profile?.expertDetails?.languages?.join(', ') ?? "") : "",
+        hourlyRate: profile?.expertDetails?.hourlyRate != null ? String(profile.expertDetails.hourlyRate) : "",
       }));
       if (profile?.interests && profile.interests.length > 0) {
         setSelectedInterests(profile.interests);

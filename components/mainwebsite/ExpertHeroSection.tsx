@@ -6,7 +6,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
+import { axiosInstance } from "@/lib/mainwebsite/axios";
 import { useCategoriesStore } from "@/lib/mainwebsite/categories-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -16,54 +16,101 @@ const ExpertHeroSection = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const router = useRouter();
-  const { searchSuggestions } = useAllExpertsStore();
-  const { categories, fetchAllCategories, isLoading: categoriesLoading } = useCategoriesStore();
+  // State for search results (experts only for infinite scroll)
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { categories, fetchAllCategories, isLoading: categoriesLoading, subcategories, fetchAllSubcategories } = useCategoriesStore();
 
-  // State for search results
-  const [searchResults, setSearchResults] = useState<{
-    experts: any[];
-    categories: any[];
-  }>({ experts: [], categories: [] });
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  // Fetch categories on component mount
+  // Fetch categories and subcategories on component mount (only if not already loaded)
   useEffect(() => {
     if (categories.length === 0) {
       fetchAllCategories();
     }
-  }, [fetchAllCategories, categories.length]);
+    if (subcategories.length === 0) {
+      fetchAllSubcategories();
+    }
+  }, [fetchAllCategories, fetchAllSubcategories, categories.length, subcategories.length]);
 
-  // Debounced search function
+  // Reset page and results when searchQuery changes
+  useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    setSearchResults([]);
+  }, [searchQuery]);
+
+  // Debounced search function (API-based, infinite scroll)
   useEffect(() => {
     const timeoutId = setTimeout(async () => {
       if (searchQuery.trim() && searchFocused) {
         setIsSearchLoading(true);
         try {
-          const results = await searchSuggestions(searchQuery);
-          setSearchResults(results);
+          const response = await axiosInstance.get("/users", { params: { search: searchQuery, limit: 10, page: 1 } });
+          if (response.data && response.data.status === 'success') {
+            setSearchResults(response.data.data.users || []);
+            setHasMore((response.data.data.pagination?.page || 1) < (response.data.data.pagination?.pages || 1));
+          } else {
+            setSearchResults([]);
+            setHasMore(false);
+          }
         } catch (error) {
-          console.error("Error fetching search suggestions:", error);
-          setSearchResults({ experts: [], categories: [] });
+          setSearchResults([]);
+          setHasMore(false);
         } finally {
           setIsSearchLoading(false);
         }
       } else {
-        setSearchResults({ experts: [], categories: [] });
+        setSearchResults([]);
+        setHasMore(false);
       }
-    }, 300); // 300ms debounce
-
+    }, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchFocused, searchSuggestions]);
+  }, [searchQuery, searchFocused]);
+
+  // Load more users for infinite scroll
+  const loadMoreUsers = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await axiosInstance.get("/users", { params: { search: searchQuery, limit: 10, page: nextPage } });
+      if (response.data && response.data.status === 'success') {
+        const newUsers = response.data.data.users || [];
+        setSearchResults(prev => [...prev, ...newUsers]);
+        setPage(nextPage);
+        setHasMore((response.data.data.pagination?.page || nextPage) < (response.data.data.pagination?.pages || nextPage));
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Scroll handler for infinite scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const el = dropdownRef.current;
+      if (!el || loadingMore || !hasMore) return;
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) {
+        loadMoreUsers();
+      }
+    };
+    const el = dropdownRef.current;
+    if (el) {
+      el.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (el) el.removeEventListener('scroll', handleScroll);
+    };
+  }, [loadingMore, hasMore, searchResults]);
 
   // Helper function to get category icon component
-  const getCategoryIconComponent = (iconName: string) => {
+  const getCategoryIconComponent = (iconName: string, className = "") => {
     const iconMap: { [key: string]: any } = {
       HiAcademicCap: HiAcademicCap,
       HiCode: HiCode,
@@ -76,9 +123,8 @@ const ExpertHeroSection = () => {
       HiUserGroup: HiUserGroup,
       HiBriefcase: HiBriefcase,
     };
-
     const IconComponent = iconMap[iconName] || HiAcademicCap;
-    return <IconComponent className="text-xl" />;
+    return <IconComponent className={className} />;
   };
 
   // Get category icon based on category name
@@ -110,6 +156,13 @@ const ExpertHeroSection = () => {
     return categoryIcons[categoryName] || HiAcademicCap;
   };
 
+  // Helper to safely get subcategory icon name (fallback to 'HiAcademicCap')
+  const getSubcategoryIconName = (subcategory: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const icon = (subcategory as any).icon;
+    return typeof icon === 'string' && icon ? icon : 'HiAcademicCap';
+  };
+
   const expertIcons = [
     { icon: <HiAcademicCap className="text-4xl" />, label: "Education" },
     { icon: <HiCode className="text-4xl" />, label: "Technology" },
@@ -133,7 +186,7 @@ const ExpertHeroSection = () => {
 
   const handleSearch = (query: string) => {
     if (query.trim()) {
-      router.push(`/allexperts?search=${encodeURIComponent(query.trim())}`);
+      router.push(`/connections?search=${encodeURIComponent(query.trim())}`);
     }
   };
 
@@ -241,8 +294,12 @@ const ExpertHeroSection = () => {
                 />
 
                 {/* Search Results Dropdown */}
-                {searchFocused && (searchResults.experts.length > 0 || searchResults.categories.length > 0 || isSearchLoading) && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 max-h-96 overflow-y-auto z-50">
+                {searchFocused && (searchResults.length > 0 || isSearchLoading) && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50"
+                    style={{ maxHeight: 384, overflowY: 'auto' }}
+                  >
                     {isSearchLoading ? (
                       <div className="p-4 text-center">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto"></div>
@@ -250,24 +307,24 @@ const ExpertHeroSection = () => {
                       </div>
                     ) : (
                       <>
-                        {searchResults.experts.length > 0 && (
+                        {searchResults.length > 0 && (
                           <div className="p-3 border-b border-gray-100">
                             <h3 className="text-sm font-semibold text-gray-900 mb-2">
                               Experts
                             </h3>
                             <div className="space-y-2">
-                              {searchResults.experts.map((expert) => (
+                              {searchResults.map((expert: any) => (
                                 <div
                                   key={expert.id}
                                   className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
                                   onClick={() => {
-                                    router.push(`/experts/${expert.id}`);
+                                    router.push(`/connections/${expert.id}`);
                                     setSearchFocused(false);
                                     setSearchQuery("");
                                   }}
                                 >
                                   <Avatar className="h-10 w-10">
-                                    <AvatarImage src={expert.image} alt={expert.name} />
+                                    <AvatarImage src={expert.avatar} alt={expert.name} />
                                     <AvatarFallback>
                                       {expert.name
                                         .split(" ")
@@ -280,61 +337,28 @@ const ExpertHeroSection = () => {
                                       {expert.name}
                                     </p>
                                     <p className="text-xs text-gray-500 truncate">
-                                      {expert.title}
+                                      {expert.email}
                                     </p>
                                   </div>
                                   <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                    {expert.categories?.[0] || "Expert"}
+                                    {expert.role ? expert.role.charAt(0).toUpperCase() + expert.role.slice(1) : "User"}
                                   </span>
                                 </div>
                               ))}
                             </div>
                           </div>
                         )}
-
-                        {searchResults.categories.length > 0 && (
-                          <div className="p-3">
-                            <h3 className="text-sm font-semibold text-gray-900 mb-2">
-                              Categories
-                            </h3>
-                            <div className="space-y-2">
-                              {searchResults.categories.map((category) => (
-                                <div
-                                  key={category.id}
-                                  className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    router.push(`/categories/${category.id}`);
-                                    setSearchFocused(false);
-                                    setSearchQuery("");
-                                  }}
-                                >
-                                  <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                                    {getCategoryIconComponent(category.icon)}
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900">
-                                      {category.name}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                        {loadingMore && (
+                          <div className="flex justify-center items-center py-2">
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+                            <span className="ml-2 text-xs text-neutral-500">Loading more...</span>
                           </div>
                         )}
-
-                        {/* View All Results Button */}
-                        {(searchResults.experts.length > 0 || searchResults.categories.length > 0) && (
-                          <div className="p-3 border-t border-gray-100">
-                            <button
-                              className="w-full text-sm text-green-600 hover:text-green-700 font-medium py-2 hover:bg-green-50 rounded-md transition-colors"
-                              onClick={() => {
-                                handleSearch(searchQuery);
-                                setSearchFocused(false);
-                              }}
-                            >
-                              View all results for "{searchQuery}"
-                            </button>
-                          </div>
+                        {!hasMore && searchResults.length > 0 && (
+                          <div className="text-center text-xs text-neutral-400 py-2">No more users</div>
+                        )}
+                        {searchResults.length === 0 && !isSearchLoading && (
+                          <div className="p-4 text-center text-sm text-neutral-500">No users found.</div>
                         )}
                       </>
                     )}
@@ -415,40 +439,40 @@ const ExpertHeroSection = () => {
                 ))
               ) : (
                 <>
-                  {categories.slice(0, 9).map((category, index) => {
-                    const IconComponent = getCategoryIcon(category.name);
+                  {subcategories && subcategories.slice(0, 18).map((subcategory, index) => {
+                    const iconName = getSubcategoryIconName(subcategory);
                     return (
                       <motion.div
-                        key={category.id}
+                        key={subcategory.id}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 1.3 + index * 0.1 }}
-                        onClick={() => handleSearch(category.name)}
+                        onClick={() => handleSearch(subcategory.name)}
                         className="flex-shrink-0 flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 rounded-xl bg-white/5 border border-white/10 hover:border-green-500/50 transition-colors duration-300 min-w-[100px] sm:min-w-[140px] cursor-pointer"
                       >
-                        <div className="text-green-400 text-3xl sm:text-5xl">
-                          <IconComponent />
+                        <div className="text-green-400">
+                          {getCategoryIconComponent(iconName, "text-3xl sm:text-5xl")}
                         </div>
-                        <span className="text-xs sm:text-sm text-white/70 font-medium text-center">{category.name}</span>
+                        <span className="text-xs sm:text-sm text-white/70 font-medium text-center">{subcategory.name}</span>
                       </motion.div>
                     );
                   })}
                   {/* Duplicate set for seamless scrolling */}
-                  {categories.slice(0, 9).map((category, index) => {
-                    const IconComponent = getCategoryIcon(category.name);
+                  {subcategories && subcategories.slice(0, 18).map((subcategory, index) => {
+                    const iconName = getSubcategoryIconName(subcategory);
                     return (
                       <motion.div
-                        key={`${category.id}-duplicate`}
+                        key={`${subcategory.id}-duplicate`}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 1.3 + index * 0.1 }}
-                        onClick={() => handleSearch(category.name)}
+                        onClick={() => handleSearch(subcategory.name)}
                         className="flex-shrink-0 flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 rounded-xl bg-white/5 border border-white/10 hover:border-green-500/50 transition-colors duration-300 min-w-[100px] sm:min-w-[140px] cursor-pointer"
                       >
-                        <div className="text-green-400 text-3xl sm:text-5xl">
-                          <IconComponent />
+                        <div className="text-green-400">
+                          {getCategoryIconComponent(iconName, "text-3xl sm:text-5xl")}
                         </div>
-                        <span className="text-xs sm:text-sm text-white/70 font-medium text-center">{category.name}</span>
+                        <span className="text-xs sm:text-sm text-white/70 font-medium text-center">{subcategory.name}</span>
                       </motion.div>
                     );
                   })}
@@ -504,7 +528,7 @@ const ExpertHeroSection = () => {
             transition={{ delay: 1.4, duration: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mt-8 sm:mt-12 px-4 sm:px-0"
           >
-            <Link href="/allexperts" className="w-full sm:w-auto">
+            <Link href="/connections" className="w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

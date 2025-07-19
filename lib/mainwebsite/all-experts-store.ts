@@ -24,6 +24,7 @@ const getCategoryIcon = (category: string): string => {
 
 interface Expert {
   id: string;
+  userId: string;
   name: string;
   title?: string;
   location: string | { address?: string; country?: string };
@@ -187,29 +188,27 @@ export const useAllExpertsStore = create<AllExpertsState>()(
             const transformedExperts = experts.map((expert: any) => ({
               id: expert.id,
               name: expert.user?.name || expert.headline || "Expert",
+              userId: expert.userId,
               title: expert.headline,
               location:
                 typeof expert.user?.location === "object"
-                  ? [expert.user.location.address, expert.user.location.country]
-                      .filter(Boolean)
-                      .join(", ")
-                  : expert.user?.location || "Remote",
-              rating: expert.user?.ratings || 0,
-              reviews: expert.user?.reviews || 0,
+                  ? [expert.user.location.address, expert.user.location.country].filter(Boolean).join(", ")
+                  : expert.user?.location || expert.location || "Remote",
+              rating: expert.ratings || expert.user?.ratings || 0,
+              reviews: expert.user?.reviews || expert.reviews || 0,
               categories: expert.expertise || [],
-              tags: expert.user?.tags || [],
-              image:
-                expert.user?.avatar ||
-                "https://randomuser.me/api/portraits/men/1.jpg",
-              status: expert.user?.role === "EXPERT" ? "Verified" : undefined,
-              bio: expert.user?.bio,
-              description: expert.summary,
+              tags: expert.user?.tags || expert.tags || [],
+              image: expert.user?.avatar || expert.avatar || "https://randomuser.me/api/portraits/men/1.jpg",
+              status: (expert.user?.role === "EXPERT" || expert.role === "EXPERT") ? "Verified" : undefined,
+              bio: expert.user?.bio || expert.bio,
+              description: expert.summary || expert.description,
               hourlyRate: expert.hourlyRate,
-              verified: expert.user?.role === "EXPERT",
+              verified: expert.user?.role === "EXPERT" || expert.role === "EXPERT",
               expertise: expert.expertise || [],
               experience: expert.experience,
               availability: expert.availability,
               languages: expert.languages || [],
+              about: expert.about,
             }));
             set({
               experts: transformedExperts,

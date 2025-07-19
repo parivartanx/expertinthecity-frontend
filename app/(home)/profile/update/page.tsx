@@ -76,16 +76,16 @@ export default function UpdateProfilePage() {
 
       if (isExpert) {
         setExpertForm({
-          headline: profile.headline || "",
-          summary: profile.summary || "",
-          expertise: profile.expertise || [],
-          experience: profile.experience || 0,
-          hourlyRate: profile.hourlyRate || 0,
-          about: profile.about || "",
-          availability: profile.availability || "",
-          languages: profile.languages || [],
-          progressLevel: profile.progressLevel || "BRONZE",
-          progressShow: profile.progressShow !== false
+          headline: profile.expertDetails?.headline || "",
+          summary: profile.expertDetails?.summary || "",
+          expertise: profile.expertDetails?.expertise || [],
+          experience: profile.expertDetails?.experience || 0,
+          hourlyRate: profile.expertDetails?.hourlyRate || 0,
+          about: profile.expertDetails?.about || "",
+          availability: profile.expertDetails?.availability || "",
+          languages: profile.expertDetails?.languages || [],
+          progressLevel: profile.expertDetails?.progressLevel || "BRONZE",
+          progressShow: profile.expertDetails?.progressShow !== false
         });
       }
     }

@@ -88,7 +88,11 @@ export const useReportStore = create<ReportStoreState>()(
           }
         } catch (error: any) {
           set({
-            error: error.response?.data?.message || error.message || "Failed to report post",
+            error:
+              error.response?.data?.error?.message ||
+              error.response?.data?.message ||
+              error.message ||
+              "Failed to report post",
             isLoading: false,
           });
         }
@@ -106,7 +110,11 @@ export const useReportStore = create<ReportStoreState>()(
           }
         } catch (error: any) {
           set({
-            error: error.response?.data?.message || error.message || "Failed to report user",
+            error:
+              error.response?.data?.error?.message ||
+              error.response?.data?.message ||
+              error.message ||
+              "Failed to report user",
             isLoading: false,
           });
         }

@@ -33,7 +33,7 @@ import {
 import { RiCustomerService2Line } from "react-icons/ri";
 import { IconType } from "react-icons";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
-import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
+import { axiosInstance } from "@/lib/mainwebsite/axios";
 import { useChatStore } from "@/lib/mainwebsite/chat-store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -97,7 +97,6 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { searchSuggestions } = useAllExpertsStore();
   const { chats } = useChatStore();
   const { user: chatUser } = useAuthStore();
   // Calculate unread chats count for the current user
@@ -112,12 +111,21 @@ const Header = () => {
   // Add state for portal
   const [mounted, setMounted] = React.useState(false);
 
-  // State for search results
-  const [searchResults, setSearchResults] = React.useState<{
-    experts: any[];
-    categories: any[];
-  }>({ experts: [], categories: [] });
+  // Infinite scroll states
+  const [page, setPage] = React.useState(1);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
+
+  // State for search results (only users for now)
+  const [searchResults, setSearchResults] = React.useState<any[]>([]);
   const [isSearchLoading, setIsSearchLoading] = React.useState(false);
+
+  // Reset page and results when searchQuery changes
+  React.useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+    setSearchResults([]);
+  }, [searchQuery]);
 
   // Debounced search function
   React.useEffect(() => {
@@ -125,21 +133,68 @@ const Header = () => {
       if (searchQuery.trim() && searchFocused) {
         setIsSearchLoading(true);
         try {
-          const results = await searchSuggestions(searchQuery);
-          setSearchResults(results);
+          const response = await axiosInstance.get("/users", { params: { search: searchQuery, limit: 10, page: 1 } });
+          if (response.data && response.data.status === 'success') {
+            setSearchResults(response.data.data.users || []);
+            setHasMore((response.data.data.pagination?.page || 1) < (response.data.data.pagination?.pages || 1));
+          } else {
+            setSearchResults([]);
+            setHasMore(false);
+          }
         } catch (error) {
-          console.error("Error fetching search suggestions:", error);
-          setSearchResults({ experts: [], categories: [] });
+          setSearchResults([]);
+          setHasMore(false);
         } finally {
           setIsSearchLoading(false);
         }
       } else {
-        setSearchResults({ experts: [], categories: [] });
+        setSearchResults([]);
+        setHasMore(false);
       }
-    }, 300); // 300ms debounce
-
+    }, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, searchFocused, searchSuggestions]);
+  }, [searchQuery, searchFocused]);
+
+  // Load more users for infinite scroll
+  const loadMoreUsers = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const response = await axiosInstance.get("/users", { params: { search: searchQuery, limit: 10, page: nextPage } });
+      if (response.data && response.data.status === 'success') {
+        const newUsers = response.data.data.users || [];
+        setSearchResults(prev => [...prev, ...newUsers]);
+        setPage(nextPage);
+        setHasMore((response.data.data.pagination?.page || nextPage) < (response.data.data.pagination?.pages || nextPage));
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Scroll handler for infinite scroll
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const el = dropdownRef.current;
+      if (!el || loadingMore || !hasMore) return;
+      if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) {
+        loadMoreUsers();
+      }
+    };
+    const el = dropdownRef.current;
+    if (el) {
+      el.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (el) el.removeEventListener('scroll', handleScroll);
+    };
+  }, [loadingMore, hasMore, searchResults]);
 
   // Filter navLinks to hide 'Chats' if not authenticated
   const filteredNavLinks = React.useMemo(() => {
@@ -289,23 +344,27 @@ const Header = () => {
                     </div>
                   </div>
                 )}
-                {!isSearchLoading && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-green-200/50 overflow-hidden z-50">
+                {!isSearchLoading && searchResults.length > 0 && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-green-200/50 overflow-hidden z-50"
+                    style={{ maxHeight: 350, overflowY: 'auto' }}
+                  >
                     <div className="p-3 border-b border-green-100">
                       <h3 className="text-sm font-semibold text-neutral-900 mb-2">
-                        Experts
+                        Users
                       </h3>
                       <div className="space-y-2">
-                        {searchResults.experts.map((expert) => (
+                        {searchResults.map((user) => (
                           <div
-                            key={expert.id}
+                            key={user.id}
                             className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
-                            onClick={() => router.push(`/experts/${expert.id}`)}
+                            onClick={() => router.push(`/connections/${user.id}`)}
                           >
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={expert.image} alt={expert.name} />
+                              <AvatarImage src={user.avatar} alt={user.name} />
                               <AvatarFallback>
-                                {expert.name
+                                {user.name
                                   .split(" ")
                                   .map((n: string) => n[0])
                                   .join("")}
@@ -313,69 +372,33 @@ const Header = () => {
                             </Avatar>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-neutral-900 truncate">
-                                {expert.name}
+                                {user.name}
                               </p>
                               <p className="text-xs text-neutral-500 truncate">
-                                {expert.title}
+                                {user.email}
                               </p>
                             </div>
                             <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                              {expert.categories?.[0] || "Expert"}
+                              {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
                             </span>
                           </div>
                         ))}
                       </div>
                     </div>
-
-                    <div className="p-3">
-                      <h3 className="text-sm font-semibold text-neutral-900 mb-2">
-                        Categories
-                      </h3>
-                      <div className="space-y-2">
-                        {searchResults.categories.map((category) => (
-                          <div
-                            key={category.id}
-                            className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
-                            onClick={() => {
-                              router.push(`/categories/${category.id}`);
-                              setMobileOpen(false);
-                            }}
-                          >
-                            <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                              {getCategoryIconComponent(category.icon)}
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-neutral-900">
-                                {category.name}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                    {loadingMore && (
+                      <div className="flex justify-center items-center py-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+                        <span className="ml-2 text-xs text-neutral-500">Loading more...</span>
                       </div>
-
-                      {/* View All Results Button */}
-                      <div className="p-3 border-t border-green-100">
-                        <Link
-                          href="/search"
-                          className="w-full py-2 text-sm font-medium text-green-600 hover:bg-green-50 rounded-md transition-colors flex items-center justify-center gap-2 block"
-                        >
-                          <span>View all results</span>
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 5l7 7-7 7"
-                            />
-                          </svg>
-                        </Link>
-                      </div>
-                    </div>
+                    )}
+                    {!hasMore && searchResults.length > 0 && (
+                      <div className="text-center text-xs text-neutral-400 py-2">No more users</div>
+                    )}
+                  </div>
+                )}
+                {!isSearchLoading && searchResults.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg border border-green-200/50 overflow-hidden z-50 p-4 text-center text-sm text-neutral-500">
+                    No users found.
                   </div>
                 )}
               </>
@@ -414,10 +437,13 @@ const Header = () => {
                   {link.name}
                 </Link>
               ) : (
-                <div key={link.name} className="relative">
+                <div
+                  key={link.name}
+                  className="relative"
+                  onMouseEnter={() => setShowDropdown(true)}
+                  onMouseLeave={() => setShowDropdown(false)}
+                >
                   <button
-                    onClick={() => setShowDropdown((prev) => !prev)}
-                    onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                     className={`flex items-center gap-2 px-1 transition ${showDropdown
                       ? (pathname === "/" || pathname === "/") && !isScrolled
                         ? "text-white"
@@ -435,7 +461,12 @@ const Header = () => {
                     />
                   </button>
                   {showDropdown && (
-                    <div className="absolute left-0 mt-2 w-48 bg-white/90 backdrop-blur-md border border-green-200/50 rounded-lg shadow-lg z-10 transform origin-top transition-all duration-200 ease-out">
+                    <div
+                      className="absolute left-0 w-48 bg-white/90 backdrop-blur-md border border-green-200/50 rounded-lg shadow-lg z-10 transform origin-top transition-all duration-200 ease-out"
+                      onMouseEnter={() => setShowDropdown(true)}
+                      onMouseLeave={() => setShowDropdown(false)}
+                      style={{ top: '100%' }}
+                    >
                       {link.items?.map((item) => (
                         <Link
                           key={item.name}
@@ -645,29 +676,29 @@ const Header = () => {
                         </div>
                       </div>
                     )}
-                    {!isSearchLoading && (
+                    {!isSearchLoading && searchResults.length > 0 && (
                       <div className="absolute left-4 right-4 mt-2 bg-white rounded-lg shadow-lg border border-green-200/50 overflow-hidden z-50">
                         <div className="p-3 border-b border-green-100">
                           <h3 className="text-sm font-semibold text-neutral-900 mb-2">
-                            Experts
+                            Users
                           </h3>
                           <div className="space-y-2">
-                            {searchResults.experts.map((expert) => (
+                            {searchResults.map((user) => (
                               <div
-                                key={expert.id}
+                                key={user.id}
                                 className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
                                 onClick={() => {
-                                  router.push(`/experts/${expert.id}`);
+                                  router.push(`/connections/${user.id}`);
                                   setMobileOpen(false);
                                 }}
                               >
                                 <Avatar className="h-10 w-10">
                                   <AvatarImage
-                                    src={expert.image}
-                                    alt={expert.name}
+                                    src={user.avatar}
+                                    alt={user.name}
                                   />
                                   <AvatarFallback>
-                                    {expert.name
+                                    {user.name
                                       .split(" ")
                                       .map((n: string) => n[0])
                                       .join("")}
@@ -675,70 +706,24 @@ const Header = () => {
                                 </Avatar>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-neutral-900 truncate">
-                                    {expert.name}
+                                    {user.name}
                                   </p>
                                   <p className="text-xs text-neutral-500 truncate">
-                                    {expert.title}
+                                    {user.email}
                                   </p>
                                 </div>
                                 <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                                  {expert.categories?.[0] || "Expert"}
+                                  {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
                                 </span>
                               </div>
                             ))}
                           </div>
                         </div>
-
-                        <div className="p-3">
-                          <h3 className="text-sm font-semibold text-neutral-900 mb-2">
-                            Categories
-                          </h3>
-                          <div className="space-y-2">
-                            {searchResults.categories.map((category) => (
-                              <div
-                                key={category.id}
-                                className="flex items-center gap-3 p-2 hover:bg-green-50 rounded-md cursor-pointer transition-colors"
-                                onClick={() => {
-                                  router.push(`/categories/${category.id}`);
-                                  setMobileOpen(false);
-                                }}
-                              >
-                                <div className="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center text-green-600">
-                                  {getCategoryIconComponent(category.icon)}
-                                </div>
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-neutral-900">
-                                    {category.name}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* View All Results Button */}
-                          <div className="p-3 border-t border-green-100">
-                            <Link
-                              href="/search"
-                              className="w-full py-2 text-sm font-medium text-green-600 hover:bg-green-50 rounded-md transition-colors flex items-center justify-center gap-2 block"
-                              onClick={() => setMobileOpen(false)}
-                            >
-                              <span>View all results</span>
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 5l7 7-7 7"
-                                />
-                              </svg>
-                            </Link>
-                          </div>
-                        </div>
+                      </div>
+                    )}
+                    {!isSearchLoading && searchResults.length === 0 && (
+                      <div className="absolute left-4 right-4 mt-2 bg-white rounded-lg shadow-lg border border-green-200/50 overflow-hidden z-50 p-4 text-center text-sm text-neutral-500">
+                        No users found.
                       </div>
                     )}
                   </>
