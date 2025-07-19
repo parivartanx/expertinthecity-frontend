@@ -13,7 +13,8 @@ import {
   getDocs,
   getDoc,
   setDoc,
-  arrayUnion
+  arrayUnion,
+  deleteDoc
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { useAuthStore } from "./auth-store";
@@ -72,12 +73,13 @@ interface ChatState {
   fetchChats: () => void;
   fetchMessages: (chatId: string) => void;
   sendMessage: (chatId: string, content: string) => Promise<void>;
-  createChat: (participantIds: string[]) => Promise<string>;
+  createChat: (participantIds: string[], fallbackProfile?: any) => Promise<string>;
   markMessageAsRead: (chatId: string, messageId: string) => Promise<void>;
   setTypingStatus: (chatId: string, isTyping: boolean) => Promise<void>;
   setCurrentChat: (chat: Chat | null) => void;
   clearMessages: () => void;
   clearError: () => void;
+  deleteChat: (chatId: string) => Promise<void>;
   
   // Reaction Actions
   addReaction: (chatId: string, messageId: string, reaction: string) => Promise<void>;
@@ -256,7 +258,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  createChat: async (participantIds: string[]) => {
+  createChat: async (participantIds: string[], fallbackProfile?: any) => {
     try {
       const currentUser = useAuthStore.getState().user;
       if (!currentUser) {
@@ -279,17 +281,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Add other participants
       for (const id of participantIds) {
         if (id === currentUser.id) continue;
-        const user = await fetchUserInfo(id);
-        if (user) {
-          participantDetails[id] = {
-            id: user.id,
-            name: user.name,
-            avatar: user.avatar ?? "/default-avatar.png",
-            role: user.role?.toUpperCase() || "EXPERT",
-            isOnline: false,
-            lastSeen: new Date(),
-          };
+        let user = await fetchUserInfo(id);
+        if (!user && fallbackProfile && fallbackProfile.id === id) {
+          user = fallbackProfile;
         }
+        participantDetails[id] = {
+          id: user?.id || id,
+          name: user?.name || "Unknown User",
+          avatar: user?.avatar ?? "/default-avatar.png",
+          role: user?.role?.toUpperCase() || "EXPERT",
+          isOnline: false,
+          lastSeen: new Date(),
+        };
       }
 
       const chatData = {
@@ -387,6 +390,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  deleteChat: async (chatId: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      // Delete all messages in the chat
+      const messagesRef = collection(db, "chats", chatId, "messages");
+      const messagesSnap = await getDocs(messagesRef);
+      const batchDeletes: Promise<any>[] = [];
+      messagesSnap.forEach((docSnap) => {
+        batchDeletes.push(deleteDoc(docSnap.ref));
+      });
+      await Promise.all(batchDeletes);
+      // Delete the chat document
+      await deleteDoc(doc(db, "chats", chatId));
+      // Remove from local state
+      set((state) => ({
+        chats: state.chats.filter((c) => c.id !== chatId),
+        messages: Object.fromEntries(Object.entries(state.messages).filter(([id]) => id !== chatId)),
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      console.error("Error deleting chat:", error);
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
   },
 
   // Reaction Actions

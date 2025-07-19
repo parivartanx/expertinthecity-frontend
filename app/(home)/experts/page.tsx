@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { HiUserAdd } from "react-icons/hi";
 import { useEffect } from "react";
 import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ExpertsPage() {
   const router = useRouter();
@@ -68,7 +69,7 @@ export default function ExpertsPage() {
                   Join Now
                 </Link>
                 <Link
-                  href="/allexperts"
+                  href="/connections"
                   className="px-10 py-4 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 transition-all duration-200 backdrop-blur-sm flex items-center gap-3 text-lg"
                 >
                   Explore Experts
@@ -97,44 +98,34 @@ export default function ExpertsPage() {
               </div>
             </div>
 
-            {/* Right Content - Featured Expert Card */}
+            {/* Right Content - Informative Block */}
             <div className="hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl">
-                <div className="flex items-center gap-6 mb-8">
-                  <img
-                    src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=2070&auto=format&fit=crop"
-                    alt="Featured Expert"
-                    className="w-20 h-20 rounded-full object-cover border-2 border-green-500"
-                  />
-                  <div>
-                    <h3 className="text-white text-xl font-semibold">
-                      Sarah Johnson
-                    </h3>
-                    <p className="text-green-400 text-base">Featured Expert</p>
-                  </div>
+              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-2xl flex flex-col items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-4 mb-6">
+                  <span className="text-green-500 text-4xl">🌟</span>
+                  <h3 className="text-white text-2xl font-semibold text-center">
+                    Unlock Your Potential with the Right Expert
+                  </h3>
                 </div>
-                <div className="space-y-6">
-                  <div className="flex items-center gap-3 text-white/80">
-                    <span className="text-yellow-400 text-xl">⭐</span>
-                    <span className="text-lg">4.9 (128 reviews)</span>
-                  </div>
-                  <p className="text-white/80 text-lg leading-relaxed">
-                    "Join our community of experts and share your knowledge with
-                    the world. Make a difference in people's lives through
-                    mentorship."
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {["Mentorship", "Career Growth", "Leadership"].map(
-                      (tag) => (
-                        <span
-                          key={tag}
-                          className="px-4 py-2 rounded-full bg-green-500/20 text-green-400 text-sm font-medium"
-                        >
-                          {tag}
-                        </span>
-                      )
-                    )}
-                  </div>
+                <p className="text-white/80 text-lg leading-relaxed text-center mb-6">
+                  Find the perfect mentor, coach, or specialist for your unique needs. Our network covers everything from career growth and wellness to home services and learning. Get personalized help, verified professionals, and real results—right when you need them.
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {[
+                    "Career Growth",
+                    "Wellness",
+                    "Learning",
+                    "Home Services",
+                    "Mentorship",
+                    "Verified Pros"
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-4 py-2 rounded-full bg-green-500/20 text-green-400 text-sm font-medium"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -149,15 +140,42 @@ export default function ExpertsPage() {
         </h2>
         {/* Loading and error handling only for experts section */}
         {isLoading ? (
-          <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading experts...</p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="relative bg-white/60 backdrop-blur-lg border border-green-100 rounded-3xl shadow-xl p-6 flex flex-col items-center group overflow-hidden"
+              >
+                {/* Avatar Skeleton */}
+                <div className="mb-4 z-10 flex justify-center w-full">
+                  <Skeleton className="w-24 h-24 rounded-full border-4 border-white shadow-lg mx-auto" />
+                </div>
+                {/* Name Skeleton */}
+                <Skeleton className="h-6 w-32 mb-2 rounded" />
+                {/* Title Skeleton */}
+                <Skeleton className="h-4 w-24 mb-2 rounded" />
+                {/* Location Skeleton */}
+                <Skeleton className="h-3 w-20 mb-2 rounded" />
+                {/* Rating Skeleton */}
+                <Skeleton className="h-4 w-16 mb-4 rounded" />
+                {/* Expertise Chip Skeleton */}
+                <div className="flex items-center w-full justify-center mb-4">
+                  <div className="h-0.5 bg-green-200 flex-1" />
+                  <Skeleton className="h-6 w-20 rounded-full bg-green-100 mx-2" />
+                  <div className="h-0.5 bg-green-200 flex-1" />
+                </div>
+                {/* About Skeleton */}
+                <Skeleton className="h-4 w-40 mb-2 rounded" />
+                {/* Button Skeleton */}
+                <Skeleton className="h-10 w-full rounded-xl" />
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="text-center py-20 text-red-500">{error}</div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {(experts.slice(0, 6)).map((mentor) => (
+            {experts.slice(0, 6).map((mentor) => (
               <div
                 key={mentor.id}
                 className="relative bg-white/60 backdrop-blur-lg border border-green-100 rounded-3xl shadow-xl p-6 flex flex-col items-center transition-transform duration-200 hover:-translate-y-1 hover:shadow-2xl group overflow-hidden"
@@ -171,8 +189,8 @@ export default function ExpertsPage() {
                 {/* Profile Image */}
                 <div className="mb-4 z-10 flex justify-center w-full">
                   <img
-                    src={mentor.image}
-                    alt={mentor.name}
+                    src={mentor.image || "https://randomuser.me/api/portraits/men/1.jpg"}
+                    alt={mentor.name || mentor.title}
                     className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover mx-auto group-hover:scale-105 transition-transform duration-200"
                   />
                 </div>
@@ -186,49 +204,36 @@ export default function ExpertsPage() {
                 <p className="text-xs text-gray-400 mb-2 text-center">
                   {typeof mentor.location === 'object' && mentor.location !== null
                     ? [mentor.location.address, mentor.location.country].filter(Boolean).join(', ')
-                    : mentor.location}
+                    : mentor.location || "Remote"}
                 </p>
                 {/* Rating */}
                 <div className="flex items-center justify-center text-sm mb-2">
                   <span className="text-yellow-400 mr-1">★</span>
                   <span className="font-semibold text-gray-700">
-                    {mentor.rating}
-                  </span>
-                  <span className="text-gray-500 ml-1">
-                    ({mentor.reviews} reviews)
+                    {mentor.rating || 0}
                   </span>
                 </div>
-                {/* Categories - Wire Design */}
-                {mentor.categories && mentor.categories.length > 0 && (
+                {/* Categories/Expertise */}
+                {(mentor.expertise && mentor.expertise.length > 0) || (mentor.categories && mentor.categories.length > 0) ? (
                   <div className="flex flex-col items-center mb-4 w-full">
-                    {/* Main Category */}
-                    <div className="font-semibold text-green-700 text-sm mb-1">
-                      {mentor.categories[0]}
+                    {/* Main Category as styled chip */}
+                    <div className="flex items-center w-full justify-center">
+                      <div className="h-0.5 bg-green-200 flex-1" />
+                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium border border-green-200 mx-2">
+                        {(mentor.expertise && mentor.expertise[0]) || (mentor.categories && mentor.categories[0])}
+                      </span>
+                      <div className="h-0.5 bg-green-200 flex-1" />
                     </div>
-                    {/* Wire and Subcategories */}
-                    {mentor.categories.length > 1 && (
-                      <div className="flex items-center w-full justify-center">
-                        {/* Wire left */}
-                        <div className="h-0.5 bg-green-200 flex-1" />
-                        {/* Subcategories */}
-                        <div className="flex gap-2 px-2">
-                          {mentor.categories.slice(1).map((cat, i) => (
-                            <span
-                              key={i}
-                              className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium border border-green-200"
-                            >
-                              {cat}
-                            </span>
-                          ))}
-                        </div>
-                        {/* Wire right */}
-                        <div className="h-0.5 bg-green-200 flex-1" />
-                      </div>
-                    )}
                   </div>
-                )}
+                ) : null}
+                {/* About/Summary */}
+                {mentor.description || mentor.bio ? (
+                  <p className="text-xs text-gray-600 mb-2 text-center line-clamp-2">
+                    {mentor.description || mentor.bio}
+                  </p>
+                ) : null}
                 {/* View Profile Button */}
-                <Link href={`/experts/${mentor.id}`}>
+                <Link href={`/connections/${mentor.userId}`}>
                   <button className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-2 rounded-xl font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all mt-2">
                     View Profile
                   </button>
@@ -238,11 +243,12 @@ export default function ExpertsPage() {
           </div>
         )}
         <div className="text-center mt-8">
-          <Link href="/allexperts">
-            <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded">
-              View All
-            </button>
-          </Link>
+          <button
+            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
+            onClick={() => router.push('/connections?role=EXPERT')}
+          >
+            View All
+          </button>
         </div>
       </section>
 
@@ -270,7 +276,7 @@ export default function ExpertsPage() {
               industries. Get personalized Expertship, career advice, and
               more—all in one platform.
             </p>
-            <Link href={"/allexperts"}>
+            <Link href={"/connections"}>
               <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
                 Explore
               </button>

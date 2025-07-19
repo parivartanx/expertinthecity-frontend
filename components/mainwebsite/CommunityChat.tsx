@@ -31,6 +31,8 @@ import { useCountryDetection } from "@/hooks/use-country-detection";
 import { toast } from "sonner";
 import { onSnapshot, query, collection, where } from "firebase/firestore";
 import { db } from "@/lib/mainwebsite/firebase";
+import { storage } from "@/lib/mainwebsite/firebase";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const CommunityChat = () => {
   const router = useRouter();
@@ -45,6 +47,10 @@ const CommunityChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isRealtimeMember, setIsRealtimeMember] = useState<boolean | null>(null);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user: currentUser } = useAuthStore();
   const {
@@ -387,11 +393,8 @@ const CommunityChat = () => {
         <div className="flex-1 min-w-0">
           <div className="font-semibold text-base text-[#222] flex items-center gap-2 min-w-0 whitespace-nowrap overflow-hidden">
             <span className="truncate">{community.name}</span>
-            {isUserCountry && (
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">
-                Your Country
-              </span>
-            )}
+            {isUserCountry 
+            }
             {hasLeft && (
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full whitespace-nowrap">
                 Left
@@ -423,13 +426,74 @@ const CommunityChat = () => {
     );
   };
 
-  // Message component
+  // Handle file select and upload
+  const handleAttachClick = () => {
+    if (!uploading) fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentCommunity) return;
+    setUploading(true);
+    setUploadProgress(0);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `community_uploads/${currentCommunity.id}/${Date.now()}_${file.name}`;
+      const fileRef = storageRef(storage, filePath);
+      const uploadTask = uploadBytesResumable(fileRef, file);
+      uploadTask.on('state_changed', (snapshot) => {
+        setUploadProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
+      });
+      await uploadTask;
+      const url = await getDownloadURL(fileRef);
+      // Send as a message
+      await patchedSendMessage(currentCommunity.id, '', {
+        fileUrl: url,
+        fileType: file.type,
+        fileName: file.name,
+      });
+      toast.success('File uploaded!');
+    } catch (err) {
+      console.error('Upload error', err);
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Patch sendMessage to support file messages
+  const patchedSendMessage = async (communityId: string, content: string, fileData?: { fileUrl: string, fileType: string, fileName: string }) => {
+    if (!currentUser) return;
+    if (!content.trim() && !fileData) return;
+    const message = fileData
+      ? { content: '', senderId: currentUser.id, senderName: currentUser.name, senderAvatar: currentUser.avatar, senderRole: currentUser.role, timestamp: new Date(), ...fileData }
+      : { content, senderId: currentUser.id, senderName: currentUser.name, senderAvatar: currentUser.avatar, senderRole: currentUser.role, timestamp: new Date() };
+    // Use the original sendMessage for text, or add file fields for file
+    if (fileData) {
+      // Directly add to Firestore (bypass store for now)
+      const { db } = await import('@/lib/mainwebsite/firebase');
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      await addDoc(collection(db, 'communities', communityId, 'messages'), {
+        ...message,
+        timestamp: serverTimestamp(),
+      });
+    } else {
+      await sendMessage(communityId, content);
+    }
+  };
+
+  // In MessageItem, render file/image if present
   const MessageItem = ({ message }: { message: any }) => {
     const isOwnMessage = message.senderId === currentUser?.id;
     const isEditing = editingMessage === message.id;
     const isMenuOpen = messageMenuOpen === message.id;
     const isReactionPickerOpen = reactionPickerOpen === message.id;
     const userReaction = getUserReaction(message);
+
+    const hasFile = message.fileUrl && message.fileType;
+    const isImage = hasFile && message.fileType.startsWith('image/');
 
     return (
       <div className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}>
@@ -454,6 +518,28 @@ const CommunityChat = () => {
                   } shadow-sm`}
                   style={{ wordBreak: "break-word" }}
                 >
+                  {/* File/image rendering */}
+                  {hasFile && (
+                    isImage ? (
+                      <img
+                        src={message.fileUrl}
+                        alt={message.fileName || 'image'}
+                        className="max-w-xs max-h-60 rounded-lg mb-2 border"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <a
+                        href={message.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-blue-600 underline mb-2"
+                        download={message.fileName}
+                      >
+                        {message.fileName || 'Download file'}
+                      </a>
+                    )
+                  )}
+                  {/* Text content */}
                   <span>{message.content}</span>
                   {message.edited && (
                     <span className="text-xs opacity-70 ml-2">(edited)</span>
@@ -732,8 +818,17 @@ const CommunityChat = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <FaUsers className="text-[#BDBDBD] text-lg" />
-                  <span className="text-xs text-[#BDBDBD]">{currentCommunity.memberCount} members</span>
+                  <FaUsers
+                    className="text-[#BDBDBD] text-lg cursor-pointer hover:text-green-600 transition-colors"
+                    onClick={() => setShowMembersModal(true)}
+                    title="View members"
+                  />
+                  <span
+                    className="text-xs text-[#BDBDBD] cursor-pointer hover:text-green-600 transition-colors"
+                    onClick={() => setShowMembersModal(true)}
+                  >
+                    {currentCommunity.memberCount} members
+                  </span>
                   {isRealtimeMember === true && (
                     <button
                       onClick={handleLeaveCommunity}
@@ -785,7 +880,24 @@ const CommunityChat = () => {
                         </button>
                       </>
                     ) : (
-                      <MdOutlineAttachFile className="text-[#BDBDBD] text-2xl cursor-pointer hover:text-gray-600 transition-colors" />
+                      <>
+                        <MdOutlineAttachFile
+                          className={`text-[#BDBDBD] text-2xl cursor-pointer hover:text-gray-600 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={handleAttachClick}
+                          title="Attach file or image"
+                        />
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          style={{ display: 'none' }}
+                          onChange={handleFileChange}
+                          accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,application/x-zip-compressed,application/octet-stream,.doc,.docx,.xls,.xlsx,.pdf,.zip,.rar,.txt,.csv"
+                          disabled={uploading}
+                        />
+                        {uploading && (
+                          <span className="text-xs text-green-600 ml-2">Uploading... {uploadProgress}%</span>
+                        )}
+                      </>
                     )}
                     <input
                       type="text"
@@ -795,9 +907,6 @@ const CommunityChat = () => {
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKeyPress}
                     />
-                    {!editingMessage && (
-                      <FaRegSmile className="text-[#BDBDBD] text-2xl cursor-pointer hover:text-gray-600 transition-colors" />
-                    )}
                     <FaPaperPlane
                       className={`text-2xl cursor-pointer transition-colors ${
                         input.trim() ? "text-green-600 hover:text-green-700" : "text-[#BDBDBD]"
@@ -874,6 +983,52 @@ const CommunityChat = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Members Modal */}
+      {showMembersModal && currentCommunity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl p-6 max-w-lg w-full mx-4 shadow-xl relative max-h-[80vh] overflow-y-auto">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold"
+              onClick={() => setShowMembersModal(false)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h3 className="text-2xl font-bold text-green-700 mb-4 text-center flex items-center justify-center gap-2">
+              <FaUsers /> Community Members
+            </h3>
+            {Object.values(currentCommunity.memberDetails || {}).length === 0 ? (
+              <div className="text-center text-[#BDBDBD] py-8">No members found.</div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {Object.values(currentCommunity.memberDetails || {}).map((member: any) => (
+                  <li key={member.id} className="flex items-center gap-4 py-3">
+                    <img
+                      src={member.avatar || "/default-avatar.png"}
+                      alt={member.name}
+                      className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-[#222] truncate">{member.name}</div>
+                      <div className="text-xs text-[#888] flex items-center gap-2">
+                        <span className="capitalize">{member.role}</span>
+                        {member.isOnline ? (
+                          <span className="ml-2 text-green-600 font-semibold">● Online</span>
+                        ) : (
+                          <span className="ml-2 text-gray-400">Offline</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400 whitespace-nowrap">
+                      Joined: {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : "-"}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}

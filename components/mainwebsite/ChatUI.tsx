@@ -22,7 +22,7 @@ import { BsPinAngleFill } from "react-icons/bs";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { MdOutlineAttachFile } from "react-icons/md";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useChatStore } from "@/lib/mainwebsite/chat-store";
 import { useAuthStore } from "@/lib/mainwebsite/auth-store";
 import { useUserStore } from "@/lib/mainwebsite/user-store";
@@ -30,6 +30,8 @@ import { useCommunityStore } from "@/lib/mainwebsite/community-store";
 import StartChatModal from "./StartChatModal";
 import { useFollowStore } from "@/lib/mainwebsite/follow-store";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 // Types
 interface ChatParticipant {
@@ -73,6 +75,7 @@ interface Chat {
 
 const ChatUI = () => {
   const router = useRouter();
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const [search, setSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -85,6 +88,7 @@ const ChatUI = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { user: currentUser } = useAuthStore();
   const { fetchUserProfile } = useUserStore();
@@ -105,6 +109,7 @@ const ChatUI = () => {
     clearMessages,
     onlineUsers,
     typingUsers,
+    deleteChat, // <-- add this
   } =   useChatStore();
 
   const { getFollowing, following, getFollowers, followers, isLoading: isFollowLoading } = useFollowStore();
@@ -212,6 +217,17 @@ const ChatUI = () => {
     };
   }, [userJoinedCommunity, userMemberships]);
 
+  // Set selectedChatId from URL query string on mount or when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const chatId = params.get('chatId');
+      if (chatId) {
+        setSelectedChatId(chatId);
+      }
+    }
+  }, []);
+
   // Fetch messages when a chat is selected
   useEffect(() => {
     if (selectedChatId) {
@@ -288,9 +304,10 @@ const ChatUI = () => {
   // Get other participant in chat
   const getOtherParticipant = useCallback((chat: Chat): ChatParticipant | null => {
     if (!currentUser || !chat.participantDetails) return null;
-    return Object.values(chat.participantDetails).find(
+    const other = Object.values(chat.participantDetails).find(
       (participant: ChatParticipant) => participant.id !== currentUser.id
     ) || null;
+    return other;
   }, [currentUser]);
 
   // Handle send message
@@ -678,6 +695,8 @@ const ChatUI = () => {
                 className="flex items-center gap-3 py-2 cursor-pointer hover:bg-green-50 px-2 rounded"
                 onClick={async () => {
                   setShowFollowingsModal(false);
+                  // Log user details for chat initiation
+                  console.log("[ChatUI] Initiating chat with user:", user);
                   // Check if chat already exists
                   let chat = chats.find((c) => c.participants.includes(user.id));
                   let chatId;
@@ -794,19 +813,31 @@ const ChatUI = () => {
           <div className="sticky top-0 z-20 bg-white shadow-sm">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E6E6] bg-white">
               <div className="flex items-center gap-4">
-                <div className="relative">
-                  <img
-                    src={currentChatParticipant?.avatar || "/default-avatar.png"}
-                    alt={currentChatParticipant?.name || "Chat"}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                <div className="relative cursor-pointer group" onClick={() => {
+                  if (currentChatParticipant?.id) router.push(`/connections/${currentChatParticipant.id}`);
+                }}>
+                  {currentChat && !currentChat.participantDetails ? (
+                    <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full animate-pulse">
+                      <span className="text-gray-400">Loading...</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={currentChatParticipant?.avatar || "/default-avatar.png"}
+                      alt={currentChatParticipant?.name || "Chat"}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-gray-200 group-hover:border-green-600 group-hover:shadow-[0_0_0_4px_rgba(34,197,94,0.3)] transition-all duration-200"
+                    />
+                  )}
                   {isCurrentParticipantOnline && (
                     <FaCircle className="absolute -bottom-1 -right-1 text-green-500 text-sm bg-white rounded-full" />
                   )}
                 </div>
-                <div className="flex flex-col gap-1 justify-center">
-                  <span className="font-semibold text-lg text-[#222]">
-                    {currentChatParticipant?.name || "Select a chat"}
+                <div className="flex flex-col gap-1 justify-center cursor-pointer group" onClick={() => {
+                  if (currentChatParticipant?.id) router.push(`/connections/${currentChatParticipant.id}`);
+                }}>
+                  <span className="font-semibold text-lg text-[#222] group-hover:text-green-600 transition-colors duration-200">
+                    {currentChat && !currentChat.participantDetails
+                      ? <span className="text-gray-400">Loading...</span>
+                      : currentChatParticipant?.name || "Select a chat"}
                   </span>
                   <div className="flex items-center gap-2">
                     {isCurrentParticipantOnline ? (
@@ -834,7 +865,54 @@ const ChatUI = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <FaEllipsisH className="text-[#BDBDBD] text-lg cursor-pointer hover:text-gray-600 transition-colors" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button">
+                      <FaEllipsisH
+                        className="text-[#BDBDBD] text-lg cursor-pointer hover:text-gray-600 transition-colors"
+                      />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      className="text-red-600 focus:text-red-700 cursor-pointer"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      Delete Chat
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* Delete Chat Dialog */}
+                <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Delete Chat</DialogTitle>
+                    </DialogHeader>
+                    <p className="text-gray-600 mb-6">Are you sure you want to delete this chat? This action cannot be undone.</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={async () => {
+                          if (selectedChatId) {
+                            await deleteChat(selectedChatId);
+                            setShowDeleteDialog(false);
+                            setSelectedChatId(null);
+                            setCurrentChat(null);
+                            toast.success("Chat deleted successfully");
+                          }
+                        }}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded px-4 py-2"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteDialog(false)}
+                        className="flex-1 border border-gray-300 rounded px-4 py-2"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </div>

@@ -499,15 +499,15 @@ export default function ProfilePage() {
                             <Card>
                                 <CardContent className="p-6 relative">
                                     {/* Progress Level Icon - Top Left */}
-                                    {isExpert && profile.progressLevel && (
+                                    {isExpert && profile.expertDetails?.progressLevel && (
                                         <div className="absolute top-4 left-4">
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger>
-                                                        {getProgressLevelIcon(profile.progressLevel)}
+                                                        {getProgressLevelIcon(profile.expertDetails.progressLevel)}
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>{profile.progressLevel} Level</p>
+                                                        <p>{profile.expertDetails.progressLevel} Level</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -533,16 +533,16 @@ export default function ProfilePage() {
                                                 <FaMapMarkerAlt />
                                                 <span>{formatLocation(profile.location)}</span>
                                             </div>
-                                            {isExpert && profile.hourlyRate && (
+                                            {isExpert && profile.expertDetails?.hourlyRate && (
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                     <FaDollarSign />
-                                                    <span>${profile.hourlyRate}/hour</span>
+                                                    <span>${profile.expertDetails?.hourlyRate}/hour</span>
                                                 </div>
                                             )}
-                                            {isExpert && profile.experience && (
+                                            {isExpert && profile.expertDetails?.experience && (
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                     <FaClock />
-                                                    <span>{profile.experience} years experience</span>
+                                                    <span>{profile.expertDetails?.experience} years experience</span>
                                                 </div>
                                             )}
                                         </div>
@@ -992,7 +992,7 @@ export default function ProfilePage() {
                                                     : "Follow some experts to see their posts in your feed, or explore the community to discover great content."
                                                 }
                                             </p>
-                                            <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push('/allexperts')}>
+                                            <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push('/connections')}>
                                                 {isExpert ? (
                                                     <>
                                                         <FaEdit className="mr-2" />
@@ -1124,55 +1124,8 @@ export default function ProfilePage() {
                                             <CardTitle>Experts You Follow</CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            {profile.following && profile.following.length > 0 ? (
-                                                <div className="space-y-4">
-                                                    {profile.following.map((follow) => (
-                                                        <div key={follow.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                                                            <Link href={`/experts/${follow.following.id}`}>
-                                                                <Avatar className="w-12 h-12 hover:opacity-80 transition-opacity cursor-pointer">
-                                                                    <AvatarImage src={follow.following.avatar} alt={follow.following.name} />
-                                                                    <AvatarFallback>{follow.following.name.charAt(0)}</AvatarFallback>
-                                                                </Avatar>
-                                                            </Link>
-                                                            <div className="flex-1">
-                                                                <Link href={`/experts/${follow.following.id}`}>
-                                                                    <h4 className="font-semibold text-foreground hover:text-green-600 transition-colors cursor-pointer">
-                                                                        {follow.following.name}
-                                                                    </h4>
-                                                                </Link>
-                                                                <p className="text-sm text-muted-foreground">
-                                                                    {follow.following.role === 'EXPERT' ? 'Expert' : 'Member'}
-                                                                </p>
-                                                                <div className="flex items-center gap-2 mt-1">
-                                                                    <FaClock className="text-muted-foreground w-3 h-3" />
-                                                                    <span className="text-xs text-muted-foreground">
-                                                                        Following since {new Date(follow.createdAt).toLocaleDateString()}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <Button variant="outline" size="sm">
-                                                                Message
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="text-center py-8">
-                                                    <div className="mb-4">
-                                                        <FaUser className="text-muted-foreground w-12 h-12 mx-auto" />
-                                                    </div>
-                                                    <h3 className="text-lg font-semibold text-foreground mb-2">Not Following Anyone Yet</h3>
-                                                    <p className="text-muted-foreground mb-4">
-                                                        Start following experts to stay updated with their latest insights, posts, and expertise.
-                                                    </p>
-                                                    <Link href="/allexperts">
-                                                        <Button className="bg-green-600 hover:bg-green-700">
-                                                            <FaUser className="mr-2" />
-                                                            Find Experts to Follow
-                                                        </Button>
-                                                    </Link>
-                                                </div>
-                                            )}
+                                            {/* Following list not available on UserProfile. If needed, fetch separately or add to type. */}
+                                            <p className="text-sm text-muted-foreground">Not following anyone yet.</p>
                                         </CardContent>
                                     </Card>
                                 </TabsContent>
@@ -1240,16 +1193,16 @@ export default function ProfilePage() {
                                             <FaMapMarkerAlt className="text-muted-foreground w-4" />
                                             <span className="text-foreground">{formatLocation(profile.location)}</span>
                                         </div>
-                                        {isExpert && profile.hourlyRate && (
+                                        {isExpert && profile.expertDetails?.hourlyRate && (
                                             <div className="flex items-center gap-2 text-sm">
                                                 <FaDollarSign className="text-muted-foreground w-4" />
-                                                <span className="text-foreground">${profile.hourlyRate}/hour</span>
+                                                <span className="text-foreground">${profile.expertDetails?.hourlyRate}/hour</span>
                                             </div>
                                         )}
-                                        {isExpert && profile.ratings && (
+                                        {isExpert && profile.expertDetails?.ratings && (
                                             <div className="flex items-center gap-2 text-sm">
                                                 <FaStar className="text-yellow-500 w-4" />
-                                                <span className="text-foreground">{profile.ratings} reviews</span>
+                                                <span className="text-foreground">{profile.expertDetails?.ratings} reviews</span>
                                             </div>
                                         )}
                                         {profile.email && (
@@ -1263,7 +1216,7 @@ export default function ProfilePage() {
                             </Card>
 
                             {/* Progress Level - Only for Experts */}
-                            {isExpert && profile.progressShow && profile.progressLevel && (
+                            {isExpert && profile.expertDetails?.progressShow && profile.expertDetails?.progressLevel && (
                                 <Card>
                                     <CardHeader className="pb-3">
                                         <CardTitle className="text-lg">Progress</CardTitle>
@@ -1271,11 +1224,11 @@ export default function ProfilePage() {
                                     <CardContent className="pt-0">
                                         <div className="space-y-2">
                                             <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                                                {profile.progressLevel}
+                                                {profile.expertDetails?.progressLevel}
                                             </Badge>
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                <span>{profile.followersCount || 0} followers</span>
-                                                <span>{profile.followingCount || 0} following</span>
+                                                <span>{profile._count?.followers ?? 0} followers</span>
+                                                <span>{profile._count?.following ?? 0} following</span>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -1292,23 +1245,23 @@ export default function ProfilePage() {
                                         <div className="space-y-2">
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Following</span>
-                                                <span className="font-medium">{profile.followingCount || 0}</span>
+                                                <span className="font-medium">{profile._count?.following ?? 0}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Followers</span>
-                                                <span className="font-medium">{profile.followersCount || 0}</span>
+                                                <span className="font-semibold text-gray-900">{profile._count?.followers ?? 0}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Posts</span>
-                                                <span className="font-medium">{profile.postsCount || 0}</span>
+                                                <span className="font-semibold text-gray-900">{profile._count?.posts ?? 0}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Comments</span>
-                                                <span className="font-medium">{profile.commentsCount || 0}</span>
+                                                <span className="font-semibold text-gray-900">{profile._count?.comments ?? 0}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Likes Given</span>
-                                                <span className="font-medium">{profile.likesCount || 0}</span>
+                                                <span className="font-semibold text-gray-900">{profile._count?.likes ?? 0}</span>
                                             </div>
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-muted-foreground">Member Since</span>

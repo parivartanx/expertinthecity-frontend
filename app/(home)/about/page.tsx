@@ -5,13 +5,13 @@ import Link from "next/link";
 export default function AboutPage() {
   return (
     <main
-      className="font-sans bg-white text-neutral-900"
+      className="font-sans bg-white text-neutral-900 pt-[60px]"
       style={{ fontFamily: "var(--font-geist-sans)" }}
     >
       {/* Header */}
 
       {/* Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-20">
         {/* Background Image with Overlay */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -27,7 +27,7 @@ export default function AboutPage() {
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Column - Text Content */}
-            <div className="space-y-8 text-left my-2">
+            <div className="space-y-8 text-left pt-10 my-2">
               {/* Decorative Elements */}
               {/* <div className="flex items-center gap-3">
                 <div className="w-12 h-1 bg-green-500 rounded-full" />

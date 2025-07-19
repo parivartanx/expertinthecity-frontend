@@ -100,38 +100,13 @@ interface UserProfile {
   bio?: string;
   dateOfBirth?: string;
   gender?: string;
-  isVerified: boolean;
-  isActive: boolean;
+  isVerified?: boolean;
+  isActive?: boolean;
   role: "user" | "expert" | "admin";
   createdAt: string;
   updatedAt: string;
-  
-  // User preferences and social links
-  preferences?: {
-    notifications: boolean;
-    emailUpdates: boolean;
-    language: string;
-    timezone: string;
-  };
-  socialLinks?: {
-    linkedin?: string;
-    twitter?: string;
-    website?: string;
-  };
-
-  // Posts, followers, following
-  posts?: Post[];
-  followers?: Follower[];
-  following?: Following[];
-  
+  interests?: string[];
   // Counts
-  followersCount?: number;
-  followingCount?: number;
-  postsCount?: number;
-  commentsCount?: number;
-  likesCount?: number;
-  
-  // Backend _count object
   _count?: {
     posts: number;
     followers: number;
@@ -139,31 +114,29 @@ interface UserProfile {
     comments: number;
     likes: number;
   };
-
-  // Expert-specific fields (only for experts)
-  headline?: string;
-  summary?: string;
-  expertise?: string[];
-  experience?: number;
-  hourlyRate?: number;
-  about?: string;
-  availability?: string;
-  languages?: string[];
-  verified?: boolean;
-  badges?: string[];
-  progressLevel?: string;
-  progressShow?: boolean;
-  ratings?: number;
-  
-  // User interests and tags
-  interests?: string[];
-  tags?: string[];
-  
-  // Expert details arrays
-  certifications?: Certification[];
-  experiences?: Experience[];
-  awards?: Award[];
-  education?: Education[];
+  // Expert details (if expert)
+  expertDetails?: {
+    id: string;
+    userId: string;
+    headline?: string;
+    summary?: string;
+    expertise?: string[];
+    experience?: number;
+    hourlyRate?: number;
+    about?: string;
+    availability?: string;
+    languages?: string[];
+    verified?: boolean;
+    badges?: string[];
+    progressLevel?: string;
+    progressShow?: boolean;
+    ratings?: number;
+    certifications?: Certification[];
+    experiences?: Experience[];
+    awards?: Award[];
+    education?: Education[];
+    reviews?: any[];
+  };
 }
 
 export interface User {
@@ -194,10 +167,18 @@ export interface User {
   };
 }
 
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
 interface UserState {
   user: User | null;
   profile: UserProfile | null;
   allUsers: User[];
+  pagination: Pagination | null;
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -205,8 +186,17 @@ interface UserState {
   
   // User Actions
   fetchCurrentUser: () => Promise<void>;
-  fetchAllUsers: () => Promise<void>;
-  getUserById: (id: string) => Promise<User | null>;
+  fetchAllUsers: (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    startDate?: string;
+    endDate?: string;
+  }) => Promise<void>;
+  getUserById: (id: string) => Promise<any>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   deleteUser: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
@@ -242,6 +232,7 @@ export const useUserStore = create<UserState>()(
       user: null,
       profile: null,
       allUsers: [],
+      pagination: null,
       isLoading: false,
       error: null,
       isAuthenticated: false,
@@ -287,16 +278,15 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      fetchAllUsers: async () => {
+      fetchAllUsers: async (params = {}) => {
         try {
           set({ isLoading: true, error: null });
-          
-          const response = await axiosInstance.get("/users");
-          
-          if (response.data.success) {
-            const users = response.data.data;
+          const response = await axiosInstance.get("/users", { params });
+          if (response.data.status === 'success') {
+            const { users, pagination } = response.data.data;
             set({
               allUsers: users,
+              pagination,
               isLoading: false,
             });
           } else {
@@ -304,15 +294,12 @@ export const useUserStore = create<UserState>()(
           }
         } catch (error: any) {
           console.error("Error fetching users:", error);
-          
           let errorMessage = "Failed to fetch users";
-          
           if (error.response?.status === 401) {
             errorMessage = "Unauthorized. Please login again.";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
           }
-          
           set({
             error: errorMessage,
             isLoading: false,
@@ -320,30 +307,29 @@ export const useUserStore = create<UserState>()(
         }
       },
 
-      getUserById: async (id: string): Promise<User | null> => {
+      getUserById: async (id: string): Promise<any> => {
         try {
           set({ isLoading: true, error: null });
-          
           const response = await axiosInstance.get(`/users/${id}`);
-          
-          if (response.data.success) {
-            const user = response.data.data;
-            set({ isLoading: false });
-            return user;
+          if (response.data.status === 'success' || response.data.success) {
+            // Return both user and isFollowing as per new API
+            const user = response.data.data.user;
+            const isFollowing = response.data.data.isFollowing;
+            set({ isLoading: false }); // <-- Ensure loading is stopped on success
+            return { user, isFollowing };
           } else {
-            throw new Error(response.data.error || "Failed to fetch user");
+            throw new Error(response.data.error || response.data.message || "Failed to fetch user");
           }
         } catch (error: any) {
           console.error("Error fetching user by ID:", error);
-          
           let errorMessage = "Failed to fetch user";
-          
           if (error.response?.status === 404) {
             errorMessage = "User not found";
           } else if (error.response?.data?.error) {
             errorMessage = error.response.data.error;
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
           }
-          
           set({
             error: errorMessage,
             isLoading: false,
@@ -544,11 +530,7 @@ export const useUserStore = create<UserState>()(
             const profile = {
               ...userData,
               // Ensure counts are numbers, fallback to 0 if undefined
-              followersCount: userData.followersCount || 0,
-              followingCount: userData.followingCount || 0,
-              postsCount: userData.postsCount || 0,
-              commentsCount: userData.commentsCount || 0,
-              likesCount: userData.likesCount || 0,
+              _count: userData._count || { posts: 0, followers: 0, following: 0, comments: 0, likes: 0 },
             };
             
             console.log("Transformed profile:", profile);

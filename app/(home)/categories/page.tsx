@@ -53,19 +53,15 @@ export default function CategoriesPage() {
     clearError,
   } = useCategoriesStore();
 
-  // Fetch categories on component mount
+  // Fetch categories and subcategories on component mount (only if not already loaded)
   useEffect(() => {
-    if (!isLoaded) {
+    if (categories.length === 0) {
       fetchAllCategories();
     }
-  }, [isLoaded, fetchAllCategories]);
-
-  // Fetch subcategories when categories are loaded
-  useEffect(() => {
-    if (categories.length > 0) {
+    if (subcategories.length === 0) {
       fetchAllSubcategories();
     }
-  }, [categories, fetchAllSubcategories]);
+  }, [fetchAllCategories, fetchAllSubcategories, categories.length, subcategories.length]);
 
   // Get experts for selected subcategory (using fallback for now)
   const experts = fallbackExperts;
@@ -186,7 +182,7 @@ export default function CategoriesPage() {
                     category.subcategories.map((subcategory) => (
                       <li key={subcategory.id}>
                         <Link
-                          href={`/allexperts?category=${encodeURIComponent(
+                          href={`/connections?category=${encodeURIComponent(
                             subcategory.name.toLowerCase().replace(/\s+/g, "-")
                           )}`}
                           className={`flex items-center justify-between px-3 py-2 rounded-lg text-green-900 bg-green-50 hover:bg-green-100 transition-all text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-200`}

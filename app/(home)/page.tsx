@@ -183,7 +183,7 @@ export default function HomePage() {
                   ?.subcategories.map((subcat: string) => (
                     <a
                       key={subcat}
-                      href={`/allexperts?category=${encodeURIComponent(
+                      href={`/connections?category=${encodeURIComponent(
                         subcat.toLowerCase().replace(/\s+/g, "-")
                       )}`}
                       className="px-6 py-4 rounded-2xl font-semibold text-center shadow-lg bg-green-400 text-black transition-all duration-200 text-base cursor-pointer w-full hover:bg-green-500"
