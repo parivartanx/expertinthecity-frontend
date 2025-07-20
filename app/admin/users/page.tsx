@@ -38,6 +38,7 @@ interface User {
   verified: boolean;
   profilePicture?: string;
   bio?: string;
+  phone?: string;
   location?: string;
   profileVisitors: number;
   preferences: string[];
@@ -117,21 +118,21 @@ export default function UsersPage() {
     switch (actionType) {
       case "activate":
         updatedUser = {
-          status: "active"
+          status: "ACTIVE"
         };
         message = `User ${selectedUser.name} has been activated`;
         break;
       case "deactivate":
         updatedUser = {
-          status: "inactive"
+          status: "INACTIVE"
         };
         message = `User ${selectedUser.name} has been deactivated`;
         break;
       case "verify":
         updatedUser = {
-          verified: true
+          status: "ACTIVE"
         };
-        message = `User ${selectedUser.name} has been verified`;
+        message = `User ${selectedUser.name} has been verified and activated`;
         break;
     }
 
@@ -179,20 +180,21 @@ export default function UsersPage() {
   };
 
   // Map API users to the expected format
-  const mappedUsers: User[] = users.map((u) => ({
+  const mappedUsers: User[] = users.map((u: any) => ({
     id: u.id,
     name: u.name,
     email: u.email,
     role: u.role,
-    status: u.isAdmin ? "admin" : "active", // Use isAdmin to determine status
+    status: u.status?.toLowerCase() || "active", // Use actual status from API
     joinedAt: u.createdAt,
     lastActive: u.updatedAt,
     verified: false, // Default to false since not in API response
     profilePicture: u.avatar,
     bio: u.bio,
-    location: "", // Not in API response
+    phone: u.phone, // Add phone from API
+    location: u.location ? `${u.location.city}, ${u.location.country}` : "", // Format location from API
     profileVisitors: 0, // Not in API response
-    preferences: [], // Not in API response
+    preferences: u.interests || [], // Use interests from API
     stats: u.stats
   }));
 
@@ -259,6 +261,22 @@ export default function UsersPage() {
       },
     },
     {
+      accessorKey: "phone",
+      header: "Phone",
+      cell: ({ row }) => {
+        const phone = row.original.phone;
+        return (
+          <div className="text-sm">
+            {phone ? (
+              <span>{phone}</span>
+            ) : (
+              <span className="text-muted-foreground">No phone</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
@@ -266,7 +284,7 @@ export default function UsersPage() {
         return (
           <Badge
             variant={
-              status === "active"
+              status === "active" || status === "ACTIVE"
                 ? "default"
                 : status === "admin"
                   ? "secondary"
@@ -339,13 +357,13 @@ export default function UsersPage() {
                 View Details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {user.status === "inactive" && (
+              {(user.status === "inactive" || user.status === "INACTIVE") && (
                 <DropdownMenuItem onClick={() => handleAction(user, "activate")}>
                   <CheckCircle className="mr-2 h-4 w-4" />
                   Activate
                 </DropdownMenuItem>
               )}
-              {user.status === "active" && (
+              {(user.status === "active" || user.status === "ACTIVE") && (
                 <DropdownMenuItem onClick={() => handleAction(user, "deactivate")}>
                   <User className="mr-2 h-4 w-4" />
                   Deactivate
@@ -444,6 +462,10 @@ export default function UsersPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
                   <p className="font-medium capitalize">{selectedUser.status}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Phone</p>
+                  <p className="font-medium">{selectedUser.phone || 'Not specified'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Location</p>

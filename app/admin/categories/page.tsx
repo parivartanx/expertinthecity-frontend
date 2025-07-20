@@ -67,6 +67,7 @@ export default function CategoriesPage() {
         subcategories,
         isLoading,
         error,
+        isLoaded,
         fetchAllCategories,
         fetchAllSubcategories,
         createCategory,
@@ -100,10 +101,13 @@ export default function CategoriesPage() {
     // Fetch data on mount
     useEffect(() => {
         if (isAuthenticated) {
-            fetchAllCategories();
-            fetchAllSubcategories();
+            // Only fetch if not already loaded
+            if (!isLoaded && !isLoading) {
+                fetchAllCategories();
+                fetchAllSubcategories();
+            }
         }
-    }, [isAuthenticated, fetchAllCategories, fetchAllSubcategories]);
+    }, [isAuthenticated, fetchAllCategories, fetchAllSubcategories, isLoaded, isLoading]);
 
     const categoryForm = useForm<CategoryFormData>({
         resolver: zodResolver(categoryFormSchema),

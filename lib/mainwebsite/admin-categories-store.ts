@@ -71,6 +71,17 @@ export const useAdminCategoriesStore = create<AdminCategoriesState>()(
       // Category Actions
       fetchAllCategories: async () => {
         try {
+          // Check if we already have categories and they were loaded recently (within 5 minutes)
+          const { categories, isLoaded } = get();
+          const lastFetchTime = localStorage.getItem('adminCategoriesLastFetch');
+          const now = Date.now();
+          const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+          
+          if (isLoaded && categories.length > 0 && lastFetchTime && (now - parseInt(lastFetchTime)) < fiveMinutes) {
+            console.log('Admin categories already loaded recently, skipping fetch');
+            return;
+          }
+          
           set({ isLoading: true, error: null });
           
           // Check if admin token exists
@@ -88,6 +99,8 @@ export const useAdminCategoriesStore = create<AdminCategoriesState>()(
               isLoading: false,
               isLoaded: true,
             });
+            // Store the fetch timestamp
+            localStorage.setItem('adminCategoriesLastFetch', now.toString());
           } else {
             throw new Error(response.data.error || "Failed to fetch categories");
           }

@@ -9,7 +9,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, User, CheckCircle, Edit2, Save, X, Loader2, Eye, Tag, MessageSquare, MapPin, Calendar, Phone, Mail } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, User, CheckCircle, Edit2, Save, X, Loader2, Eye, Tag, MessageSquare, MapPin, Calendar, Phone, Mail, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
 import { toast } from "sonner";
@@ -21,6 +39,7 @@ interface UserData {
   name: string;
   phone: string | null;
   role: string;
+  status?: string;
   bio: string | null;
   avatar: string | null;
   interests: string[];
@@ -77,6 +96,7 @@ export default function UserDetailsPage() {
     error,
     fetchUserById,
     updateUser,
+    deleteUser,
   } = useAdminUserStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState<UserData | null>(null);
@@ -127,6 +147,10 @@ export default function UserDetailsPage() {
           updateData.phone = editedUser.phone || undefined;
         }
         
+        if ((editedUser as any).status !== (userData as any).status) {
+          updateData.status = (editedUser as any).status;
+        }
+        
         // Only make API call if there are changes
         if (Object.keys(updateData).length > 0) {
           await updateUser(editedUser.id, updateData);
@@ -166,6 +190,18 @@ export default function UserDetailsPage() {
           [field]: value,
         },
       });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (userData) {
+      try {
+        await deleteUser(userData.id);
+        toast.success("User deleted successfully");
+        router.push('/admin/users');
+      } catch (e) {
+        toast.error("Failed to delete user");
+      }
     }
   };
 
@@ -215,23 +251,50 @@ export default function UserDetailsPage() {
           </Button>
           <h1 className="text-3xl font-bold tracking-tight">User Details</h1>
         </div>
-        {!isEditing ? (
-          <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
-            <Edit2 className="h-4 w-4" />
-            Edit Profile
-          </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button onClick={handleCancel} variant="outline" className="gap-2">
-              <X className="h-4 w-4" />
-              Cancel
-            </Button>
-            <Button onClick={handleSave} className="gap-2">
-              <Save className="h-4 w-4" />
-              Save Changes
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <>
+              <Button onClick={() => setIsEditing(true)} variant="outline" className="gap-2">
+                <Edit2 className="h-4 w-4" />
+                Edit Profile
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Delete User
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete the user
+                      <strong> {userData?.name}</strong> and remove all their data from our servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete User
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          ) : (
+            <>
+              <Button onClick={handleCancel} variant="outline" className="gap-2">
+                <X className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button onClick={handleSave} className="gap-2">
+                <Save className="h-4 w-4" />
+                Save Changes
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="profile" className="mt-2">
@@ -315,6 +378,38 @@ export default function UserDetailsPage() {
                   ) : (
                     <Badge variant={userData.role === 'ADMIN' ? 'default' : 'secondary'}>
                       {userData.role}
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Status
+                  </p>
+                  {isEditing ? (
+                    <Select
+                      value={(editedUser as any).status || 'ACTIVE'}
+                      onValueChange={(value) => handleChange('status', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="INACTIVE">Inactive</SelectItem>
+                        <SelectItem value="BLOCKED">Blocked</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge 
+                      variant={
+                        (userData as any).status === 'ACTIVE' ? 'default' : 
+                        (userData as any).status === 'INACTIVE' ? 'secondary' : 
+                        'destructive'
+                      }
+                    >
+                      {(userData as any).status || 'ACTIVE'}
                     </Badge>
                   )}
                 </div>
