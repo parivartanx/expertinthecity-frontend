@@ -27,6 +27,7 @@ interface CategoriesState {
   isLoading: boolean;
   error: string | null;
   isLoaded: boolean;
+  subcategoriesLoaded: boolean;
   
   // Category Actions
   fetchAllCategories: () => Promise<void>;
@@ -60,6 +61,7 @@ export const useCategoriesStore = create<CategoriesState>()(
       isLoading: false,
       error: null,
       isLoaded: false,
+      subcategoriesLoaded: false,
 
       // Category Actions
       fetchAllCategories: async () => {
@@ -272,6 +274,17 @@ export const useCategoriesStore = create<CategoriesState>()(
       // Subcategory Actions
       fetchAllSubcategories: async (categoryId?: string) => {
         try {
+          // Check if we already have subcategories and they were loaded recently (within 5 minutes)
+          const { subcategories, subcategoriesLoaded } = get();
+          const lastFetchTime = localStorage.getItem('subcategoriesLastFetch');
+          const now = Date.now();
+          const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+          
+          if (subcategoriesLoaded && subcategories.length > 0 && lastFetchTime && (now - parseInt(lastFetchTime)) < fiveMinutes) {
+            console.log('Subcategories already loaded recently, skipping fetch');
+            return;
+          }
+          
           set({ isLoading: true, error: null });
           
           const params = categoryId ? { categoryId } : {};
@@ -282,7 +295,10 @@ export const useCategoriesStore = create<CategoriesState>()(
             set({
               subcategories,
               isLoading: false,
+              subcategoriesLoaded: true,
             });
+            // Store the fetch timestamp
+            localStorage.setItem('subcategoriesLastFetch', now.toString());
           } else {
             throw new Error(response.data.error || "Failed to fetch subcategories");
           }
@@ -302,6 +318,7 @@ export const useCategoriesStore = create<CategoriesState>()(
           set({
             error: errorMessage,
             isLoading: false,
+            subcategoriesLoaded: false,
           });
         }
       },
@@ -480,6 +497,7 @@ export const useCategoriesStore = create<CategoriesState>()(
           currentSubcategory: null,
           isLoading: false,
           error: null,
+          subcategoriesLoaded: false,
         });
       },
 

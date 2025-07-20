@@ -46,6 +46,7 @@ export default function HomePage() {
     categories,
     subcategories,
     isLoaded: categoriesLoaded,
+    subcategoriesLoaded,
     fetchAllCategories,
     fetchAllSubcategories,
     isLoading: categoriesLoading
@@ -73,7 +74,8 @@ export default function HomePage() {
           console.log("✅ Categories fetched:", categories.length);
         }
 
-        if (!categoriesLoading) {
+        // Only fetch subcategories if not already loaded and categories are loaded
+        if (categoriesLoaded && !subcategoriesLoaded && !categoriesLoading) {
           console.log("📂 Fetching subcategories...");
           await fetchAllSubcategories();
           console.log("✅ Subcategories fetched:", subcategories.length);
@@ -85,7 +87,7 @@ export default function HomePage() {
     };
 
     fetchData();
-  }, [fetchExperts, fetchAllCategories, fetchAllSubcategories, categoriesLoaded, categoriesLoading]);
+  }, [categoriesLoaded, categoriesLoading, subcategoriesLoaded]); // Removed function dependencies
 
   // Process categories and subcategories when data is loaded
   useEffect(() => {
@@ -154,7 +156,9 @@ export default function HomePage() {
               <p className="text-gray-600 mb-4">No categories available</p>
               <button
                 onClick={() => {
-                  // Force refresh by clearing loaded state
+                  // Force refresh by clearing loaded state and refetching
+                  localStorage.removeItem('categoriesLastFetch');
+                  localStorage.removeItem('subcategoriesLastFetch');
                   fetchAllCategories();
                   fetchAllSubcategories();
                 }}
