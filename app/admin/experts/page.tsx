@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
@@ -34,24 +34,53 @@ interface Expert {
   id: string;
   name: string;
   email: string;
-  category: string;
+  phone?: string;
+  bio?: string;
+  avatar?: string;
   status: string;
-  profileCompletion: number;
-  followers: number;
   joinedAt: string;
   lastActive: string;
   verified: boolean;
-  experience: string;
-  skills: string[];
-  featured: boolean;
-  rating: number;
-  profileVisitors: number;
+  location?: string | {
+    city?: string;
+    country?: string;
+    pincode?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+  interests: string[];
+  tags: string[];
+  expertDetails?: {
+    id: string;
+    userId: string;
+    headline?: string;
+    summary?: string;
+    expertise?: string[];
+    experience?: number;
+    hourlyRate?: number;
+    about?: string;
+    availability?: string;
+    languages?: string[];
+    verified?: boolean;
+    badges?: string[];
+    progressLevel?: string;
+    progressShow?: boolean;
+    ratings?: number;
+  };
+  stats?: {
+    posts: number;
+    followers: number;
+    following: number;
+    likes: number;
+    comments: number;
+  };
 }
 
 export default function ExpertsPage() {
   const router = useRouter();
   const {
     users,
+    pagination,
     fetchUsers,
     updateUser,
     isLoading,
@@ -60,35 +89,62 @@ export default function ExpertsPage() {
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
-  const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | "feature" | null>(null);
+  const [actionType, setActionType] = useState<"activate" | "deactivate" | "verify" | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchInputValue, setSearchInputValue] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  
+  // Debouncing ref
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    fetchUsers({ role: "EXPERT" });
-  }, [fetchUsers]);
+    fetchUsers({
+      page: currentPage,
+      limit: pageSize,
+      search: searchQuery,
+      sortBy,
+      sortOrder,
+      role: "EXPERT"
+    });
+  }, [fetchUsers, currentPage, pageSize, searchQuery, sortBy, sortOrder]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Map API users to Expert interface
   const mappedExperts: Expert[] = users
     .filter((u) => u.role === "EXPERT")
-    .map((u) => ({
+    .map((u: any) => ({
       id: u.id,
       name: u.name,
       email: u.email,
-      category: u.expertDetails?.category || "",
-      status: (u as any).status || "active",
-      profileCompletion: u.expertDetails?.profileCompletion || 0,
-      followers: u.stats?.followers || 0,
-      joinedAt: u.createdAt || "",
-      lastActive: u.updatedAt || "",
-      verified: (u as any).verified ?? false,
-      experience: u.expertDetails?.experience || "",
-      skills: u.expertDetails?.skills || [],
-      featured: u.expertDetails?.featured || false,
-      rating: u.stats?.rating || 0,
-      profileVisitors: u.stats?.profileVisitors || 0,
+      phone: u.phone,
+      bio: u.bio,
+      avatar: u.avatar,
+      status: u.status?.toLowerCase() || "active",
+      joinedAt: u.createdAt,
+      lastActive: u.updatedAt,
+      verified: u.expertDetails?.verified || false,
+      location: u.location,
+      interests: u.interests || [],
+      tags: u.tags || [],
+      expertDetails: u.expertDetails,
+      stats: u.stats,
     }));
 
-  const handleAction = (expert: Expert, action: "activate" | "deactivate" | "verify" | "feature") => {
+  const handleAction = (expert: Expert, action: "activate" | "deactivate" | "verify") => {
     setSelectedExpert(expert);
     setActionType(action);
     setActionDialogOpen(true);
@@ -100,6 +156,41 @@ export default function ExpertsPage() {
     router.push(`/admin/experts/${expert.id}`);
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleSearchInputChange = (query: string) => {
+    // Update input value immediately
+    setSearchInputValue(query);
+    
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set new timeout for API call
+    searchTimeoutRef.current = setTimeout(() => {
+      handleSearch(query);
+    }, 500);
+  };
+
+  const handleSort = (column: string, order: string) => {
+    setSortBy(column);
+    setSortOrder(order);
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
   const confirmAction = () => {
     if (!selectedExpert || !actionType) return;
 
@@ -109,38 +200,27 @@ export default function ExpertsPage() {
     switch (actionType) {
       case "activate":
         updatedExpert = {
-          ...selectedExpert,
-          status: "active"
+          status: "ACTIVE"
         };
         message = `Expert ${selectedExpert.name} has been activated`;
         break;
       case "deactivate":
         updatedExpert = {
-          ...selectedExpert,
-          status: "inactive",
-          featured: false // Remove from featured when deactivated
+          status: "INACTIVE"
         };
-        message = `Expert ${selectedExpert.name} has been deactivated and removed from featured`;
+        message = `Expert ${selectedExpert.name} has been deactivated`;
         break;
       case "verify":
         updatedExpert = {
-          ...selectedExpert,
-          verified: true
+          status: "ACTIVE"
         };
-        message = `Expert ${selectedExpert.name} has been verified`;
-        break;
-      case "feature":
-        updatedExpert = {
-          ...selectedExpert,
-          featured: !selectedExpert.featured
-        };
-        message = `Expert ${selectedExpert.name} has been ${selectedExpert.featured ? 'removed from' : 'added to'} featured experts`;
+        message = `Expert ${selectedExpert.name} has been verified and activated`;
         break;
     }
 
     if (updatedExpert) {
-      // Update via API
-      updateUser(selectedExpert.id, updatedExpert);
+      // Update via API - cast to AdminUser type for compatibility
+      updateUser(selectedExpert.id, updatedExpert as any);
       toast.success(message);
     }
 
@@ -160,12 +240,20 @@ export default function ExpertsPage() {
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => (
+            cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div>
+          {row.original.avatar ? (
+            <img 
+              src={row.original.avatar} 
+              alt={row.original.name}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+              <Award className="h-4 w-4 text-muted-foreground" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
             <div 
               className="font-medium flex items-center gap-1 cursor-pointer hover:text-primary hover:underline transition-colors"
               onClick={() => handleViewExpert(row.original)}
@@ -178,7 +266,17 @@ export default function ExpertsPage() {
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
               )}
             </div>
-            <div className="text-sm text-muted-foreground">{row.original.category}</div>
+            <div className="text-xs text-muted-foreground truncate">
+              {row.original.email} • {row.original.phone || "No phone"}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              {typeof row.original.location === 'string' 
+                ? row.original.location 
+                : row.original.location 
+                  ? `${(row.original.location as any).city || ''}, ${(row.original.location as any).country || ''}`.trim() || 'No location'
+                  : 'No location'
+              }
+            </div>
           </div>
         </div>
       ),
@@ -191,113 +289,116 @@ export default function ExpertsPage() {
         return (
           <Badge
             variant={
-              status === "active"
+              status === "active" || status === "ACTIVE"
                 ? "default"
-                : status === "pending"
-                ? "secondary"
-                : "outline"
+                : status === "admin"
+                  ? "secondary"
+                  : "outline"
             }
           >
             {status}
           </Badge>
         );
       },
-    },
-    {
-      accessorKey: "experience",
-      header: "Experience",
-      cell: ({ row }) => {
-        return (
-          <div className="text-sm">
-            {row.original.experience}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "skills",
-      header: "Skills",
-      cell: ({ row }) => {
-        return (
-          <div className="flex flex-wrap gap-1">
-            {row.original.skills.map((skill, index) => (
-              <Badge key={index} variant="secondary">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "followers",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Followers
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1.5">
-          <Users className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>{row.original.followers.toLocaleString()}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "rating",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Rating
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-          <span>{row.original.rating.toFixed(1)}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "profileVisitors",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Profile Visitors
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1.5">
-          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>{row.original.profileVisitors.toLocaleString()}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "profileCompletion",
-      header: "Profile",
-      cell: ({ row }) => {
-        const completion = row.original.profileCompletion;
-        return (
-          <div className="w-24">
-            <div className="flex justify-between mb-1 text-xs">
-              <span>{completion}%</span>
+          },
+      {
+        accessorKey: "expertise",
+        header: "Expertise",
+        cell: ({ row }) => {
+          const expertise = row.original.expertDetails?.expertise;
+          return (
+            <div className="text-xs">
+              {expertise && expertise.length > 0 ? (
+                <div className="flex flex-wrap gap-0.5">
+                  {expertise.slice(0, 2).map((skill: string, index: number) => (
+                    <Badge key={index} variant="secondary" className="text-xs px-1 py-0">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {expertise.length > 2 && (
+                    <span className="text-muted-foreground">+{expertise.length - 2}</span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">No expertise</span>
+              )}
             </div>
-            <Progress value={completion} className="h-2" />
-          </div>
-        );
+          );
+        },
       },
-    }
+      {
+        accessorKey: "stats",
+        header: "Stats",
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-1 text-xs">
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Followers:</span>
+              <span className="font-medium">{row.original.stats?.followers?.toLocaleString() || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-muted-foreground">Following:</span>
+              <span className="font-medium">{row.original.stats?.following?.toLocaleString() || 0}</span>
+            </div>
+          </div>
+        ),
+            },
+      {
+        accessorKey: "progressLevel",
+        header: "Level",
+        cell: ({ row }) => {
+          const level = row.original.expertDetails?.progressLevel;
+          return (
+            <div className="text-sm">
+              <Badge variant="outline">
+                {level || "BRONZE"}
+              </Badge>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const expert = row.original;
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => handleViewExpert(expert)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {(expert.status === "inactive" || expert.status === "INACTIVE") && (
+                  <DropdownMenuItem onClick={() => handleAction(expert, "activate")}>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Activate
+                  </DropdownMenuItem>
+                )}
+                {(expert.status === "active" || expert.status === "ACTIVE") && (
+                  <DropdownMenuItem onClick={() => handleAction(expert, "deactivate")}>
+                    <Award className="mr-2 h-4 w-4" />
+                    Deactivate
+                  </DropdownMenuItem>
+                )}
+                {!expert.verified && (
+                  <DropdownMenuItem onClick={() => handleAction(expert, "verify")}>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Verify
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      }
   ];
 
   return (
@@ -306,12 +407,35 @@ export default function ExpertsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Expert Management</h1>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={mappedExperts} 
-        searchColumn="name" 
-        searchPlaceholder="Search experts..." 
-      />
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Data Table */}
+      {!isLoading && !error && (
+        <DataTable 
+          columns={columns} 
+          data={mappedExperts} 
+          searchColumn="name" 
+          searchPlaceholder="Search experts..."
+          searchValue={searchInputValue}
+          pagination={pagination || undefined}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          onSearch={handleSearchInputChange}
+          isLoading={isLoading}
+        />
+      )}
 
       {/* View Expert Dialog */}
       {selectedExpert && (
@@ -342,7 +466,7 @@ export default function ExpertsPage() {
                       )}
                     </div>
                     <p className="text-muted-foreground">{selectedExpert.email}</p>
-                    <p className="text-sm font-medium mt-1">{selectedExpert.category}</p>
+                    <p className="text-sm font-medium mt-1">{selectedExpert.expertDetails?.headline || "No headline"}</p>
                   </div>
                 </div>
                 
@@ -353,7 +477,7 @@ export default function ExpertsPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Followers</p>
-                    <p className="font-medium">{selectedExpert.followers.toLocaleString()}</p>
+                    <p className="font-medium">{selectedExpert.stats?.followers?.toLocaleString() || 0}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Joined</p>
@@ -366,26 +490,23 @@ export default function ExpertsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Profile Completion</p>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">{selectedExpert.profileCompletion}%</span>
-                  </div>
-                  <Progress value={selectedExpert.profileCompletion} className="h-2" />
+                  <p className="text-sm text-muted-foreground">Progress Level</p>
+                  <p className="font-medium">{selectedExpert.expertDetails?.progressLevel || "BRONZE"}</p>
                 </div>
 
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Experience</p>
-                  <p className="font-medium">{selectedExpert.experience}</p>
+                  <p className="font-medium">{selectedExpert.expertDetails?.experience ? `${selectedExpert.expertDetails.experience} years` : "Not specified"}</p>
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Skills</p>
+                  <p className="text-sm text-muted-foreground">Expertise</p>
                   <div className="flex flex-wrap gap-1">
-                    {selectedExpert.skills.map((skill, index) => (
+                    {selectedExpert.expertDetails?.expertise?.map((skill: string, index: number) => (
                       <Badge key={index} variant="secondary">
                         {skill}
                       </Badge>
-                    ))}
+                    )) || <span className="text-muted-foreground text-sm">No expertise listed</span>}
                   </div>
                 </div>
               </TabsContent>
@@ -483,9 +604,6 @@ export default function ExpertsPage() {
               {actionType === "activate" && "Are you sure you want to activate this expert?"}
               {actionType === "deactivate" && "Are you sure you want to deactivate this expert?"}
               {actionType === "verify" && "Are you sure you want to verify this expert?"}
-              {actionType === "feature" && selectedExpert?.featured
-                ? "Are you sure you want to remove this expert from featured?"
-                : "Are you sure you want to add this expert to featured?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

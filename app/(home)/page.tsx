@@ -66,14 +66,18 @@ export default function HomePage() {
         await fetchExperts();
         console.log("✅ Experts fetched");
 
-        // Always fetch categories and subcategories to ensure fresh data
-        console.log("📂 Fetching categories...");
-        await fetchAllCategories();
-        console.log("✅ Categories fetched:", categories.length);
+        // Only fetch categories and subcategories if not already loaded
+        if (!categoriesLoaded && !categoriesLoading) {
+          console.log("📂 Fetching categories...");
+          await fetchAllCategories();
+          console.log("✅ Categories fetched:", categories.length);
+        }
 
-        console.log("📂 Fetching subcategories...");
-        await fetchAllSubcategories();
-        console.log("✅ Subcategories fetched:", subcategories.length);
+        if (!categoriesLoading) {
+          console.log("📂 Fetching subcategories...");
+          await fetchAllSubcategories();
+          console.log("✅ Subcategories fetched:", subcategories.length);
+        }
 
       } catch (error) {
         console.error("❌ Error fetching data:", error);
@@ -81,7 +85,7 @@ export default function HomePage() {
     };
 
     fetchData();
-  }, [fetchExperts, fetchAllCategories, fetchAllSubcategories]);
+  }, [fetchExperts, fetchAllCategories, fetchAllSubcategories, categoriesLoaded, categoriesLoading]);
 
   // Process categories and subcategories when data is loaded
   useEffect(() => {
@@ -150,6 +154,7 @@ export default function HomePage() {
               <p className="text-gray-600 mb-4">No categories available</p>
               <button
                 onClick={() => {
+                  // Force refresh by clearing loaded state
                   fetchAllCategories();
                   fetchAllSubcategories();
                 }}

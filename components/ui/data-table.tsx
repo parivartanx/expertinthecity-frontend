@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   searchColumn?: string;
   searchPlaceholder?: string;
+  searchValue?: string; // Add search value prop
   // Server-side pagination props
   pagination?: {
     total: number;
@@ -56,6 +57,7 @@ export function DataTable<TData, TValue>({
   data,
   searchColumn,
   searchPlaceholder = "Search...",
+  searchValue = "",
   pagination,
   onPageChange,
   onPageSizeChange,
@@ -95,7 +97,7 @@ export function DataTable<TData, TValue>({
         <div className="flex items-center gap-2">
           <Input
             placeholder={searchPlaceholder}
-            value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
+            value={searchValue}
             onChange={(event) => {
               const value = event.target.value;
               if (onSearch) {

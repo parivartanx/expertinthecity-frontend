@@ -64,6 +64,17 @@ export const useCategoriesStore = create<CategoriesState>()(
       // Category Actions
       fetchAllCategories: async () => {
         try {
+          // Check if we already have categories and they were loaded recently (within 5 minutes)
+          const { categories, isLoaded } = get();
+          const lastFetchTime = localStorage.getItem('categoriesLastFetch');
+          const now = Date.now();
+          const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+          
+          if (isLoaded && categories.length > 0 && lastFetchTime && (now - parseInt(lastFetchTime)) < fiveMinutes) {
+            console.log('Categories already loaded recently, skipping fetch');
+            return;
+          }
+          
           set({ isLoading: true, error: null });
           
           const response = await axiosInstance.get("/categories");
@@ -75,6 +86,8 @@ export const useCategoriesStore = create<CategoriesState>()(
               isLoading: false,
               isLoaded: true,
             });
+            // Store the fetch timestamp
+            localStorage.setItem('categoriesLastFetch', now.toString());
           } else {
             throw new Error(response.data.error || "Failed to fetch categories");
           }

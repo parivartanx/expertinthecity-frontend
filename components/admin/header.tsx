@@ -13,6 +13,7 @@ import {
 import { useTheme } from "next-themes";
 import { Badge } from "@/components/ui/badge";
 import type { AdminUser } from "@/lib/mainwebsite/admin-user-store";
+import { useAdminUserStore } from "@/lib/mainwebsite/admin-user-store";
 import { useAdminNotificationsStore } from "@/lib/mainwebsite/admin-notifications-store";
 
 interface HeaderProps {
@@ -25,7 +26,8 @@ export function Header({ user }: HeaderProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
-  // Use admin notifications store
+  // Use admin stores
+  const { selectedUser } = useAdminUserStore();
   const {
     notifications,
     fetchNotifications,
@@ -83,6 +85,12 @@ export function Header({ user }: HeaderProps) {
     
     const path = pathname.split("/").filter(Boolean);
     if (path.length < 2) return "Dashboard";
+    
+    // Special case for user details page
+    if (path[0] === "admin" && path[1] === "users" && path[2] && path[2] !== "page") {
+      // Show user name if available, otherwise show "User Details"
+      return selectedUser?.name || "User Details";
+    }
     
     // Convert the last segment to title case
     const lastSegment = path[path.length - 1];
