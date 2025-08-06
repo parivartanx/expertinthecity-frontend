@@ -28,6 +28,9 @@ interface LikeStoreState {
   unlikePost: (postId: string) => Promise<void>;
   getPostLikes: (postId: string, page?: number, limit?: number) => Promise<void>;
   getUserLikes: (page?: number, limit?: number) => Promise<void>;
+  // Optimistic update methods
+  addLikeOptimistically: (postId: string, userId: string, userName: string, userAvatar?: string) => void;
+  removeLikeOptimistically: (postId: string, userId: string) => void;
   clearError: () => void;
   clearSuccess: () => void;
 }
@@ -135,6 +138,30 @@ export const useLikeStore = create<LikeStoreState>()(
             isLoading: false,
           });
         }
+      },
+
+      addLikeOptimistically: (postId: string, userId: string, userName: string, userAvatar?: string) => {
+        const newLike: Like = {
+          id: `temp-${Date.now()}`,
+          postId,
+          userId,
+          user: {
+            id: userId,
+            name: userName,
+            avatar: userAvatar || null,
+          },
+          createdAt: new Date().toISOString(),
+        };
+        
+        set((state) => ({
+          postLikes: [...state.postLikes, newLike],
+        }));
+      },
+
+      removeLikeOptimistically: (postId: string, userId: string) => {
+        set((state) => ({
+          postLikes: state.postLikes.filter(like => !(like.postId === postId && like.userId === userId)),
+        }));
       },
 
       clearError: () => set({ error: null }),

@@ -106,7 +106,7 @@ interface UserProfile {
   createdAt: string;
   updatedAt: string;
   interests?: string[];
-  // Counts
+  // Counts - both formats supported
   _count?: {
     posts: number;
     followers: number;
@@ -114,6 +114,26 @@ interface UserProfile {
     comments: number;
     likes: number;
   };
+  // Direct count properties from API response
+  followersCount?: number;
+  followingCount?: number;
+  postsCount?: number;
+  commentsCount?: number;
+  likesCount?: number;
+  // Expert properties from API response
+  badges?: string[];
+  progressLevel?: string;
+  experience?: number;
+  hourlyRate?: number;
+  ratings?: number;
+  verified?: boolean;
+  headline?: string;
+  summary?: string;
+  expertise?: string[];
+  about?: string;
+  availability?: string;
+  languages?: string[];
+  progressShow?: boolean;
   // Expert details (if expert)
   expertDetails?: {
     id: string;
@@ -526,11 +546,23 @@ export const useUserStore = create<UserState>()(
             const userData = response.data.data.user; // Backend returns { user: transformedUser }
             console.log("Backend response userData:", userData);
             
-            // The backend now returns counts directly on the user object, no need to transform
+            // The backend returns counts directly on the user object
             const profile = {
               ...userData,
-              // Ensure counts are numbers, fallback to 0 if undefined
-              _count: userData._count || { posts: 0, followers: 0, following: 0, comments: 0, likes: 0 },
+              // Map the direct count properties to both formats for compatibility
+              followersCount: userData.followersCount || 0,
+              followingCount: userData.followingCount || 0,
+              postsCount: userData.postsCount || 0,
+              commentsCount: userData.commentsCount || 0,
+              likesCount: userData.likesCount || 0,
+              // Also maintain the _count format for backward compatibility
+              _count: {
+                posts: userData.postsCount || 0,
+                followers: userData.followersCount || 0,
+                following: userData.followingCount || 0,
+                comments: userData.commentsCount || 0,
+                likes: userData.likesCount || 0,
+              },
             };
             
             console.log("Transformed profile:", profile);
@@ -909,6 +941,7 @@ export const useUserStore = create<UserState>()(
       name: "user-store",
       partialize: (state) => ({
         user: state.user,
+        profile: state.profile,
         isAuthenticated: state.isAuthenticated,
         isLoaded: state.isLoaded,
       }),

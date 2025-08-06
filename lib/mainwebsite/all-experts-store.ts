@@ -25,23 +25,46 @@ const getCategoryIcon = (category: string): string => {
 interface Expert {
   id: string;
   userId: string;
-  name: string;
-  title?: string;
-  location: string | { address?: string; country?: string };
-  rating: number;
-  reviews: number;
-  categories?: string[];
-  tags?: string[];
-  image: string;
-  status?: string;
-  bio?: string;
-  description?: string;
-  hourlyRate?: number;
-  verified?: boolean;
+  headline?: string;
+  summary?: string;
   expertise?: string[];
   experience?: number;
+  hourlyRate?: number;
+  about?: string;
   availability?: string;
   languages?: string[];
+  verified?: boolean;
+  badges?: string[];
+  progressLevel?: string;
+  progressShow?: boolean;
+  ratings?: number;
+  reviews?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  user?: {
+    id: string;
+    name: string;
+    email?: string;
+    avatar?: string;
+    bio?: string;
+    role?: string;
+    interests?: string[];
+    tags?: string[];
+    location?: string | { city?: string; country?: string; postalCode?: string };
+    createdAt?: string;
+  };
+  certifications?: Array<{
+    name: string;
+    issuingOrganization: string;
+    issueDate: string;
+  }>;
+  experiences?: Array<{
+    title: string;
+    company: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent: boolean;
+  }>;
 }
 
 interface AllExpertsState {

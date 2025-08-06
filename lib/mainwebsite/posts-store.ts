@@ -31,6 +31,13 @@ interface Post {
   analytics: PostAnalytics;
   createdAt: string;
   updatedAt: string;
+  // Like-related properties from API response
+  likes?: Array<{ userId: string }>;
+  likedByIds?: string[];
+  _count?: {
+    comments: number;
+    likes: number;
+  };
 }
 
 interface UploadUrlResponse {
@@ -94,6 +101,14 @@ interface PostsState {
   clearCurrentPost: () => void;
   clearError: () => void;
   setCurrentPost: (post: Post | null) => void;
+  
+  // Optimistic update methods for likes
+  addLikeOptimistically: (postId: string, userId: string) => void;
+  removeLikeOptimistically: (postId: string, userId: string) => void;
+  
+  // Optimistic update methods for comments
+  addCommentOptimistically: (postId: string) => void;
+  removeCommentOptimistically: (postId: string) => void;
 }
 
 export const usePostsStore = create<PostsState>()(
@@ -419,6 +434,92 @@ export const usePostsStore = create<PostsState>()(
 
       setCurrentPost: (post: Post | null) => {
         set({ currentPost: post });
+      },
+
+      addLikeOptimistically: (postId: string, userId: string) => {
+        set((state) => ({
+          posts: state.posts.map(post => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                likedByIds: [...(post.likedByIds || []), userId],
+                analytics: {
+                  ...post.analytics,
+                  likes: (post.analytics?.likes || 0) + 1
+                },
+                _count: {
+                  ...post._count,
+                  likes: (post._count?.likes || 0) + 1
+                }
+              };
+            }
+            return post;
+          })
+        }));
+      },
+
+      removeLikeOptimistically: (postId: string, userId: string) => {
+        set((state) => ({
+          posts: state.posts.map(post => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                likedByIds: (post.likedByIds || []).filter(id => id !== userId),
+                analytics: {
+                  ...post.analytics,
+                  likes: Math.max(0, (post.analytics?.likes || 0) - 1)
+                },
+                _count: {
+                  ...post._count,
+                  likes: Math.max(0, (post._count?.likes || 0) - 1)
+                }
+              };
+            }
+            return post;
+          })
+        }));
+      },
+
+      addCommentOptimistically: (postId: string) => {
+        set((state) => ({
+          posts: state.posts.map(post => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                analytics: {
+                  ...post.analytics,
+                  comments: (post.analytics?.comments || 0) + 1
+                },
+                _count: {
+                  ...post._count,
+                  comments: (post._count?.comments || 0) + 1
+                }
+              };
+            }
+            return post;
+          })
+        }));
+      },
+
+      removeCommentOptimistically: (postId: string) => {
+        set((state) => ({
+          posts: state.posts.map(post => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                analytics: {
+                  ...post.analytics,
+                  comments: Math.max(0, (post.analytics?.comments || 0) - 1)
+                },
+                _count: {
+                  ...post._count,
+                  comments: Math.max(0, (post._count?.comments || 0) - 1)
+                }
+              };
+            }
+            return post;
+          })
+        }));
       },
     }),
     {

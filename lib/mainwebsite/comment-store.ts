@@ -36,17 +36,27 @@ interface CommentStoreState {
 
   // Actions
   getComments: (postId: string, page?: number, limit?: number) => Promise<void>;
-  createComment: (postId: string, content: string) => Promise<void>;
+  createComment: (postId: string, content: string) => Promise<Comment>;
   updateComment: (commentId: string, content: string) => Promise<void>;
   deleteComment: (commentId: string) => Promise<void>;
 
   getReplies: (commentId: string, page?: number, limit?: number) => Promise<void>;
-  createReply: (commentId: string, content: string) => Promise<void>;
+  createReply: (commentId: string, content: string) => Promise<Reply>;
   updateReply: (replyId: string, content: string) => Promise<void>;
   deleteReply: (replyId: string) => Promise<void>;
 
   clearError: () => void;
   clearSuccess: () => void;
+  
+  // Optimistic update methods
+  addCommentOptimisticallyToStore: (postId: string, content: string, author: Author) => string;
+  updateCommentOptimistically: (commentId: string, content: string) => void;
+  deleteCommentOptimistically: (commentId: string) => void;
+  updateOptimisticCommentWithReal: (tempId: string, realComment: Comment) => void;
+  addReplyOptimistically: (commentId: string, content: string, author: Author) => string;
+  updateReplyOptimistically: (replyId: string, content: string) => void;
+  deleteReplyOptimistically: (replyId: string) => void;
+  updateOptimisticReplyWithReal: (tempId: string, realReply: Reply) => void;
 }
 
 export const useCommentStore = create<CommentStoreState>()(
@@ -86,8 +96,8 @@ export const useCommentStore = create<CommentStoreState>()(
           const response = await axiosInstance.post(`/comments/post/${postId}`, { content });
           if (response.data.status === "success") {
             set({ success: "Comment added!", isLoading: false });
-            // Optionally refresh comments
-            await get().getComments(postId);
+            // Return the created comment data
+            return response.data.data?.comment || response.data.comment;
           } else {
             throw new Error(response.data.message || "Failed to add comment");
           }
@@ -96,6 +106,7 @@ export const useCommentStore = create<CommentStoreState>()(
             error: error.response?.data?.message || error.message || "Failed to add comment",
             isLoading: false,
           });
+          throw error;
         }
       },
 
@@ -163,8 +174,8 @@ export const useCommentStore = create<CommentStoreState>()(
           const response = await axiosInstance.post(`/comments/${commentId}/replies`, { content });
           if (response.data.status === "success") {
             set({ success: "Reply added!", isLoading: false });
-            // Optionally refresh replies
-            await get().getReplies(commentId);
+            // Return the created reply data
+            return response.data.data?.reply || response.data.reply;
           } else {
             throw new Error(response.data.message || "Failed to add reply");
           }
@@ -173,6 +184,7 @@ export const useCommentStore = create<CommentStoreState>()(
             error: error.response?.data?.message || error.message || "Failed to add reply",
             isLoading: false,
           });
+          throw error;
         }
       },
 
@@ -214,6 +226,114 @@ export const useCommentStore = create<CommentStoreState>()(
 
       clearError: () => set({ error: null }),
       clearSuccess: () => set({ success: null }),
+
+      addCommentOptimisticallyToStore: (postId: string, content: string, author: Author) => {
+        const tempId = `temp-${Date.now()}`;
+        const newComment: Comment = {
+          id: tempId,
+          content,
+          author,
+          postId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          replies: [],
+        };
+        
+        set((state) => ({
+          comments: [...state.comments, newComment],
+        }));
+        
+        return tempId;
+      },
+
+      updateCommentOptimistically: (commentId: string, content: string) => {
+        set((state) => ({
+          comments: state.comments.map(comment => 
+            comment.id === commentId 
+              ? { ...comment, content, updatedAt: new Date().toISOString() }
+              : comment
+          ),
+        }));
+      },
+
+      deleteCommentOptimistically: (commentId: string) => {
+        set((state) => ({
+          comments: state.comments.filter(comment => comment.id !== commentId),
+        }));
+      },
+
+      addReplyOptimistically: (commentId: string, content: string, author: Author) => {
+        const tempId = `temp-reply-${Date.now()}`;
+        const newReply: Reply = {
+          id: tempId,
+          content,
+          author,
+          commentId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        set((state) => ({
+          replies: [...state.replies, newReply],
+          comments: state.comments.map(comment => 
+            comment.id === commentId 
+              ? { ...comment, replies: [...comment.replies, newReply] }
+              : comment
+          ),
+        }));
+        
+        return tempId;
+      },
+
+      updateReplyOptimistically: (replyId: string, content: string) => {
+        set((state) => ({
+          replies: state.replies.map(reply => 
+            reply.id === replyId 
+              ? { ...reply, content, updatedAt: new Date().toISOString() }
+              : reply
+          ),
+          comments: state.comments.map(comment => ({
+            ...comment,
+            replies: comment.replies.map(reply => 
+              reply.id === replyId 
+                ? { ...reply, content, updatedAt: new Date().toISOString() }
+                : reply
+            ),
+          })),
+        }));
+      },
+
+      deleteReplyOptimistically: (replyId: string) => {
+        set((state) => ({
+          replies: state.replies.filter(reply => reply.id !== replyId),
+          comments: state.comments.map(comment => ({
+            ...comment,
+            replies: comment.replies.filter(reply => reply.id !== replyId),
+          })),
+        }));
+      },
+
+      updateOptimisticReplyWithReal: (tempId: string, realReply: Reply) => {
+        set((state) => ({
+          replies: state.replies.map(reply => 
+            reply.id === tempId ? realReply : reply
+          ),
+          comments: state.comments.map(comment => ({
+            ...comment,
+            replies: comment.replies.map(reply => 
+              reply.id === tempId ? realReply : reply
+            ),
+          })),
+        }));
+      },
+
+      updateOptimisticCommentWithReal: (tempId: string, realComment: Comment) => {
+        set((state) => ({
+          comments: state.comments.map(comment => 
+            comment.id === tempId ? realComment : comment
+          ),
+        }));
+      },
     }),
     {
       name: "comment-storage",

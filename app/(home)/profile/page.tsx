@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useReportStore } from "@/lib/mainwebsite/report-store";
 import { useLikeStore } from "@/lib/mainwebsite/like-store";
 import { useCommentStore } from "@/lib/mainwebsite/comment-store";
+import { useAllExpertsStore } from "@/lib/mainwebsite/all-experts-store";
 
 const INTEREST_LABELS: Record<string, string> = {
     TECHNOLOGY: "Technology",
@@ -124,6 +125,14 @@ export default function ProfilePage() {
 
     const isExpert = user?.role?.toUpperCase() === "EXPERT";
     const isUser = user?.role?.toUpperCase() === "USER";
+
+    // Experts state
+    const { experts, isLoading: expertsLoading, error: expertsError, fetchAllExperts, totalExperts, currentPage } = useAllExpertsStore();
+    const [expertsToShow, setExpertsToShow] = useState(10);
+
+    useEffect(() => {
+        fetchAllExperts(1, expertsToShow);
+    }, [expertsToShow, fetchAllExperts]);
 
     // Fetch user profile on component mount
     useEffect(() => {
@@ -495,59 +504,71 @@ export default function ProfilePage() {
                     {/* Left Column - Profile Only (Sticky) */}
                     <div className="lg:col-span-3">
                         <div className="sticky top-20">
-                            {/* Profile Card */}
+                            {/* Profile Card for USER */}
                             <Card>
                                 <CardContent className="p-6 relative">
-                                    {/* Progress Level Icon - Top Left */}
-                                    {isExpert && profile.expertDetails?.progressLevel && (
-                                        <div className="absolute top-4 left-4">
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        {getProgressLevelIcon(profile.expertDetails.progressLevel)}
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{profile.expertDetails.progressLevel} Level</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
-                                    )}
                                     <div className="text-center">
+                                        {/* Avatar */}
                                         <Avatar className="w-24 h-24 mx-auto mb-4">
-                                            <AvatarImage src={getAvatarUrl(profile.avatar)} alt={profile.name || user?.name || 'User'} />
-                                            <AvatarFallback>{(profile.name || user?.name || 'U').charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={profile.avatar} alt={profile.name} />
+                                            <AvatarFallback>{profile.name?.charAt(0) || "U"}</AvatarFallback>
                                         </Avatar>
+                                        {/* Name and Role */}
                                         <h1 className="text-2xl font-bold text-foreground mb-2">
-                                            {profile.name || user?.name || 'User'}
-                                            {isExpert && (
-                                                <FaCheckCircle className="inline ml-2 text-green-500" />
-                                            )}
+                                            {profile.name}
                                         </h1>
                                         <p className="text-sm text-muted-foreground mb-3">
-                                            {isExpert ? 'Expert' : 'Member'}
+                                            Member
                                         </p>
-
-                                        <div className="space-y-2 mb-6">
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        {/* Bio */}
+                                        {profile.bio && (
+                                            <p className="text-muted-foreground mb-4">{profile.bio}</p>
+                                        )}
+                                        {/* Location */}
+                                        {profile.location && (
+                                            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
                                                 <FaMapMarkerAlt />
-                                                <span>{formatLocation(profile.location)}</span>
+                                                <span>
+                                                    {typeof profile.location === "string"
+                                                        ? profile.location
+                                                        : [profile.location.city, profile.location.country].filter(Boolean).join(", ")}
+                                                </span>
                                             </div>
-                                            {isExpert && profile.expertDetails?.hourlyRate && (
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <FaDollarSign />
-                                                    <span>${profile.expertDetails?.hourlyRate}/hour</span>
-                                                </div>
-                                            )}
-                                            {isExpert && profile.expertDetails?.experience && (
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <FaClock />
-                                                    <span>{profile.expertDetails?.experience} years experience</span>
-                                                </div>
-                                            )}
+                                        )}
+                                        {/* Email */}
+                                        {profile.email && (
+                                            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+                                                <FaUser />
+                                                <span>{profile.email}</span>
+                                            </div>
+                                        )}
+                                        {/* Interests */}
+                                        {profile.interests && profile.interests.length > 0 && (
+                                            <div className="flex flex-wrap justify-center gap-2 mb-4">
+                                                {profile.interests.map((interest, idx) => (
+                                                    <Badge key={idx} variant="secondary" className="bg-green-100 text-green-800">
+                                                        {interest}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* Stats */}
+                                        <div className="flex flex-wrap justify-center gap-4 mt-4">
+                                            <div className="text-center">
+                                                <div className="font-bold text-lg">{profile.followersCount ?? 0}</div>
+                                                <div className="text-xs text-muted-foreground">Followers</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="font-bold text-lg">{profile.followingCount ?? 0}</div>
+                                                <div className="text-xs text-muted-foreground">Following</div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="font-bold text-lg">{profile.postsCount ?? 0}</div>
+                                                <div className="text-xs text-muted-foreground">Posts</div>
+                                            </div>
                                         </div>
-
-                                        <div className="space-y-3">
+                                        {/* Update Profile Button */}
+                                        <div className="space-y-3 mt-6">
                                             <Link href="/profile/update">
                                                 <Button className="w-full bg-green-600 hover:bg-green-700">
                                                     <FaEdit className="mr-2" />
@@ -595,8 +616,8 @@ export default function ProfilePage() {
 
                             {/* Posts Tab - For both Users and Experts */}
                             <TabsContent value="posts" className="space-y-6">
-                                {/* Create Post Section - Only for Experts */}
-                                {isExpert && (
+                                {/* Create Post Section - For both Users and Experts */}
+                                {(isExpert || isUser) && (
                                     <Card>
                                         <CardContent className="p-6">
                                             {!showCreatePost ? (
@@ -609,7 +630,9 @@ export default function ProfilePage() {
                                                         className="flex-1 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                                                         onClick={() => setShowCreatePost(true)}
                                                     >
-                                                        <p className="text-muted-foreground">Share your expertise and insights...</p>
+                                                        <p className="text-muted-foreground">
+                                                            {isExpert ? "Share your expertise and insights..." : "Share your thoughts and experiences..."}
+                                                        </p>
                                                     </div>
                                                     <Button
                                                         onClick={() => setShowCreatePost(true)}
@@ -642,7 +665,7 @@ export default function ProfilePage() {
                                                         />
 
                                                         <Textarea
-                                                            placeholder="Share your expertise, insights, or experiences..."
+                                                            placeholder={isExpert ? "Share your expertise, insights, or experiences..." : "Share your thoughts, experiences, or questions..."}
                                                             value={postContent}
                                                             onChange={(e) => setPostContent(e.target.value)}
                                                             className="min-h-[120px] resize-none"
@@ -801,7 +824,7 @@ export default function ProfilePage() {
                                                                 />
 
                                                                 <Textarea
-                                                                    placeholder="Share your expertise, insights, or experiences..."
+                                                                    placeholder={isExpert ? "Share your expertise, insights, or experiences..." : "Share your thoughts, experiences, or questions..."}
                                                                     value={editPostContent}
                                                                     onChange={(e) => setEditPostContent(e.target.value)}
                                                                     className="min-h-[120px] resize-none"
@@ -1156,126 +1179,114 @@ export default function ProfilePage() {
                         </Tabs>
                     </div>
 
-                    {/* Right Column - User Info & Stats (Sticky) */}
+                    {/* Right Column - Experts Section */}
                     <div className="lg:col-span-3">
                         <div className="sticky top-20 space-y-4">
-                            {/* Services Card - Only for Experts */}
-                            {isExpert && (
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Services</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        {profile.interests && profile.interests.length > 0 ? (
-                                            <div className="space-y-1">
-                                                {profile.interests.map((interest, index) => (
-                                                    <div key={index} className="flex items-center gap-1.5 py-1 px-2 bg-muted/20 rounded">
-                                                        <div className="w-1 h-1 bg-green-500 rounded-full flex-shrink-0"></div>
-                                                        <span className="text-sm text-foreground">{INTEREST_LABELS[interest] || interest}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground">No services listed.</p>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* Contact Information */}
                             <Card>
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg">Contact</CardTitle>
+                                    <CardTitle className="text-lg">Top Experts</CardTitle>
                                 </CardHeader>
                                 <CardContent className="pt-0">
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <FaMapMarkerAlt className="text-muted-foreground w-4" />
-                                            <span className="text-foreground">{formatLocation(profile.location)}</span>
+                                    {expertsLoading ? (
+                                        <div className="text-center py-8">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600 mx-auto mb-2"></div>
+                                            <span className="text-sm text-muted-foreground">Loading experts...</span>
                                         </div>
-                                        {isExpert && profile.expertDetails?.hourlyRate && (
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <FaDollarSign className="text-muted-foreground w-4" />
-                                                <span className="text-foreground">${profile.expertDetails?.hourlyRate}/hour</span>
-                                            </div>
-                                        )}
-                                        {isExpert && profile.expertDetails?.ratings && (
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <FaStar className="text-yellow-500 w-4" />
-                                                <span className="text-foreground">{profile.expertDetails?.ratings} reviews</span>
-                                            </div>
-                                        )}
-                                        {profile.email && (
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <FaUser className="text-muted-foreground w-4" />
-                                                <span className="text-foreground">{profile.email}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                    ) : expertsError ? (
+                                        <div className="text-center text-red-500 py-8">{expertsError}</div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {experts.slice(0, expertsToShow).map((expert) => {
+                                                // Extract user data from the nested structure
+                                                const userData = expert.user;
+                                                const expertName = userData?.name || 'Expert';
+                                                const expertAvatar = userData?.avatar || "https://randomuser.me/api/portraits/men/1.jpg";
+                                                const expertLocation = userData?.location;
+                                                
+                                                // Format location properly
+                                                const formatExpertLocation = (location: any) => {
+                                                    if (!location) return 'Remote';
+                                                    if (typeof location === 'string') return location;
+                                                    if (typeof location === 'object') {
+                                                        const parts = [location.city, location.country].filter(Boolean);
+                                                        return parts.length > 0 ? parts.join(', ') : 'Remote';
+                                                    }
+                                                    return 'Remote';
+                                                };
+
+                                                return (
+                                                    <div 
+                                                        key={expert.userId} 
+                                                        className="flex items-center gap-3 p-2 rounded hover:bg-green-50 hover:border-green-200 border border-transparent transition-all duration-200 cursor-pointer"
+                                                        onClick={() => router.push(`/connections/${expert.userId}`)}
+                                                    >
+                                                        {/* Expert Image */}
+                                                        <img
+                                                            src={expertAvatar}
+                                                            alt={expertName}
+                                                            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                                                        />
+
+                                                        {/* Expert Info */}
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <h4 className="font-semibold text-foreground text-sm">
+                                                                        {expertName}
+                                                                        {expert.verified && (
+                                                                            <FaCheckCircle className="inline ml-1 text-green-500 w-3 h-3" />
+                                                                        )}
+                                                                    </h4>
+                                                                    <div className="flex items-center text-xs text-muted-foreground">
+                                                                        <FaMapMarkerAlt className="w-3 h-3 mr-1" />
+                                                                        <span>{formatExpertLocation(expertLocation)}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Rating */}
+                                                                <div className="flex items-center gap-1 text-yellow-500">
+                                                                    <FaStar className="w-3 h-3" />
+                                                                    <span className="font-medium text-xs">{expert.ratings || 0}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {expertsToShow < totalExperts && (
+                                                <div className="text-center pt-3">
+                                                    <Button
+                                                        onClick={() => setExpertsToShow((prev) => prev + 10)}
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="bg-green-600 hover:bg-green-700 text-white border-green-600"
+                                                    >
+                                                        Show More
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            {/* View All button after 10 */}
+                                            {experts.length > 10 && expertsToShow >= 10 && (
+                                                <div className="text-center pt-2">
+                                                    <Button
+                                                        onClick={() => router.push('/connections')}
+                                                        variant="ghost"
+                                                        className="text-green-700 hover:bg-green-50"
+                                                    >
+                                                        View All
+                                                    </Button>
+                                                </div>
+                                            )}
+                                            {experts.length === 0 && !expertsLoading && (
+                                                <div className="text-center py-6">
+                                                    <FaUser className="text-muted-foreground w-8 h-8 mx-auto mb-2" />
+                                                    <p className="text-sm text-muted-foreground">No experts available</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
-
-                            {/* Progress Level - Only for Experts */}
-                            {isExpert && profile.expertDetails?.progressShow && profile.expertDetails?.progressLevel && (
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Progress</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <div className="space-y-2">
-                                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                                                {profile.expertDetails?.progressLevel}
-                                            </Badge>
-                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                <span>{profile._count?.followers ?? 0} followers</span>
-                                                <span>{profile._count?.following ?? 0} following</span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
-
-                            {/* Community Stats - For Users */}
-                            {isUser && (
-                                <Card>
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Community Stats</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Following</span>
-                                                <span className="font-medium">{profile._count?.following ?? 0}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Followers</span>
-                                                <span className="font-semibold text-gray-900">{profile._count?.followers ?? 0}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Posts</span>
-                                                <span className="font-semibold text-gray-900">{profile._count?.posts ?? 0}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Comments</span>
-                                                <span className="font-semibold text-gray-900">{profile._count?.comments ?? 0}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Likes Given</span>
-                                                <span className="font-semibold text-gray-900">{profile._count?.likes ?? 0}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-muted-foreground">Member Since</span>
-                                                <span className="font-medium">
-                                                    {profile.createdAt ?
-                                                        new Date(profile.createdAt).getFullYear() :
-                                                        'N/A'
-                                                    }
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
                         </div>
                     </div>
                 </div>
